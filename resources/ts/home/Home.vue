@@ -14,10 +14,18 @@
       -->
       <div v-if="auth.authenticated">
         <h1 class="text-xl">Accounts</h1>
-				<p v-for="account of accounts.values">
-					{{ account.name }}<br>
-					{{ account.amount }}
-				</p>
+				<DataTable>
+					<template #header>
+						<DataTableHeaderCell>Name</DataTableHeaderCell>
+						<DataTableHeaderCell numeric>Amount</DataTableHeaderCell>
+					</template>
+					<template #body>
+						<DataTableRow v-for="account of values">
+							<DataTableCell>{{ account.name }}</DataTableCell>
+							<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
+						</DataTableRow>
+					</template>
+				</DataTable>
       </div>
 
 
@@ -32,13 +40,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs } from 'vue';
 import Button from '@/ts/core/buttons/Button.vue'
 import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
 import { useAccounts } from '@/ts/store/accounts';
+import { dollars } from '@/ts/core/utilities/currency'
+import DataTable from '@/ts/core/tables/DataTable.vue';
+import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
+import DataTableRow from '@/ts/core/tables/DataTableRow.vue';
+import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
 
 const prod = import.meta.env.PROD
 const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
@@ -63,8 +76,11 @@ function sendPushNotification() {
 	})
 }
 
-const accounts = useAccounts()
-accounts.getData()
+const {
+	getData,
+	values,
+} = useAccounts()
+getData()
 </script>
 
 <style scoped lang="scss">
