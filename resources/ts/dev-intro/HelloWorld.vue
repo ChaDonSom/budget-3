@@ -6,45 +6,11 @@
 			</div>
 			<h1 class="text-3xl sm:text-5xl md:text-7xl font-thin">{{ msg }}</h1>
 
-			<h2 class="mt-5">Material Components:</h2>
-			<div class="flex justify-center gap-5">
-				<Button @click="count++" raised> Count is: {{ count }}</Button>
-			</div>
-			<h2 class="mt-5">Material Icons:</h2>
-			<div class="flex justify-center m-4 gap-5">
-				<i class="material-icons">edit</i>
-				<i class="material-icons">playlist_add_check</i>
-				<i class="material-icons">insert_emoticon</i>
-				<i class="material-icons">keyboard_hide</i>
-			</div>
 			<div class="my-7">
 				<p v-for="message of messages" :key="message">{{ message }}</p>
-				<h2 class="text-3xl sm:text-5xl md:text-6xl font-thin mb-3">Stack</h2>
-				<div class="flex flex-row flex-wrap align-center justify-center gap-5">
-					<a
-							v-for="tech of stack"
-							target="_blank"
-							class="flex flex-col items-center justify-center gap-1"
-							:key="tech.link"
-							:title="tech.title"
-							:href="tech.link"
-					>
-						<img :src="tech.image" style="height: 55px;" class="grow-0">
-						{{ tech.title }}
-					</a>
-				</div>
 			</div>
 			<div class="my-7" v-if="auth.authenticated">
 				<Button @click="sendPushNotification">Send myself a push notification</Button>
-			</div>
-			<div class="my-7 flex flex-col items-center justify-center gap-2" v-if="forgeResponse">
-				<h3>My sites:</h3>
-				<p v-for="site of forgeResponse" :key="site.id">
-					<a :href="`https://${site.name}`" class="flex flex-col items-center text-blue-600 visited:text-purple-600">
-						<img :src="`https://${site.name}/favicon.ico`" class="h-14 w-14">	
-						<span>{{ site.name }}</span>
-					</a>
-				</p>
 			</div>
 		</div>
 	</div>
@@ -64,10 +30,10 @@ import { useEcho } from '../store/echo';
 import axios from 'axios';
 
 const props = defineProps({
-		msg: {
-			type: String,
-			required: true,
-		},
+	msg: {
+		type: String,
+		required: true,
+	},
 })
 
 const count = ref(0)
@@ -166,12 +132,6 @@ function sendPushNotification() {
 }
 
 const forgeResponse = ref<Array<{ id: string, status: string, name: string, }>|null>(null)
-onMounted(async () => {
-	let response = await axios.get('/api/sites')
-	forgeResponse.value = response.data.sites.filter((site: any) => {
-		return site.status == 'installed' && site.name != 'default'
-	})
-})
 </script>
 
 <style scoped lang="scss">
