@@ -13,7 +13,7 @@
         Dashboard
       -->
       <div v-if="auth.authenticated">
-        <h1 class="text-xl">Accounts</h1>
+        <h1 class="text-xl mt-5">Accounts</h1>
 				<DataTable>
 					<template #header>
 						<DataTableHeaderCell>Name</DataTableHeaderCell>
