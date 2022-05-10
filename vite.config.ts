@@ -20,7 +20,7 @@ export default defineConfig()
 			swDest: process.env.APP_ENV == 'production' ? 'public/sw.js' : 'public/dev-sw.js'
 		},
 		manifest: {
-			id: (process.env.APP_NAME).split(' ').map(str => str.charAt(0).toLowerCase() + str.slice(1)).join('-'), 
+			id: (process.env.APP_NAME).split(' ').map(str => str.charAt(0).toLowerCase() + str.slice(1)).join('-') + '-v3', 
 			name: process.env.APP_NAME,
 			short_name: process.env.PWA_SHORT_NAME,
 			description: process.env.PWA_DESCRIPTION,
