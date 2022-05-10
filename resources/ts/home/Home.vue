@@ -14,6 +14,10 @@
       -->
       <div v-if="auth.authenticated">
         <h1 class="text-xl">Accounts</h1>
+				<p v-for="account of accounts.values">
+					{{ account.name }}<br>
+					{{ account.amount }}
+				</p>
       </div>
 
 
@@ -34,6 +38,7 @@ import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
+import { useAccounts } from '@/ts/store/accounts';
 
 const prod = import.meta.env.PROD
 const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
@@ -57,6 +62,9 @@ function sendPushNotification() {
 		message: 'Hi there, a notification from Somero Budget 3!'
 	})
 }
+
+const accounts = useAccounts()
+accounts.getData()
 </script>
 
 <style scoped lang="scss">
