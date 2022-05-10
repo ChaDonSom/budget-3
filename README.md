@@ -1,82 +1,25 @@
-# Stack
+<img src="https://budget.somero.dev/favicon.ico" >
 
-<a href="https://laravel.com" target="_blank" title="Laravel">
-    <img src="https://laravel.com/img/logomark.min.svg" height="55">
-</a> The Laravel framework is fast, clean, and filled with best practices. In this stack, it will handle the backend as an API.
+# Somero Budget v3
 
-&nbsp;
+## The idea:
 
-<a href="https://laravel-vite.innocenzi.dev" target="_blank" title="Laravel Vite">
-    <img src="https://laravel-vite.innocenzi.dev/logo.svg" height="55">
-</a> The Laravel Vite package ties Laravel's frontend build process to Vite, allowing us to use Vite with Laravel having minimal configuration.
+<img src="https://s3.us-west-2.amazonaws.com/secure.notion-static.com/4a2c6b72-d5ad-4c0d-a7e6-6f71ea0a8d8c/Untitled.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20220510%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220510T011023Z&X-Amz-Expires=86400&X-Amz-Signature=4c8d78e9413bcd66ff51e52c13a45487aa6aaa7e3a256c9edfd1826ae6d80e77&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Untitled.png%22&x-id=GetObject">
 
-&nbsp;
+---
 
-<a href="https://vitejs.dev" target="_blank" title="Vite">
-    <img src="https://vitejs.dev/logo.svg" height="55">
-</a> Vite gets our development server running - our finger on the pulse - in a split second, and hot-reloads faster than you can <code>alt+tab</code>.
+The simplest way to budget: put however much you want into each account, and it waits until you've made all your adjustments to do away with the math. That way, you can assign however much you want to every 'account' you have, then see how much you have to take from your check (and how much you'll have left).
 
 &nbsp;
 
-<a href="https://vuejs.org/" target="_blank" title="Vue 3">
-    <img src="https://vuejs.org/images/logo.png" height="55">
-</a> Vue 3 is powerful, fast, and lends itself to clean organization through its Composition API.
+## The underneath
+The app theoretically has two main models:
+- accounts
+- audits
 
-&nbsp;
+An account is simply a name with a total dollar amount associated with it. Every time we edit an account's total, we log an 'audit' recording the old and new value.
 
-<a href="https://next.router.vuejs.org/" target="_blank" title="Vue Router">
-    <img src="https://vuejs.org/images/logo.png" height="55">
-</a> Vue Router allows us to handle SPA navigation on our frontend.
-
-&nbsp;
-
-<a href="https://vueuse.org/" target="_blank" title="Vue 3">
-    <img src="https://d33wubrfki0l68.cloudfront.net/2f6479d73bc25170dc532dd42e059166573bf478/61057/favicon.svg" height="55">
-</a> VueUse is an awesome library of <code>use</code> functions for Vue 3 Composition API that allow us to access many browser APIs reactively.
-
-&nbsp;
-
-<a href="https://www.typescriptlang.org/" target="_blank" title="Vue 3">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg" height="55">
-</a> TypeScript allows us to remember what goes where - it gives us code intellisense.
-
-&nbsp;
-
-<a href="https://developers.google.com/web/tools/workbox" target="_blank" title="Workbox">
-    <img src="https://cdn.worldvectorlogo.com/logos/workbox-1.svg" height="55">
-</a> Workbox handles the complexity of our Service Worker for us, allowing us to run code in the background while our app is closed.
-
-&nbsp;
-
-<a href="https://pinia.vuejs.org/" target="_blank" title="Pinia">
-    <img src="https://pinia.vuejs.org/logo.svg" height="55">
-</a> Pinia provides a type-safe, structured way to share data between components.
-
-&nbsp;
-
-<a href="https://tailwindcss.com/" target="_blank" title="Tailwind">
-    <img src="https://pbs.twimg.com/profile_images/1468993891584073729/a_op8KnL_400x400.jpg" height="55">
-</a> Tailwind accelerates CSS development by allowing us to compose most of our CSS rules from our HTML.
-
-&nbsp;
-
-<a href="https://github.com/material-components/material-components-web" target="_blank" title="Material Design Components">
-    <img src="https://pbs.twimg.com/profile_images/925576484122779648/ucVTUoPg_400x400.jpg" height="55">
-</a> Material Design Components provides beautiful UI components that follow Google's best practices for UI design.
-
-&nbsp;
-
-<a href="https://logrocket.com" target="_blank" title="LogRocket">
-    <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--TXdRGx5X--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://dev-to-uploads.s3.amazonaws.com/uploads/organization/profile_image/1506/e0a84c58-6a79-4f06-9149-87a38b84afa8.png" height="55">
-</a> LogRocket gives us a live replay of every session on our app, with console and network logging as well.
-
-&nbsp;
-
-<a href="https://pusher.com" target="_blank" title="Pusher">
-    <img src="https://avatars.githubusercontent.com/u/739550?s=200&v=4" height="55">
-</a> Pusher allows us to utilize websocket connections, for things like live updates, as well as push notifications, to let users know when something happens and they're not in the app.
-
-&nbsp;
+Every edit will have a date and batch-number associated with it. If its date is today, the edit will be performed synchronously, an audit made, and the result returned to the client. If its date is in the future, it will be scheduled. When the edit is made, an audit will be made.
 
 &nbsp;
 
