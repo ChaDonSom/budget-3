@@ -14,48 +14,57 @@
       -->
       <div v-if="auth.authenticated">
         <h1 class="text-xl mt-5">Accounts</h1>
-				<DataTable @sort="updateSort">
-					<template #header>
-						<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
-							Name
-						</DataTableHeaderCell>
-						<DataTableHeaderCell>
-							Next
-						</DataTableHeaderCell>
-						<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
-							Amount
-						</DataTableHeaderCell>
-						<DataTableHeaderCell>
-							<!-- Controls -->&nbsp;
-						</DataTableHeaderCell>
-					</template>
-					<template #body>
-						<DataTableRow v-for="account of sortedAccounts">
-							<DataTableCell>{{ account.name }}</DataTableCell>
-							<DataTableCell />
-							<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
-							<DataTableCell>
-								<IconButton>remove</IconButton>
-								<IconButton>add</IconButton>
-							</DataTableCell>
-						</DataTableRow>
-					</template>
-				</DataTable>
+				<div v-if="initiallyLoaded">
+					<p v-if="!sortedAccounts.length" class="m-5">
+						✨ No accounts ✨
+					</p>
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length">
+						<template #header>
+							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
+								Name
+							</DataTableHeaderCell>
+							<DataTableHeaderCell>
+								Next
+							</DataTableHeaderCell>
+							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
+								Amount
+							</DataTableHeaderCell>
+							<DataTableHeaderCell>
+								<!-- Controls -->&nbsp;
+							</DataTableHeaderCell>
+						</template>
+						<template #body>
+							<DataTableRow v-for="account of sortedAccounts">
+								<DataTableCell>{{ account.name }}</DataTableCell>
+								<DataTableCell />
+								<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
+								<DataTableCell>
+									<IconButton>remove</IconButton>
+									<IconButton>add</IconButton>
+								</DataTableCell>
+							</DataTableRow>
+						</template>
+					</DataTable>
+				</div>
+
+				<Button @click="newAccount">New account</Button>
       </div>
 
 
 			<div class="my-7">
 				<p v-for="message of messages" :key="message">{{ message }}</p>
 			</div>
+			<!--
 			<div class="my-7" v-if="auth.authenticated">
 				<Button @click="sendPushNotification">Send myself a push notification</Button>
 			</div>
+			-->
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, Ref } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, Ref, markRaw } from 'vue';
 import Button from '@/ts/core/buttons/Button.vue'
 import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
@@ -69,6 +78,9 @@ import DataTableRow from '@/ts/core/tables/DataTableRow.vue';
 import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
 import { useLocalStorage } from '@vueuse/core';
 import IconButton from '@/ts/core/buttons/IconButton.vue';
+import Fab from '@/ts/core/buttons/Fab.vue';
+import { useModals } from '@/ts/store/modals';
+import AccountModalVue from '@/ts/accounts/AccountModal.vue';
 
 const prod = import.meta.env.PROD
 const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
@@ -92,6 +104,8 @@ function sendPushNotification() {
 		message: 'Hi there, a notification from Somero Budget 3!'
 	})
 }
+
+const initiallyLoaded = ref(false)
 
 const {
 	getData: getAccountsData,
@@ -130,12 +144,20 @@ watch(
 			if (event.data?.type == 'SORT_ACCOUNTS') {
 				sortedAccounts.value = JSON.parse(event.data?.accounts) as Account[]
 				if (hideProgress.value) hideProgress.value()
+				initiallyLoaded.value = true
 				worker.terminate()
 			}
 		})
 	},
 	{ deep: true, immediate: true }
 )
+
+function newAccount() {
+	const modals = useModals()
+	modals.open({
+		modal: markRaw(AccountModalVue), props: {}
+	})
+}
 </script>
 
 <style scoped lang="scss">
