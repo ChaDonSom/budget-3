@@ -14,15 +14,30 @@
       -->
       <div v-if="auth.authenticated">
         <h1 class="text-xl mt-5">Accounts</h1>
-				<DataTable>
+				<DataTable @sort="updateSort">
 					<template #header>
-						<DataTableHeaderCell>Name</DataTableHeaderCell>
-						<DataTableHeaderCell numeric>Amount</DataTableHeaderCell>
+						<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
+							Name
+						</DataTableHeaderCell>
+						<DataTableHeaderCell>
+							Next
+						</DataTableHeaderCell>
+						<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
+							Amount
+						</DataTableHeaderCell>
+						<DataTableHeaderCell>
+							<!-- Controls -->&nbsp;
+						</DataTableHeaderCell>
 					</template>
 					<template #body>
-						<DataTableRow v-for="account of values">
+						<DataTableRow v-for="account of sortedAccounts">
 							<DataTableCell>{{ account.name }}</DataTableCell>
+							<DataTableCell />
 							<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
+							<DataTableCell>
+								<IconButton>remove</IconButton>
+								<IconButton>add</IconButton>
+							</DataTableCell>
 						</DataTableRow>
 					</template>
 				</DataTable>
@@ -40,30 +55,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted, computed, toRefs } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, Ref } from 'vue';
 import Button from '@/ts/core/buttons/Button.vue'
 import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
-import { useAccounts } from '@/ts/store/accounts';
+import { useAccounts, Account } from '@/ts/store/accounts';
 import { dollars } from '@/ts/core/utilities/currency'
 import DataTable from '@/ts/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
 import DataTableRow from '@/ts/core/tables/DataTableRow.vue';
 import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
+import { useLocalStorage } from '@vueuse/core';
+import IconButton from '@/ts/core/buttons/IconButton.vue';
 
 const prod = import.meta.env.PROD
 const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
 
 const auth = useAuth()
 
-const messages = ref([])
+const messages = ref<any[]>([])
 const echo = useEcho()
 onMounted(() => {
 	// The '.' in '.my-event' means we'll listen on 'my-channel' instead of 'App\Events.my-channel'
 	// That way, we can mess around with this from the Pusher event creator
-	echo.echo.channel('my-channel').listen('.my-event', data => {
+	echo.echo.channel('my-channel').listen('.my-event', (data: any) => {
 		console.log('data: ', data)
 		messages.value.push(data)
 	})
@@ -77,10 +94,48 @@ function sendPushNotification() {
 }
 
 const {
-	getData,
-	values,
+	getData: getAccountsData,
+	values: accountsValues,
 } = useAccounts()
-getData()
+getAccountsData()
+
+const sortedAccounts: Ref<Account[]> = ref([])
+const sort = useLocalStorage('budget-accounts-index-sort', {
+	name: {
+		value: 'none',
+		at: null as number|null,
+	},
+	amount: {
+		value: 'none',
+		at: null as number|null,
+	}
+})
+const hideProgress = ref<Function|null>(null)
+function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "ascending"|"descending", hideProgress: Function }) {
+	hideProgress.value = event.hideProgress
+	if (sort.value[event.columnId].value == 'descending') sort.value[event.columnId].value = 'none'
+	else sort.value[event.columnId].value = event.sortValue
+	sort.value[event.columnId].at = (new Date()).valueOf()
+}
+watch(
+	() => [accountsValues.value, sort.value],
+	() => {
+		const worker = new Worker('worker.js')
+		worker.postMessage({
+			type: 'SORT_ACCOUNTS',
+			accounts: JSON.stringify(accountsValues.value),
+			sort: JSON.stringify(sort.value)
+		})
+		worker.addEventListener('message', event => {
+			if (event.data?.type == 'SORT_ACCOUNTS') {
+				sortedAccounts.value = JSON.parse(event.data?.accounts) as Account[]
+				if (hideProgress.value) hideProgress.value()
+				worker.terminate()
+			}
+		})
+	},
+	{ deep: true, immediate: true }
+)
 </script>
 
 <style scoped lang="scss">
