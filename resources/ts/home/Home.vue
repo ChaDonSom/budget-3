@@ -46,15 +46,17 @@
 							<DataTableRow>
 								<DataTableCell />
 								<DataTableCell />
-								<DataTableCell numeric>{{ dollars(accountsValues.map(i => i.amount / 100).reduce((a, c) => a + c)) }}</DataTableCell>
+								<DataTableCell numeric>{{ dollars(accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0)) }}</DataTableCell>
 								<DataTableCell />
 							</DataTableRow>
 						</template>
 					</DataTable>
 				</div>
 
-				<Button @click="newAccount">New account</Button>
-				<Button @click="fetchAccountsData">Fetch accounts</Button>
+				<div v-if="initiallyLoaded">
+					<Button @click="newAccount">New account</Button>
+					<Button @click="accounts.fetchData">Fetch accounts</Button>
+				</div>
       </div>
 
 
@@ -112,14 +114,16 @@ function sendPushNotification() {
 	})
 }
 
-const initiallyLoaded = ref(false)
+const initiallySorted = ref(false)
+const initiallyLoadedAccounts = ref(false)
+const initiallyLoaded = computed(() => {
+	return (
+		initiallyLoadedAccounts.value && initiallySorted.value
+	)
+})
 
-const {
-	fetchData: fetchAccountsData,
-	values: accountsValues,
-	data
-} = useAccounts()
-fetchAccountsData()
+const accounts = useAccounts()
+accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 
 const sortedAccounts: Ref<Account[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort', {
@@ -140,19 +144,19 @@ function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "asce
 	sort.value[event.columnId].at = (new Date()).valueOf()
 }
 watch(
-	() => [accountsValues.value, sort.value],
+	() => [accounts.values, sort.value],
 	() => {
 		const worker = new Worker('worker.js')
 		worker.postMessage({
 			type: 'SORT_ACCOUNTS',
-			accounts: JSON.stringify(accountsValues.value),
+			accounts: JSON.stringify(accounts.values),
 			sort: JSON.stringify(sort.value)
 		})
 		worker.addEventListener('message', event => {
 			if (event.data?.type == 'SORT_ACCOUNTS') {
 				sortedAccounts.value = JSON.parse(event.data?.accounts) as Account[]
 				if (hideProgress.value) hideProgress.value()
-				initiallyLoaded.value = true
+				if (initiallyLoadedAccounts.value) initiallySorted.value = true
 				worker.terminate()
 			}
 		})

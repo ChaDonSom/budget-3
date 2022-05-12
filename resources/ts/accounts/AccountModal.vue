@@ -1,12 +1,17 @@
 <template>
-  <Modal @close="modals.close(id)">
-    <template #title>{{ Boolean(internalAccount.name) ? internalAccount.name : 'New account' }}</template>
-    <OutlinedTextfield autoselect v-model="internalAccount.name" autofocus>Name</OutlinedTextfield>
-    <DollarsField autoselect v-model="amount">Amount</DollarsField>
+  <Modal @close="attemptClose">
+    <template #title>{{ Boolean(form.name) ? form.name : 'New account' }}</template>
+    <OutlinedTextfield autoselect v-model="form.name" autofocus :error="form.errors.name">Name</OutlinedTextfield>
+    <DollarsField autoselect v-model="amount" :error="form.errors.amount">Amount</DollarsField>
+    <transition name="error-message">
+      <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
+        {{ form.errors.message }}
+      </p>
+    </transition>
     <template #actions>
       <div class="flex justify-between">
-        <DeleteButton v-if="'id' in internalAccount" @click="deleteAccount" :loading="deleteLoading" :disabled="deleteLoading" />
-        <SaveButton class="ml-auto" @click="save" :loading="loading" :disabled="loading" />
+        <DeleteButton v-if="form.id" @click="deleteAccount" :loading="form.processingDelete" :disabled="form.processing" />
+        <SaveButton class="ml-auto" @click="save" :loading="form.processingNotDelete" :disabled="form.processing" />
       </div>
     </template>
   </Modal>
@@ -23,6 +28,7 @@ import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
 import { useAuth } from '@/ts/core/users/auth';
 import DollarsField from '@/ts/core/fields/DollarsField.vue';
+import { useForm } from '@/ts/store/forms';
 
 const props = defineProps({
   id: {
@@ -40,42 +46,51 @@ const modals = useModals()
 
 const accounts = useAccounts()
 
-const internalAccount = ref<Omit<Account, 'id'>|Account>({
+const amount = computed({
+  get: () => form.amount / 100,
+  set: v  => form.amount = v * 100
+});
+
+const form = useForm<Omit<Account, 'id'> & { id: number|null }>('/api/accounts', {
+  id: null,
   name: '',
   amount: 0,
-  user_id: auth.user.id
-})
-const amount = computed({
-  get: () => internalAccount.value.amount / 100,
-  set: v  => internalAccount.value.amount = v * 100
+  user_id: auth.user?.id ?? 0
 });
 
 (async () => {
   if (props.accountId) {
     let result = await accounts.fetchAccount(props.accountId)
-    internalAccount.value = JSON.parse(JSON.stringify(result))
+    form.reset<Account>(result)
   }
 })()
 
-const loading = ref(false)
 async function save() {
-  loading.value = true
-  let result
-  if ('id' in internalAccount.value) result = await accounts.updateAccount(internalAccount.value)
-  else result = await accounts.createAccount(internalAccount.value)
-  internalAccount.value = result
-  loading.value = false
+  accounts.receive(await form.createOrUpdate())
   setTimeout(() => modals.close(props.id))
 }
-const deleteLoading = ref(false)
 async function deleteAccount() {
-  deleteLoading.value = true
-  // @ts-ignore (the delete button only shows if internalAccount.value has an `id` property)
-  await accounts.deleteAccount(internalAccount.value)
-  deleteLoading.value = false
-  setTimeout(() => modals.close(props.id))
+  if (form.id && props.accountId) {
+    try {
+      await modals.confirm(`Do you really want to delete ${accounts.data[props.accountId].name}?`)
+    } catch(e) { return }
+    let id = form.id
+    await form.delete()
+    accounts.remove(id)
+    setTimeout(() => modals.close(props.id))
+  } else {
+    throw Error('Form has no id')
+  }
+}
+
+async function attemptClose() {
+  try {
+    if (form.isDirty) await modals.confirm(`Do you really want to leave unsaved changes?`)
+    modals.close(props.id)
+  } catch (e) {}
 }
 </script>
 
 <style scoped lang="scss">
+@use "@/css/transitions";
 </style>
