@@ -18,7 +18,7 @@
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length">
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 75vh;">
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
 								Name
