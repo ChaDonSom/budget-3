@@ -13,7 +13,7 @@ class StoreAccountRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -26,6 +26,7 @@ class StoreAccountRequest extends FormRequest
         return [
             'name' => 'required|unique:accounts,name',
             'amount' => 'required|numeric|min:0',
+            'user_id' => 'required|exists:users,id',
         ];
     }
 }

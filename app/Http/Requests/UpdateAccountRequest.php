@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAccountRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UpdateAccountRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,8 +25,12 @@ class UpdateAccountRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|unique:accounts,name',
+            'name' => [
+                'required',
+                Rule::unique('accounts')->ignore(request()->account)
+            ],
             'amount' => 'required|numeric|min:0',
+            'user_id' => 'required|exists:users,id',
         ];
     }
 }

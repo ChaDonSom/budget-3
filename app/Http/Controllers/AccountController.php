@@ -16,7 +16,7 @@ class AccountController extends Controller
      */
     public function index()
     {
-        return Account::query()->whereBelongsTo(Auth::user())->get();
+        return Account::query()->whereBelongsTo(Auth::user())->get()->keyBy('id');
     }
 
     /**

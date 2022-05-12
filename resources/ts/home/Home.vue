@@ -35,7 +35,7 @@
 						</template>
 						<template #body>
 							<DataTableRow v-for="account of sortedAccounts">
-								<DataTableCell>{{ account.name }}</DataTableCell>
+								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
 								<DataTableCell />
 								<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
 								<DataTableCell>
@@ -43,11 +43,18 @@
 									<IconButton>add</IconButton>
 								</DataTableCell>
 							</DataTableRow>
+							<DataTableRow>
+								<DataTableCell />
+								<DataTableCell />
+								<DataTableCell numeric>{{ dollars(accountsValues.map(i => i.amount / 100).reduce((a, c) => a + c)) }}</DataTableCell>
+								<DataTableCell />
+							</DataTableRow>
 						</template>
 					</DataTable>
 				</div>
 
 				<Button @click="newAccount">New account</Button>
+				<Button @click="fetchAccountsData">Fetch accounts</Button>
       </div>
 
 
@@ -108,10 +115,11 @@ function sendPushNotification() {
 const initiallyLoaded = ref(false)
 
 const {
-	getData: getAccountsData,
+	fetchData: fetchAccountsData,
 	values: accountsValues,
+	data
 } = useAccounts()
-getAccountsData()
+fetchAccountsData()
 
 const sortedAccounts: Ref<Account[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort', {
@@ -152,10 +160,16 @@ watch(
 	{ deep: true, immediate: true }
 )
 
+const modals = useModals()
 function newAccount() {
-	const modals = useModals()
 	modals.open({
 		modal: markRaw(AccountModalVue), props: {}
+	})
+}
+function editAccount(id: number) {
+	modals.open({
+		modal: markRaw(AccountModalVue),
+		props: { accountId: id }
 	})
 }
 </script>
