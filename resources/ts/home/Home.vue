@@ -43,7 +43,7 @@
 									<IconButton>add</IconButton>
 								</DataTableCell>
 							</DataTableRow>
-							<DataTableRow>
+							<DataTableRow class="sticky-bottom-row">
 								<DataTableCell />
 								<DataTableCell />
 								<DataTableCell numeric>{{ dollars(accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0)) }}</DataTableCell>
@@ -188,5 +188,23 @@ code {
 	padding: 2px 4px;
 	border-radius: 4px;
 	color: #304455;
+}
+
+:deep(.sticky-bottom-row td) {
+	position: -webkit-sticky;
+	position: sticky;
+	bottom: 0;
+	z-index: 1;
+	background-color: white;
+	&::before {
+		content: '';
+		display: block;
+		position: absolute;
+		width: calc(100% + 32px);
+		height: 2px;
+		top: 0;
+		left: -16px;
+		background-color: rgb(197, 197, 197);
+	}
 }
 </style>
