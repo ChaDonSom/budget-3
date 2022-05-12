@@ -1,5 +1,5 @@
 <template>
-  <Button :disabled="disabled"
+  <Button :disabled="disabled" secondary
   >
     <template v-if="!loading">
       Save
