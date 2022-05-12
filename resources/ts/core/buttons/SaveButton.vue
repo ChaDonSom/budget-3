@@ -5,7 +5,7 @@
       Save
     </template>
     <template v-else>
-      <Circular small />
+      <Circular small secondary />
     </template>
     <template #trailing-icon>save</template>
   </Button>
