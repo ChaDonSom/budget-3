@@ -25,6 +25,7 @@ import Textfield from '../../fields/OutlinedTextfield.vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '.';
 import { useForm } from '@/ts/store/forms';
+import { DateTime } from 'luxon';
 
 const router = useRouter()
 const auth = useAuth()
@@ -36,6 +37,7 @@ const form = useForm('/login', {
   email: '',
   password: '',
   remember: false,
+  timezone: DateTime.now().zoneName
 })
 </script>
 
