@@ -17,6 +17,7 @@
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
+        "owen-it/laravel-auditing": "^13.0",
         "pusher/pusher-php-server": "^7.0",
         "pusher/pusher-push-notifications": "^1.1"
     },
