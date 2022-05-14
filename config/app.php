@@ -168,6 +168,7 @@ return [
          * Package Service Providers...
          */
         FortifyServiceProvider::class,
+        OwenIt\Auditing\AuditingServiceProvider::class,
 
         /*
          * Application Service Providers...
