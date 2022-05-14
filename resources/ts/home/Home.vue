@@ -14,49 +14,84 @@
       -->
       <div v-if="auth.authenticated">
         <h1 class="text-xl mt-5">Accounts</h1>
-				<div v-if="initiallyLoaded">
+				<div v-if="initiallyLoaded" class="mb-5">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 75vh;">
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 85vh;">
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
 								Name
 							</DataTableHeaderCell>
-							<DataTableHeaderCell>
-								Next
+							<DataTableHeaderCell class="hidden md:table-cell">
+								Next date
+							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden md:table-cell">
+								Next amount
 							</DataTableHeaderCell>
 							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
 								Amount
 							</DataTableHeaderCell>
-							<DataTableHeaderCell>
+							<DataTableHeaderCell numeric>
 								<!-- Controls -->&nbsp;
 							</DataTableHeaderCell>
 						</template>
 						<template #body>
 							<DataTableRow v-for="account of sortedAccounts">
 								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
-								<DataTableCell />
+								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden md:table-cell" />
 								<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
-								<DataTableCell>
-									<IconButton>remove</IconButton>
-									<IconButton>add</IconButton>
+								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
+									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
+										<IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
+										<IconButton :density="-3" @click.stop="startDepositing(account)">add</IconButton>
+									</div>
+									<div v-else-if="batchDifferences[account.id]" @click.stop="edit(account)" class="w-full h-full">
+										{{ batchDifferences[account.id].modifier == 1 ? '+' : '-' }} {{ dollars(batchDifferences[account.id].amount) }}
+									</div>
 								</DataTableCell>
 							</DataTableRow>
 							<DataTableRow class="sticky-bottom-row">
 								<DataTableCell />
-								<DataTableCell />
-								<DataTableCell numeric>{{ dollars(accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0)) }}</DataTableCell>
-								<DataTableCell />
+								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell numeric>
+									Total:
+									{{ dollars(accountsTotal) }}
+									<br v-if="areAnyBatchDifferences">
+									<span v-if="areAnyBatchDifferences">&nbsp;</span>
+								</DataTableCell>
+								<DataTableCell numeric>
+									<div v-if="areAnyBatchDifferences">
+										{{ dollars(batchTotal) }}
+										<br>
+										{{ dollars(accountsTotal + batchTotal) }}
+									</div>
+								</DataTableCell>
 							</DataTableRow>
 						</template>
 					</DataTable>
 				</div>
 
 				<div v-if="initiallyLoaded">
-					<Button @click="newAccount">New account</Button>
-					<Button @click="accounts.fetchData">Fetch accounts</Button>
+					<Fab v-if="!areAnyBatchDifferences" @click="newAccount" :icon="'add'" class="fixed bottom-4 right-4" style="z-index: 2;"></Fab>
+					<Fab v-else @click="saveBatch" icon="save" class="fixed bottom-6 right-6" style="z-index: 2;"></Fab>
+					<OutlinedTextfield
+							type="date"
+							v-if="areAnyBatchDifferences"
+							v-model="batchForm.date"
+							class="fixed bottom-0 right-20"
+					>
+						Date
+					</OutlinedTextfield>
 				</div>
+
+				<transition name="error-message">
+					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
+						{{ batchForm.errors.message }}
+					</p>
+				</transition>
       </div>
 
 
@@ -90,6 +125,11 @@ import IconButton from '@/ts/core/buttons/IconButton.vue';
 import Fab from '@/ts/core/buttons/Fab.vue';
 import { useModals } from '@/ts/store/modals';
 import AccountModalVue from '@/ts/accounts/AccountModal.vue';
+import DollarsField from '@/ts/core/fields/DollarsField.vue';
+import FloatingDifferenceInputModalVue from '@/ts/home/FloatingDifferenceInputModal.vue';
+import { useForm } from '@/ts/store/forms';
+import { DateTime } from 'luxon'
+import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 
 const prod = import.meta.env.PROD
 const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
@@ -114,6 +154,12 @@ function sendPushNotification() {
 	})
 }
 
+
+/**
+	---------------------------------------------------
+	| Indexing and the table
+	---------------------------------------------------
+ */
 const initiallySorted = ref(false)
 const initiallyLoadedAccounts = ref(false)
 const initiallyLoaded = computed(() => {
@@ -124,6 +170,7 @@ const initiallyLoaded = computed(() => {
 
 const accounts = useAccounts()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
+const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 
 const sortedAccounts: Ref<Account[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort', {
@@ -164,6 +211,71 @@ watch(
 	{ deep: true, immediate: true }
 )
 
+/**
+	---------------------------------------------------
+	| Setting up withdraw/deposit batches
+	---------------------------------------------------
+ */
+const currentlyEditingDifference = ref<number|null>(null)
+const batchDifferences = ref({} as { [key: number]: { amount: number, modifier: 1|-1 } })
+const batchDate = ref<DateTime>(DateTime.now())
+const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
+const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
+function startWithdrawing(account: Account) {
+	currentlyEditingDifference.value = account.id
+	batchDifferences.value[account.id] = {
+		amount: 0,
+		modifier: -1
+	}
+	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
+		difference: batchDifferences.value[account.id],
+	} })
+}
+function startDepositing(account: Account) {
+	currentlyEditingDifference.value = account.id
+	batchDifferences.value[account.id] = {
+		amount: 0,
+		modifier: 1
+	}
+	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
+		difference: batchDifferences.value[account.id],
+	} })
+}
+function clearBatchDifferenceFor(account: Account) {
+	delete batchDifferences.value[account.id]
+}
+function clearBatchDifferences() {
+	batchDifferences.value = {}
+}
+function edit(account: Account) {
+	currentlyEditingDifference.value = account.id
+	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
+		difference: batchDifferences.value[account.id],
+	} })
+}
+const batchForm = useForm('/api/accounts/batch', {
+	accounts: batchDifferences.value,
+	date: batchDate.value.toFormat('yyyy-MM-dd'),
+})
+async function saveBatch() {
+	batchForm.reset({ accounts: batchDifferences.value, date: batchForm.date })
+	// @ts-ignore (forms assume the response looks like their data, this one's doesn't)
+	let data = await batchForm.post() as { accounts: [] } // Will be an AccountBatchUpdate, either done, or to be done later
+	// has accounts, which have pivots describing the change
+	// has audits, but are not returned here (I imagine they won't be useful here)
+	console.log('data: ', data)
+	for (let account of data.accounts) {
+		accounts.receive(account)
+	}
+	clearBatchDifferences()
+	currentlyEditingDifference.value = null
+}
+
+/**
+	---------------------------------------------------
+	| Directly editing accounts
+	---------------------------------------------------
+ */
 const modals = useModals()
 function newAccount() {
 	modals.open({
@@ -180,6 +292,7 @@ function editAccount(id: number) {
 
 <style scoped lang="scss">
 @use "@/css/mdc-theme";
+@use "@/css/transitions";
 @use "@material/typography";
 @include typography.core-styles;
 
@@ -206,5 +319,8 @@ code {
 		left: -16px;
 		background-color: rgb(197, 197, 197);
 	}
+}
+:deep(.mdc-data-table__row.sticky-bottom-row:not(.mdc-data-table__row--selected):hover .mdc-data-table__cell) {
+	background-color: white;
 }
 </style>
