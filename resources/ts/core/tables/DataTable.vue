@@ -32,8 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import { MDCDataTable } from '@material/data-table';
-import { useLocalStorage } from '@vueuse/core';
+import { MDCDataTable } from './fake-data-table';
 import { onMounted, ref } from 'vue';
 
 const emit = defineEmits(['sort'])
