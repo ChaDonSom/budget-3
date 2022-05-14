@@ -22,7 +22,12 @@ class AccountController extends Controller
      */
     public function index()
     {
-        return Account::query()->whereBelongsTo(Auth::user())->get()->keyBy('id');
+        return Account::query()
+            ->whereBelongsTo(Auth::user())
+            // We _would_ like to see batchUpdates for index, but only the not-done ones
+            ->with(['batchUpdates' => fn($query) => $query->notDone()])
+            ->get()
+            ->keyBy('id');
     }
 
     /**
@@ -46,7 +51,7 @@ class AccountController extends Controller
      */
     public function show(Account $account)
     {
-        return $account;
+        return $account->load(['batchUpdates' => fn($query) => $query->notDone()]);
     }
 
     /**
@@ -59,6 +64,8 @@ class AccountController extends Controller
     public function update(UpdateAccountRequest $request, Account $account)
     {
         $account->fill($request->validated())->save();
+
+        $account->load(['batchUpdates' => fn($query) => $query->notDone()]);
 
         return $account;
     }
@@ -97,6 +104,12 @@ class AccountController extends Controller
             $batchUpdate->accounts;
             $httpCode = 202; // 201: created, 202: accepted (but will be processed later)
         }
+
+        $batchUpdate = AccountBatchUpdate::query()
+            // Specifically ensure the batchUpdates on each of this one's accounts are only the not-done ones
+            ->with(['accounts.batchUpdates' => fn($query) => $query->notDone()])
+            ->find($batchUpdate->id);
+
         return response($batchUpdate, $httpCode);
     }
 
