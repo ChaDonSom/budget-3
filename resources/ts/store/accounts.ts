@@ -15,6 +15,7 @@ export type Account = {
     name: string;
     amount: number;
     user_id: number;
+    batch_updates?: { batch: number, date: string, id: number, pivot: { amount: number } }[];
 };
 export type AccountsData = { [key: string | number]: Account };
 

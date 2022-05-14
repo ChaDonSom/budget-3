@@ -23,10 +23,10 @@
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
 								Name
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden md:table-cell">
+							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate" class="hidden md:table-cell">
 								Next date
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden md:table-cell">
+							<DataTableHeaderCell sortable column-id="nextAmount" :sort="sort.nextAmount" class="hidden md:table-cell">
 								Next amount
 							</DataTableHeaderCell>
 							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
@@ -39,8 +39,16 @@
 						<template #body>
 							<DataTableRow v-for="account of sortedAccounts">
 								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
-								<DataTableCell class="hidden md:table-cell" />
-								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden md:table-cell">
+									<div v-if="account.batch_updates?.[0]?.date">
+										{{ account.batch_updates?.[0]?.date }}
+									</div>
+								</DataTableCell>
+								<DataTableCell class="hidden md:table-cell">
+									<div v-if="account.batch_updates?.[0]?.pivot?.amount">
+										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
+									</div>
+								</DataTableCell>
 								<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
 									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
@@ -181,6 +189,14 @@ const sort = useLocalStorage('budget-accounts-index-sort', {
 	amount: {
 		value: 'none',
 		at: null as number|null,
+	},
+	nextDate: {
+		value: 'none',
+		at: null as number|null,
+	},
+	nextAmount: {
+		value: 'none',
+		at: null as number|null,
 	}
 })
 const hideProgress = ref<Function|null>(null)
@@ -196,12 +212,21 @@ watch(
 		const worker = new Worker('worker.js')
 		worker.postMessage({
 			type: 'SORT_ACCOUNTS',
-			accounts: JSON.stringify(accounts.values),
+			accounts: JSON.stringify(accounts.values.map(account => ({
+				...account,
+				nextDate: account.batch_updates?.[0]?.date ?? '',
+				nextAmount: account.batch_updates?.[0]?.pivot?.amount ?? 0,
+			}))),
 			sort: JSON.stringify(sort.value)
 		})
 		worker.addEventListener('message', event => {
 			if (event.data?.type == 'SORT_ACCOUNTS') {
-				sortedAccounts.value = JSON.parse(event.data?.accounts) as Account[]
+				sortedAccounts.value = JSON.parse(event.data?.accounts).map(a => {
+					let result = a
+					delete result.nextDate
+					delete result.nextAmount
+					return result
+				}) as Account[]
 				if (hideProgress.value) hideProgress.value()
 				if (initiallyLoadedAccounts.value) initiallySorted.value = true
 				worker.terminate()
@@ -263,7 +288,10 @@ async function saveBatch() {
 	let data = await batchForm.post() as { accounts: [] } // Will be an AccountBatchUpdate, either done, or to be done later
 	// has accounts, which have pivots describing the change
 	// has audits, but are not returned here (I imagine they won't be useful here)
-	console.log('data: ', data)
+	if (batchForm.httpStatus == 200) {
+	} else if (batchForm.httpStatus == 202) {
+		// Store batchUpdate for showing 'next' items
+	}
 	for (let account of data.accounts) {
 		accounts.receive(account)
 	}
