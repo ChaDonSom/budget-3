@@ -2,7 +2,7 @@
   <Modal @close="attemptClose">
     <template #title>{{ Boolean(form.name) ? form.name : 'New account' }}</template>
     <OutlinedTextfield autoselect v-model="form.name" autofocus :error="form.errors.name">Name</OutlinedTextfield>
-    <DollarsField autoselect v-model="amount" :error="form.errors.amount">Amount</DollarsField>
+    <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
     <transition name="error-message">
       <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
         {{ form.errors.message }}
