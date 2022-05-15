@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
          * Make scheduled updates to the user's account on the date they specified
          * 
          */
-        $schedule->job(function () {
+        $schedule->call(function () {
             // Get user from account to check date w/ timezone
             Log::info("Handling scheduled AccountBatchUpdates...");
             User::whereHas('accountBatchUpdates', fn($a) => $a->notDone())->get()->each(function($user) {
