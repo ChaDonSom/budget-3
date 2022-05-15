@@ -49,14 +49,28 @@
 										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
 									</div>
 								</DataTableCell>
-								<DataTableCell numeric>{{ dollars(account.amount / 100) }}</DataTableCell>
+								<DataTableCell numeric>
+									{{ dollars(account.amount / 100) }}
+									<br v-if="batchDifferences[account.id]">
+									<span v-if="batchDifferences[account.id]" class="text-gray-400"
+											:class="{'text-red-400': (account.amount / 100) + (
+												batchDifferences[account.id].amount * batchDifferences[account.id].modifier
+											) < 0}"
+									>
+										{{ dollars(
+											(account.amount / 100) + (
+												batchDifferences[account.id].amount * batchDifferences[account.id].modifier
+											)
+										) }}
+									</span>
+								</DataTableCell>
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
 									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
 										<IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
 										<IconButton :density="-3" @click.stop="startDepositing(account)">add</IconButton>
 									</div>
 									<div v-else-if="batchDifferences[account.id]" @click.stop="edit(account)" class="w-full h-full">
-										{{ batchDifferences[account.id].modifier == 1 ? '+' : '-' }} {{ dollars(batchDifferences[account.id].amount) }}
+										{{ dollars(batchDifferences[account.id].amount * batchDifferences[account.id].modifier) }}
 									</div>
 								</DataTableCell>
 							</DataTableRow>
@@ -74,7 +88,9 @@
 									<div v-if="areAnyBatchDifferences">
 										{{ dollars(batchTotal) }}
 										<br>
-										{{ dollars(accountsTotal + batchTotal) }}
+										<span :class="{ 'text-red-700': accountsTotal + batchTotal < 0 }">
+											{{ dollars(accountsTotal + batchTotal) }}
+										</span>
 									</div>
 								</DataTableCell>
 							</DataTableRow>
@@ -83,17 +99,35 @@
 				</div>
 
 				<div v-if="initiallyLoaded">
-					<Fab v-if="!areAnyBatchDifferences" @click="newAccount" :icon="'add'" class="fixed bottom-4 right-4" style="z-index: 2;"></Fab>
-					<Fab v-else @click="saveBatch" icon="save" class="fixed bottom-6 right-6" style="z-index: 2;"></Fab>
+					<Fab
+							v-if="!areAnyBatchDifferences"
+							@click="newAccount"
+							:icon="'add'"
+							class="fixed right-4 bottom-6"
+							style="z-index: 2;"
+					/>
+					<Fab
+							v-else
+							@click="saveBatch"
+							icon="save"
+							class="fixed right-4 bottom-6"
+							style="z-index: 2;"
+					/>
 					<OutlinedTextfield
 							type="date"
 							v-if="areAnyBatchDifferences"
 							v-model="batchForm.date"
-							class="fixed bottom-0 right-20"
+							class="fixed bottom-0 right-20 opaque"
+							style="z-index: 2;"
 					>
 						Date
 					</OutlinedTextfield>
 				</div>
+
+				<Button v-if="areAnyBatchDifferences" @click="clearBatchDifferences" secondary>
+					<template #leading-icon>close</template>
+					Clear changes
+				</Button>
 
 				<transition name="error-message">
 					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
@@ -221,7 +255,7 @@ watch(
 		})
 		worker.addEventListener('message', event => {
 			if (event.data?.type == 'SORT_ACCOUNTS') {
-				sortedAccounts.value = JSON.parse(event.data?.accounts).map(a => {
+				sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
 					let result = a
 					delete result.nextDate
 					delete result.nextAmount
@@ -268,9 +302,11 @@ function startDepositing(account: Account) {
 }
 function clearBatchDifferenceFor(account: Account) {
 	delete batchDifferences.value[account.id]
+	if (currentlyEditingDifference.value == account.id) currentlyEditingDifference.value = null
 }
 function clearBatchDifferences() {
 	batchDifferences.value = {}
+	currentlyEditingDifference.value = null
 }
 function edit(account: Account) {
 	currentlyEditingDifference.value = account.id
@@ -350,5 +386,17 @@ code {
 }
 :deep(.mdc-data-table__row.sticky-bottom-row:not(.mdc-data-table__row--selected):hover .mdc-data-table__cell) {
 	background-color: white;
+}
+
+// For the date field to not be see-through
+:deep(.opaque) {
+	.mdc-text-field {
+		.mdc-notched-outline__leading, .mdc-notched-outline__trailing, .mdc-notched-outline__notch {
+			background-color: white;
+		}
+		input.mdc-text-field__input {
+			z-index: 2;
+		}
+	}
 }
 </style>
