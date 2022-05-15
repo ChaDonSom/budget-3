@@ -41,7 +41,7 @@ class RunScheduledAccountBatchUpdates implements ShouldQueue
                 ->where('date', '<=', Carbon::now()->tz($user->timezone)->format('Y-m-d'))
                 ->get();
 
-            Log::info("For user {$user->id} ({$user->name}): {$updates->count()} updates");
+            Log::info("For user {$user->id} ({$user->name}): {$updates->count()} updates: {$updates->pluck('id')}");
 
             $updates->each->handle();
         });
