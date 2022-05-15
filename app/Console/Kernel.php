@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\RunScheduledAccountBatchUpdates;
 use App\Models\AccountBatchUpdate;
 use App\Models\User;
 use Carbon\Carbon;
@@ -26,19 +27,7 @@ class Kernel extends ConsoleKernel
          * Make scheduled updates to the user's account on the date they specified
          * 
          */
-        $schedule->call(function () {
-            // Get user from account to check date w/ timezone
-            Log::info("Handling scheduled AccountBatchUpdates...");
-            User::whereHas('accountBatchUpdates', fn($a) => $a->notDone())->get()->each(function($user) {
-                $updates = $user->accountBatchUpdates()
-                    ->where('date', '<=', Carbon::now()->tz($user->timezone)->format('Y-m-d'))
-                    ->get();
-
-                Log::info("For user {$user->id} ({$user->name}): {$updates->count()} updates");
-
-                $updates->each->handle();
-            });
-        })->everyThirtyMinutes();
+        $schedule->job(new RunScheduledAccountBatchUpdates)->everyMinute();
     }
 
     /**
