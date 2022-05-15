@@ -1,7 +1,6 @@
 <template>
   <Modal
       ref="mainRef"
-      class="floating-difference-input p-3 rounded-3xl shadow bg-white z-10 w-fit"
       @close="modals.close(id)"
   >
     <DollarsField
