@@ -37,6 +37,7 @@ class RunScheduledAccountBatchUpdates implements ShouldQueue
         Log::info("Handling scheduled AccountBatchUpdates...");
         User::whereHas('accountBatchUpdates', fn($a) => $a->notDone())->get()->each(function($user) {
             $updates = $user->accountBatchUpdates()
+                ->notDone()
                 ->where('date', '<=', Carbon::now()->tz($user->timezone)->format('Y-m-d'))
                 ->get();
 
