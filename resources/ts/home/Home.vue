@@ -230,7 +230,7 @@ accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 
 const sortedAccounts: Ref<Account[]> = ref([])
-const sort = useLocalStorage('budget-accounts-index-sort', {
+const sort = useLocalStorage('budget-accounts-index-sort-v2', {
 	name: {
 		value: 'none',
 		at: null as number|null,
