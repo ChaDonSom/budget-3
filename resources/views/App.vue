@@ -7,11 +7,13 @@
 			</div>
 		</transition>
 	</div>
-	<div class="fixed top-1 left-1 flex z-10">
+	<div class="fixed top-1 left-3 flex z-10">
 		<VDropdown>
-			<transition name="auth-buttons" mode="out-in">
-				<IconButton v-if="hasInitiallyLoaded">menu</IconButton>
-			</transition>
+			<template #default="{ show }">
+				<transition name="auth-buttons" mode="out-in">
+					<IconButton v-if="hasInitiallyLoaded" :density="-2" @click="show">menu</IconButton>
+				</transition>
+			</template>
 			<template #popper>
 				<div class="p-5">
 					<RouterLink to="/">
