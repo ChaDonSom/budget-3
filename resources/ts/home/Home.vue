@@ -26,7 +26,13 @@
 							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate" class="hidden md:table-cell">
 								Next date
 							</DataTableHeaderCell>
-							<DataTableHeaderCell sortable column-id="nextAmount" :sort="sort.nextAmount" class="hidden md:table-cell">
+							<DataTableHeaderCell
+									sortable
+									numeric
+									column-id="nextAmount"
+									:sort="sort.nextAmount"
+									class="hidden md:table-cell"
+							>
 								Next amount
 							</DataTableHeaderCell>
 							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
