@@ -8,11 +8,18 @@
 		</transition>
 	</div>
 	<div class="fixed top-1 left-1 flex z-10">
-		<transition name="auth-buttons" mode="out-in">
-			<RouterLink to="/" v-if="$route.name != 'index'">
-				<Button><template #leading-icon>home</template>Home</Button>
-			</RouterLink>
-		</transition>
+		<VDropdown>
+			<transition name="auth-buttons" mode="out-in">
+				<IconButton v-if="hasInitiallyLoaded">menu</IconButton>
+			</transition>
+			<template #popper>
+				<div class="p-5">
+					<RouterLink to="/">
+						<Button><template #leading-icon>home</template>Home</Button>
+					</RouterLink>
+				</div>
+			</template>
+		</VDropdown>
 	</div>
 	<div class="fixed top-1 right-1 flex z-10">
 		<transition name="auth-buttons" mode="out-in">
