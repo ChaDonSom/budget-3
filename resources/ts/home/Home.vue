@@ -50,7 +50,7 @@
 										{{ account.batch_updates?.[0]?.date }}
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell">
+								<DataTableCell class="hidden md:table-cell" numeric>
 									<div v-if="account.batch_updates?.[0]?.pivot?.amount">
 										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
 									</div>
