@@ -84,6 +84,12 @@ onMounted(() => {
       background-color: unset;
       .mdc-data-table__cell { background-color: rgba(0, 0, 0, 0.04); }
     }
+
+    // .mdc-data-table__cell {
+    //   padding-inline: 8px;
+    //   &:first-child { padding-left: 16px; }
+    //   &:lats-child { padding-left: 16px; }
+    // }
   }
 }
 </style>
