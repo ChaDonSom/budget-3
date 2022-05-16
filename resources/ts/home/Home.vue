@@ -75,7 +75,16 @@
 										<IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
 										<IconButton :density="-3" @click.stop="startDepositing(account)">add</IconButton>
 									</div>
-									<div v-else-if="batchDifferences[account.id]" @click.stop="edit(account)" class="w-full h-full">
+									<div
+											v-else-if="batchDifferences[account.id]"
+											@click.stop="edit(account)"
+											class="w-full h-full flex items-center gap-2"
+									>
+										<IconButton
+												:density="-5"
+												class="mr-2"
+												@click.stop="clearBatchDifferenceFor(account)"
+										>close</IconButton>
 										{{ dollars(batchDifferences[account.id].amount * batchDifferences[account.id].modifier) }}
 									</div>
 								</DataTableCell>
