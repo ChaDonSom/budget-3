@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
          * Make scheduled updates to the user's account on the date they specified
          * 
          */
-        $schedule->job(new RunScheduledAccountBatchUpdates)->everyFourHours();
+        $schedule->job(new RunScheduledAccountBatchUpdates)->everyThirtyMinutes();
     }
 
     /**
