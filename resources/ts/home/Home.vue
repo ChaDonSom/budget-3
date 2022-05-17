@@ -85,6 +85,7 @@
 												class="mr-2"
 												@click.stop="clearBatchDifferenceFor(account)"
 										>close</IconButton>
+										{{ batchDifferences[account.id].modifier == 1 ? '+ ' : '' }}
 										{{ dollars(batchDifferences[account.id].amount * batchDifferences[account.id].modifier) }}
 									</div>
 								</DataTableCell>
