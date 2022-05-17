@@ -14,8 +14,8 @@
         class="difference-field"
     >Amount</DollarsField>
     <div class="flex justify-between px-4" v-if="!modifying">
-      <IconButton :density="-3" @click.stop="modifying = -1">remove</IconButton>
-      <IconButton :density="-3" @click.stop="modifying = 1">add</IconButton>
+      <IconButton :density="-3" @click.stop="modifying = difference.modifier == -1 ? 1 : -1">remove</IconButton>
+      <IconButton :density="-3" @click.stop="modifying = difference.modifier">add</IconButton>
     </div>
     <DollarsField
         v-if="modifying"
