@@ -18,11 +18,19 @@
             <DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
               Amount
             </DataTableHeaderCell>
+						<DataTableHeaderCell>
+							<!-- Controls -->
+						</DataTableHeaderCell>
           </template>
           <template #body>
             <DataTableRow v-for="template of sortedTemplates" @click="editTemplate(template.id)">
               <DataTableCell >{{ template.name }}</DataTableCell>
-              <DataTableCell numeric>{{ dollars(template.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}</DataTableCell>
+              <DataTableCell numeric>
+								{{ dollars(template.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}
+							</DataTableCell>
+							<DataTableCell>
+								<IconButton @click.stop="applyTemplate(template)">open_in_new</IconButton>
+							</DataTableCell>
             </DataTableRow>
           </template>
         </DataTable>
@@ -54,6 +62,7 @@ import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
 import DataTableRow from '@/ts/core/tables/DataTableRow.vue';
 import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
 import Fab from '@/ts/core/buttons/Fab.vue';
+import IconButton from '@/ts/core/buttons/IconButton.vue';
 
 const router = useRouter()
 const auth = useAuth()
@@ -122,6 +131,9 @@ function newTemplate() {
 }
 function editTemplate(id: number) {
   router.push({ name: 'templates-show', params: { id } })
+}
+function applyTemplate(template: TemplateWithAccounts) {
+	router.push({ name: 'index', params: { template: JSON.stringify(template) } })
 }
 </script>
 

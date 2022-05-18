@@ -18,7 +18,7 @@
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 85vh;">
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh;">
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
 								Name
@@ -191,12 +191,12 @@ import FloatingDifferenceInputModalVue from '@/ts/home/FloatingDifferenceInputMo
 import { useForm } from '@/ts/store/forms';
 import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
-
-const prod = import.meta.env.PROD
-const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
+import { useRoute, useRouter } from 'vue-router';
+import { TemplateWithAccounts } from '@/ts/store/templates';
 
 const auth = useAuth()
-
+const route = useRoute()
+const router = useRouter()
 const messages = ref<any[]>([])
 const echo = useEcho()
 onMounted(() => {
@@ -336,6 +336,24 @@ function edit(account: Account) {
 const batchForm = useForm('/api/accounts/batch', {
 	accounts: batchDifferences.value,
 	date: batchDate.value.toFormat('yyyy-MM-dd'),
+})
+onMounted(() => {
+	if (route.params.template) {
+		let template: TemplateWithAccounts = JSON.parse(route.params.template as string)
+    batchForm.reset({
+      ...batchForm,
+      ...template,
+      accounts: template.accounts.reduce((a, c) => {
+        a[c.id] = {
+          amount: c.pivot.amount / 100,
+          modifier: c.pivot.amount >= 0 ? 1 : -1
+        }
+        return a
+      }, {} as { [key: number]: { amount: number, modifier: 1|-1 } })
+    })
+    batchDifferences.value = batchForm.accounts
+		router.replace({ params: {} })
+	}
 })
 async function saveBatch() {
 	batchForm.reset({ accounts: batchDifferences.value, date: batchForm.date })
