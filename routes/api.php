@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\TemplateController;
 use App\Notifications\SelfNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -51,3 +52,5 @@ Route::middleware('auth:sanctum')->resource('accounts', AccountController::class
 Route::prefix('accounts')->middleware('auth:sanctum')->group(function() {
     Route::post('/batch', [AccountController::class, 'batch']);
 });
+
+Route::middleware('auth:sanctum')->resource('templates', TemplateController::class);
