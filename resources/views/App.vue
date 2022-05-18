@@ -8,16 +8,19 @@
 		</transition>
 	</div>
 	<div class="fixed top-1 left-3 flex z-10">
-		<VDropdown>
-			<template #default="{ show }">
+		<VDropdown :delay="0">
+			<template #default="{ show, hide, shown }">
 				<transition name="auth-buttons" mode="out-in">
-					<IconButton v-if="hasInitiallyLoaded" :density="-2" @click="show">menu</IconButton>
+					<IconButton v-if="hasInitiallyLoaded" :density="-2" @click="shown ? hide() : show()">menu</IconButton>
 				</transition>
 			</template>
-			<template #popper>
+			<template #popper="{ hide }">
 				<div class="p-5">
-					<RouterLink to="/">
+					<RouterLink :to="{ name: 'index' }" @click="hide">
 						<Button><template #leading-icon>home</template>Home</Button>
+					</RouterLink>
+					<RouterLink :to="{ name: 'templates' }" v-if="auth.authenticated" @click="hide">
+						<Button><template #leading-icon>content_copy</template>Templates</Button>
 					</RouterLink>
 				</div>
 			</template>
