@@ -26,6 +26,8 @@ Every edit will have a date and batch-number associated with it. If its date is 
 # Get started
 
 ```bash
+cp .env.example .env
+
 composer install
 npm install
 npm start
