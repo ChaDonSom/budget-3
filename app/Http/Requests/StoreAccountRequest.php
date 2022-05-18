@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAccountRequest extends FormRequest
 {
@@ -24,7 +25,10 @@ class StoreAccountRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|unique:accounts,name',
+            'name' => [
+                'required',
+                Rule::unique('accounts', 'name')->where('deleted_at', null)->where('user_id', request()->user()->id),
+            ],
             'amount' => 'required|numeric|min:0',
             'user_id' => 'required|exists:users,id',
         ];

@@ -25,9 +25,13 @@ class UpdateAccountRequest extends FormRequest
     public function rules()
     {
         return [
+            'id' => 'required|exists:accounts,id',
             'name' => [
                 'required',
-                Rule::unique('accounts')->ignore(request()->account)
+                Rule::unique('accounts', 'name')
+                    ->where('deleted_at', null)
+                    ->where('user_id', request()->user()->id)
+                    ->ignore(request()->id)
             ],
             'amount' => 'required|numeric|min:0',
             'user_id' => 'required|exists:users,id',
