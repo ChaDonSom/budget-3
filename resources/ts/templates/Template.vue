@@ -9,7 +9,7 @@
         <p v-if="!sortedAccounts.length" class="m-5">
           ✨ No accounts ✨
         </p>
-        <DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 85vh;">
+        <DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 70vh;">
           <template #header>
             <DataTableHeaderCell sortable column-id="name" :sort="sort.name">
               Name
@@ -122,7 +122,7 @@ import { useForm } from '@/ts/store/forms';
 import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 import { Template, TemplateWithAccounts, useTemplates } from '@/ts/store/templates';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
 
 const props = defineProps({
@@ -135,6 +135,7 @@ const props = defineProps({
 const auth = useAuth()
 const route = useRoute()
 const router = useRouter()
+const modals = useModals()
 
 const messages = ref<any[]>([])
 const echo = useEcho()
@@ -314,13 +315,13 @@ async function deleteTemplate() {
     throw Error('Form has no id')
   }
 }
-
-/**
-	---------------------------------------------------
-	| Directly editing accounts
-	---------------------------------------------------
- */
-const modals = useModals()
+onBeforeRouteLeave(async () => {
+	try {
+		if (batchForm.isDirty) await modals.confirm("Do you really want to leave unsaved changes?")
+	} catch (e) {
+		return false
+	}
+})
 </script>
 
 <style scoped lang="scss">
