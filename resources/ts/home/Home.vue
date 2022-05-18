@@ -114,36 +114,39 @@
 					</DataTable>
 				</div>
 
-				<div v-if="initiallyLoaded">
-					<Fab
-							v-if="!areAnyBatchDifferences"
-							@click="newAccount"
-							:icon="'add'"
-							class="fixed right-4 bottom-6"
-							style="z-index: 2;"
-					/>
-					<Fab
-							v-else
-							@click="saveBatch"
-							icon="save"
-							class="fixed right-4 bottom-6"
-							style="z-index: 2;"
-					/>
-					<OutlinedTextfield
-							type="date"
-							v-if="areAnyBatchDifferences"
-							v-model="batchForm.date"
-							class="fixed bottom-0 right-20 opaque"
-							style="z-index: 2;"
-					>
-						Date
-					</OutlinedTextfield>
-				</div>
-
-				<Button v-if="areAnyBatchDifferences" @click="clearBatchDifferences" secondary>
-					<template #leading-icon>close</template>
-					Clear changes
-				</Button>
+				<Teleport to="body">
+					<div v-if="initiallyLoaded">
+						<Fab
+								v-if="!areAnyBatchDifferences"
+								@click="newAccount"
+								:icon="'add'"
+								class="fixed right-4 bottom-6"
+								style="z-index: 2;"
+						/>
+						<Fab
+								v-else
+								@click="saveBatch"
+								icon="save"
+								class="fixed right-4 bottom-6"
+								style="z-index: 2;"
+						/>
+						<OutlinedTextfield
+								type="date"
+								v-if="areAnyBatchDifferences"
+								v-model="batchForm.date"
+								class="fixed bottom-0 right-20 opaque"
+								style="z-index: 2;"
+						>
+							Date
+						</OutlinedTextfield>
+						<IconButton v-if="areAnyBatchDifferences" @click="clearBatchDifferences"
+								class="bottom-8 left-4"
+								style="position: fixed;"
+						>
+							close
+						</IconButton>
+					</div>
+				</Teleport>
 
 				<transition name="error-message">
 					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
