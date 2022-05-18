@@ -7,31 +7,29 @@
 			</div>
 		</transition>
 	</div>
-	<div class="fixed top-1 left-3 flex z-10">
+	<div class="fixed top-1 right-3 flex z-10">
 		<VDropdown :delay="0">
 			<template #default="{ show, hide, shown }">
 				<transition name="auth-buttons" mode="out-in">
-					<IconButton v-if="hasInitiallyLoaded" :density="-2" @click="shown ? hide() : show()">menu</IconButton>
+					<IconButton v-if="hasInitiallyLoaded" @click="shown ? hide() : show()">more_vert</IconButton>
 				</transition>
 			</template>
 			<template #popper="{ hide }">
-				<div class="p-5">
-					<RouterLink :to="{ name: 'index' }" @click="hide">
+				<div class="p-5" @click="hide">
+					<RouterLink :to="{ name: 'index' }">
 						<Button><template #leading-icon>home</template>Home</Button>
 					</RouterLink>
-					<RouterLink :to="{ name: 'templates' }" v-if="auth.authenticated" @click="hide">
+					<RouterLink :to="{ name: 'templates' }" v-if="auth.authenticated">
 						<Button><template #leading-icon>content_copy</template>Templates</Button>
 					</RouterLink>
+					<Button @click="auth.logout">Log out</Button>
 				</div>
 			</template>
 		</VDropdown>
 	</div>
 	<div class="fixed top-1 right-1 flex z-10">
 		<transition name="auth-buttons" mode="out-in">
-			<div v-if="auth.authenticated">
-				<Button @click="auth.logout">Log out</Button>
-			</div>
-			<div v-else class="flex">
+			<div v-if="!auth.authenticated" class="flex">
 				<transition name="auth-buttons" mode="out-in">
 					<div v-if="$route.name == 'login'">
 						<RouterLink to="register">
