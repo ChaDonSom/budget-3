@@ -109,7 +109,7 @@ watch(
 					return result
 				}) as TemplateWithAccounts[]
 				if (hideProgress.value) hideProgress.value()
-				if (initiallyLoadedTemplates.value) initiallySorted.value = true
+				initiallySorted.value = true
 				worker.terminate()
 			}
 		})

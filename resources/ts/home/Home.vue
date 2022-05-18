@@ -281,7 +281,7 @@ watch(
 					return result
 				}) as Account[]
 				if (hideProgress.value) hideProgress.value()
-				if (initiallyLoadedAccounts.value) initiallySorted.value = true
+				initiallySorted.value = true
 				worker.terminate()
 			}
 		})
