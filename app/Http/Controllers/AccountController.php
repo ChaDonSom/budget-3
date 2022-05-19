@@ -79,6 +79,7 @@ class AccountController extends Controller
 
         $now = Carbon::now()->tz(Auth::user()->timezone)->format('Y-m-d');
         $sameDate = $now == $request->date;
+        $pastDate = !$sameDate && Carbon::createFromFormat('Y-m-d', $request->date, Auth::user()->timezone)->isPast();
 
         $batchUpdate = AccountBatchUpdate::create([
             'user_id' => Auth::user()->id,
@@ -92,7 +93,7 @@ class AccountController extends Controller
             $request->accounts
         ));
 
-        if ($sameDate) {
+        if ($sameDate || $pastDate) {
             // Perform changes now and return them
             /**
              * @var Collection<Account>
