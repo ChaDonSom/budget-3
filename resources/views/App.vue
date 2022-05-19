@@ -77,6 +77,7 @@ import Button from '@/ts/core/buttons/Button.vue';
 import { onMounted, ref, watch } from 'vue';
 import { useOnline, useScroll, useWindowScroll } from '@vueuse/core';
 import { useModals } from '@/ts/store/modals';
+import IconButton from '@/ts/core/buttons/IconButton.vue';
 
 const auth = useAuth()
 
