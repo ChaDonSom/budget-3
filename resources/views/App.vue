@@ -11,7 +11,9 @@
 		<VDropdown :delay="0">
 			<template #default="{ show, hide, shown }">
 				<transition name="auth-buttons" mode="out-in">
-					<IconButton v-if="hasInitiallyLoaded" @click="shown ? hide() : show()">more_vert</IconButton>
+					<IconButton v-if="hasInitiallyLoaded && auth.authenticated" @click="shown ? hide() : show()">
+						more_vert
+					</IconButton>
 				</transition>
 			</template>
 			<template #popper="{ hide }">
