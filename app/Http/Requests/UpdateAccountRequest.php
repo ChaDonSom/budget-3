@@ -34,7 +34,7 @@ class UpdateAccountRequest extends FormRequest
                     ->ignore(request()->id)
             ],
             'amount' => 'required|numeric|min:0',
-            'user_id' => 'required|exists:users,id',
+            'account_holder_id' => 'required|exists:account_holders,id',
         ];
     }
 }

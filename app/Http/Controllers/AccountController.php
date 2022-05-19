@@ -23,7 +23,7 @@ class AccountController extends Controller
     public function index()
     {
         return Account::query()
-            ->whereBelongsTo(Auth::user())
+            ->whereIn('account_holder_id', Auth::user()->accountHolders()->select('account_holders.id'))
             // We _would_ like to see batchUpdates for index, but only the not-done ones
             ->with(['batchUpdates' => fn($query) => $query->notDone()])
             ->get()

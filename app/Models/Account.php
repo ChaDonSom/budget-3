@@ -19,8 +19,8 @@ class Account extends Model implements Auditable
         'user_id',
     ];
 
-    public function user() {
-        return $this->belongsTo(User::class);
+    public function accountHolder() {
+        return $this->belongsTo(AccountHolder::class);
     }
 
     public function batchUpdates() {

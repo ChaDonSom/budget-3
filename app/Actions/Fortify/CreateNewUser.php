@@ -33,11 +33,17 @@ class CreateNewUser implements CreatesNewUsers
             'timezone' => 'required|string'
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'timezone' => $input['timezone'],
         ]);
+
+        $user->accountHolders()->create();
+
+        $user->load('accountHolders');
+
+        return $user;
     }
 }
