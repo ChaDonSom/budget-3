@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AccountBatchUpdate extends Model
 {
@@ -39,12 +40,20 @@ class AccountBatchUpdate extends Model
      * @return Collection<Account>
      */
     public function handle() {
+        $batch = DB::select('select batch from audits where batch is not null order by created_at desc limit 1');
+        // If nothing has been done yet, a blank slate...
+        if (!count($batch)) $batch = 1;
+        else $batch = $batch[0]->batch + 1;
+
         foreach ($this->accounts as $account) {
-            Cache::put("account-batch-update-batch-{$account->pivot->id}", $this->batch, 60);
+            Cache::put("account-batch-update-batch-{$account->pivot->id}", $batch, 60);
             $account->fill(['amount' => $account->amount + $account->pivot->amount])->save();
         }
 
-        $this->fill(['done_at' => Carbon::now()])->save();
+        $this->fill([
+            'batch' => $batch,
+            'done_at' => Carbon::now()
+        ])->save();
 
         // TODO: send notifications? Or schedule them for later, not midnight
 
