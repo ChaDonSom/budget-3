@@ -287,7 +287,7 @@ async function loadTemplate() {
       ...result,
       accounts: result.accounts.reduce((a, c) => {
         a[c.id] = {
-          amount: c.pivot.amount / 100,
+          amount: Math.abs(c.pivot.amount / 100),
           modifier: c.pivot.amount >= 0 ? 1 : -1
         }
         return a
