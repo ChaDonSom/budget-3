@@ -18,7 +18,7 @@ export type Template = {
     // batch_updates?: { batch: number, date: string, id: number, pivot: { amount: number } }[];
 };
 export type TemplateWithAccounts = Template & {
-    accounts: Account & { pivot: { amount: number } }[]
+    accounts: (Account & { pivot: { amount: number } })[]
 }
 export type TemplatesData = { [key: string | number]: Template };
 
