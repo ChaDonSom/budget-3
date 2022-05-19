@@ -114,6 +114,7 @@
 					</DataTable>
 				</div>
 
+				<CircularScrim :loading="batchForm.processing" />
 				<Teleport to="body">
 					<div v-if="initiallyLoaded">
 						<Fab
@@ -193,6 +194,7 @@ import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { TemplateWithAccounts } from '@/ts/store/templates';
+import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
 
 const auth = useAuth()
 const route = useRoute()

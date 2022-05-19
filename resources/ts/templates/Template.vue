@@ -51,6 +51,8 @@
         </DataTable>
       </div>
 
+			<CircularScrim :loading="batchForm.processing" />
+
       <Teleport to="body">
         <div v-if="initiallyLoaded">
           <Fab
@@ -124,6 +126,7 @@ import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 import { Template, TemplateWithAccounts, useTemplates } from '@/ts/store/templates';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
+import CircularScrim from '../core/loaders/CircularScrim.vue';
 
 const props = defineProps({
   id: {
