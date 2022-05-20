@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BatchUpdateAccountRequest;
 use App\Http\Requests\StoreAccountRequest;
+use App\Http\Requests\UpdateAccountBatchUpdateRequest;
 use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Models\AccountBatchUpdate;
@@ -19,7 +20,7 @@ class AccountController extends Controller
     {
         $this->authorizeResource(Account::class, 'account');
     }
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -100,6 +101,44 @@ class AccountController extends Controller
             $request->accounts
         ));
 
+        if ($sameDate || $pastDate) {
+            // Perform changes now and return them
+            /**
+             * @var Collection<Account>
+             */
+            $result = $batchUpdate->handle();
+            $httpCode = 200;
+        } else {
+            // Schedule changes for later and let the client know
+            $batchUpdate->accounts;
+            $httpCode = 202; // 201: created, 202: accepted (but will be processed later)
+        }
+
+        $batchUpdate = AccountBatchUpdate::query()
+            // Specifically ensure the batchUpdates on each of this one's accounts are only the not-done ones
+            ->with(['accounts.batchUpdates' => fn($query) => $query->notDone()])
+            ->find($batchUpdate->id);
+
+        return response($batchUpdate, $httpCode);
+    }
+
+    public function updateBatch(UpdateAccountBatchUpdateRequest $request, AccountBatchUpdate $batchUpdate) {
+        $now = Carbon::now()->tz(Auth::user()->timezone)->format('Y-m-d');
+        $sameDate = $now == $request->date;
+        $pastDate = !$sameDate && Carbon::createFromFormat('Y-m-d', $request->date, Auth::user()->timezone)->isPast();
+
+        $batchUpdate->fill([
+            'user_id' => Auth::user()->id,
+            'date' => $request->date,
+        ])->save();
+
+        // Attach to accounts with change info
+        $batchUpdate->accounts()->sync(array_map(
+            fn($changes) => ([ 'amount' => ($changes['amount'] * 100) * $changes['modifier'] ]),
+            $request->accounts
+        ));
+
+        if ($batchUpdate->done_at) $batchUpdate->reverse();
         if ($sameDate || $pastDate) {
             // Perform changes now and return them
             /**

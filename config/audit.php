@@ -1,5 +1,6 @@
 <?php
 
+use App\AuditResolvers\BatchIdResolver;
 use App\AuditResolvers\BatchResolver;
 
 return [
@@ -48,6 +49,7 @@ return [
         'user_agent' => OwenIt\Auditing\Resolvers\UserAgentResolver::class,
         'url'        => OwenIt\Auditing\Resolvers\UrlResolver::class,
         'batch'      => BatchResolver::class,
+        'batch_id'   => BatchIdResolver::class,
     ],
 
     /*

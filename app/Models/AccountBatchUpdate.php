@@ -39,7 +39,7 @@ class AccountBatchUpdate extends Model
      *
      * @return Collection<Account>
      */
-    public function handle() {
+    public function handle($forward = true) {
         $batch = DB::select('select batch from audits where batch is not null order by created_at desc limit 1');
         // If nothing has been done yet, a blank slate...
         if (!count($batch)) $batch = 1;
@@ -47,7 +47,11 @@ class AccountBatchUpdate extends Model
 
         foreach ($this->accounts as $account) {
             Cache::put("account-batch-update-batch-{$account->pivot->id}", $batch, 60);
-            $account->fill(['amount' => $account->amount + $account->pivot->amount])->save();
+            Cache::put("account-batch-update-batch-{$account->pivot->id}-batch-id", $this->id, 60);
+            $amount = $forward
+                ? $account->amount + $account->pivot->amount
+                : $account->amount - $account->pivot->amount;
+            $account->fill(['amount' => $amount])->save();
         }
 
         $this->fill([
@@ -55,9 +59,14 @@ class AccountBatchUpdate extends Model
             'done_at' => Carbon::now()
         ])->save();
 
-        // TODO: send notifications? Or schedule them for later, not midnight
+        // TODO: send notifications? Or schedule them for later, not now (midnight)
 
         return $this->accounts;
+    }
+
+    // TODO: a 'reverse' function, that way we can use it to posthumously edit the batchupdate to undo and have it go in later
+    public function reverse() {
+        return $this->handle(false);
     }
 
     public function scopeNotDone($query) {

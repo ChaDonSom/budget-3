@@ -51,6 +51,7 @@ Route::prefix('beams')->middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->resource('accounts', AccountController::class);
 Route::prefix('accounts')->middleware('auth:sanctum')->group(function() {
     Route::post('/batch', [AccountController::class, 'batch']);
+    Route::patch('/batch/{batchUpdate}', [AccountController::class, 'updateBatch']);
 });
 
 Route::middleware('auth:sanctum')->resource('templates', TemplateController::class);
