@@ -192,7 +192,7 @@ import FloatingDifferenceInputModalVue from '@/ts/home/FloatingDifferenceInputMo
 import { useForm } from '@/ts/store/forms';
 import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { TemplateWithAccounts } from '@/ts/store/templates';
 import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
 
@@ -373,6 +373,13 @@ async function saveBatch() {
 	clearBatchDifferences()
 	currentlyEditingDifference.value = null
 }
+onBeforeRouteLeave(async () => {
+	try {
+		if (areAnyBatchDifferences.value) await modals.confirm("Do you really want to leave unsaved changes?")
+	} catch (e) {
+		return false
+	}
+})
 
 /**
 	---------------------------------------------------
