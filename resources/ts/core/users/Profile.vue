@@ -31,7 +31,11 @@
           v-if="form.errors.message || addUserForm.errors.message"
           class="bg-red-200 rounded-3xl py-3 px-4 absolute" style="bottom: -4rem;"
       >
-        {{ form.errors.message ?? addUserForm.errors.message }}
+        {{ form.errors.message ?? (
+          addUserForm.errors.message == 'No query results for model [App\\Models\\User].'
+            ? "Sorry, we couldn't find a user by that name or email."
+            : addUserForm.errors.message
+        ) }}
       </p>
     </transition>
   </div>
