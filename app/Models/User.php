@@ -52,4 +52,12 @@ class User extends Authenticatable
     public function accountBatchUpdates() {
         return $this->hasMany(AccountBatchUpdate::class);
     }
+
+    public function sharedUsers() {
+        return $this->belongsToMany(User::class, 'user_shared_user', 'user_id', 'shared_user_id');
+    }
+
+    public function usersWhoSharedToMe() {
+        return $this->belongsToMany(User::class, 'user_shared_user', 'shared_user_id', 'user_id');
+    }
 }

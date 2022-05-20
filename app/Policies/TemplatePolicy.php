@@ -94,6 +94,10 @@ class TemplatePolicy
 
     public function hasOwnership(User $user, Template $template): bool
     {
-        return $template->user_id == $user->id;
+        return $template->user_id == $user->id
+            || in_array(
+                $template->user_id,
+                collect([$user])->concat($user->sharedUsers)->concat($user->usersWhoSharedToMe)->pluck('id')->toArray()
+            );
     }
 }

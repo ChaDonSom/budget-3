@@ -94,6 +94,10 @@ class AccountPolicy
 
     public function hasOwnership(User $user, Account $account): bool
     {
-        return $account->user_id == $user->id;
+        return $account->user_id == $user->id
+            || in_array(
+                $account->user_id,
+                collect([$user])->concat($user->sharedUsers)->concat($user->usersWhoSharedToMe)->pluck('id')->toArray()
+            );
     }
 }

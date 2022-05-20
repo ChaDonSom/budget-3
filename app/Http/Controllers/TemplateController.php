@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class TemplateController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Template::class, 'template');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -16,8 +21,10 @@ class TemplateController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
         return Template::query()
-            ->whereBelongsTo(Auth::user())
+            ->whereIn('user_id', $users->pluck('id')->values())
             ->with(['accounts'])
             ->get()
             ->keyBy('id');

@@ -18,14 +18,23 @@
 			</template>
 			<template #popper="{ hide }">
 				<div class="p-5" @click="hide">
-					<RouterLink :to="{ name: 'index' }" v-if="$route.name != 'index'">
-						<Button><template #leading-icon>home</template>Home</Button>
+					<RouterLink :to="{ name: 'index' }">
+						<Button :disabled="$route.name == 'index'" :raised="$route.name == 'index'">
+							<template #leading-icon>home</template>
+							Home
+						</Button>
 					</RouterLink>
-					<RouterLink :to="{ name: 'profile' }" v-if="auth.authenticated && $route.name != 'profile'">
-						<Button><template #leading-icon>person</template>Profile</Button>
+					<RouterLink :to="{ name: 'profile' }">
+						<Button :disabled="!auth.authenticated || $route.name == 'profile'" :raised="$route.name == 'profile'">
+							<template #leading-icon>person</template>
+							Profile
+						</Button>
 					</RouterLink>
-					<RouterLink :to="{ name: 'templates' }" v-if="auth.authenticated && $route.name != 'templates'">
-						<Button><template #leading-icon>content_copy</template>Templates</Button>
+					<RouterLink :to="{ name: 'templates' }">
+						<Button :disabled="!auth.authenticated || $route.name == 'templates'" :raised="$route.name == 'templates'">
+							<template #leading-icon>content_copy</template>
+							Templates
+						</Button>
 					</RouterLink>
 					<Button @click="auth.logout">Log out</Button>
 				</div>

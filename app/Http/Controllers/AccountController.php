@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\DB;
 
 class AccountController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Account::class, 'account');
+    }
+    
     /**
      * Display a listing of the resource.
      *
@@ -22,8 +27,10 @@ class AccountController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
         return Account::query()
-            ->whereBelongsTo(Auth::user())
+            ->whereIn('user_id', $users->pluck('id')->values())
             // We _would_ like to see batchUpdates for index, but only the not-done ones
             ->with(['batchUpdates' => fn($query) => $query->notDone()])
             ->get()

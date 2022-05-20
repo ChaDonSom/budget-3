@@ -7,7 +7,8 @@ import { useModals } from "@/ts/store/modals";
 export type User = {
     id: number;
     [key: string]: any;
-    account_holders?: { id: number, users: User[] }[];
+    shared_users?: User[];
+    users_who_shared_to_me?: User[];
 };
 
 export const useAuth = defineStore('auth', {

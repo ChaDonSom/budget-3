@@ -13,7 +13,7 @@
         Dashboard
       -->
       <div v-if="auth.authenticated">
-        <h1 class="text-xl mt-5">Accounts</h1>
+        <h1 class="text-xl mt-5 mb-2">Budget</h1>
 				<div v-if="initiallyLoaded" class="mb-5">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨

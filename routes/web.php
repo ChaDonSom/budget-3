@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Permissions\ShareAccountHolderToUserByNameOrEmail;
+use App\Http\Controllers\UserProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,3 +30,6 @@ Route::get('/', function () {
 Route::get('/password-reset', function () {
     return view('app');
 })->name('password.reset');
+
+Route::post('/user/share-by-search', [UserProfileController::class, 'shareBySearch']);
+Route::post('/user/remove-shared-user', [UserProfileController::class, 'removeSharedUser']);
