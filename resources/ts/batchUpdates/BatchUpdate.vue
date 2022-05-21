@@ -17,12 +17,7 @@
           </template>
           <template #body>
             <DataTableRow v-for="account of sortedAccounts">
-              <DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
-              <DataTableCell class="hidden md:table-cell">
-                <div v-if="account.batch_updates?.[0]?.date">
-                  {{ account.batch_updates?.[0]?.date }}
-                </div>
-              </DataTableCell>
+              <DataTableCell>{{ account.name }}</DataTableCell>
               <DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
                 <div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
                   <IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
