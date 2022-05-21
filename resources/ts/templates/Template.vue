@@ -175,7 +175,7 @@ const accounts = useAccounts()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 
 const sortedAccounts: Ref<Account[]> = ref([])
-const sort = useLocalStorage('budget-accounts-index-sort-v2', {
+const sort = useLocalStorage('budget-template-accounts-sort-v1', {
 	name: {
 		value: 'none',
 		at: null as number|null,

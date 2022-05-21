@@ -26,6 +26,12 @@
 							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate" class="hidden md:table-cell">
 								Next date
 							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden md:table-cell">
+								Min. to cover
+							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden md:table-cell">
+								Over min.
+							</DataTableHeaderCell>
 							<DataTableHeaderCell
 									sortable
 									numeric
@@ -34,6 +40,9 @@
 									class="hidden md:table-cell"
 							>
 								Next amount
+							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden md:table-cell">
+								% covered
 							</DataTableHeaderCell>
 							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
 								Amount
@@ -50,9 +59,64 @@
 										{{ account.batch_updates?.[0]?.date }}
 									</div>
 								</DataTableCell>
+								<DataTableCell class="hidden md:table-cell">
+									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
+										{{
+											dollars((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
+												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
+													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
+													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).diff(
+												// Now's previous friday
+												DateTime.now().startOf('day').weekday >= 5
+													? DateTime.now().startOf('day').set({ weekday: 5 })
+													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).as('weeks') || 1)))
+										}}
+									</div>
+								</DataTableCell>
+								<DataTableCell class="hidden md:table-cell">
+									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
+										{{
+											(account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
+												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
+													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
+													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).diff(
+												// Now's previous friday
+												DateTime.now().startOf('day').weekday >= 5
+													? DateTime.now().startOf('day').set({ weekday: 5 })
+													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).as('weeks') || 1))
+											?
+											dollars((account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
+												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
+													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
+													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).diff(
+												// Now's previous friday
+												DateTime.now().startOf('day').weekday >= 5
+													? DateTime.now().startOf('day').set({ weekday: 5 })
+													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).as('weeks') || 1)))
+											: ''
+										}}
+									</div>
+								</DataTableCell>
 								<DataTableCell class="hidden md:table-cell" numeric>
 									<div v-if="account.batch_updates?.[0]?.pivot?.amount">
 										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
+									</div>
+								</DataTableCell>
+								<DataTableCell class="hidden md:table-cell" numeric>
+									<div
+											v-if="account.batch_updates?.[0]?.pivot?.amount"
+											:class="{
+												'text-blue-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) == 100,
+												'text-green-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) > 100,
+											}"
+									>
+										{{ Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) }} %
 									</div>
 								</DataTableCell>
 								<DataTableCell numeric>
@@ -92,6 +156,26 @@
 							</DataTableRow>
 							<DataTableRow class="sticky-bottom-row">
 								<DataTableCell />
+								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden md:table-cell">
+									Total:
+									{{
+										dollars(accounts.values.reduce((total, account) => {
+											if (account && account.batch_updates?.[0]?.pivot?.amount) total += (account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
+												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
+													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
+													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).diff(
+												// Now's previous friday
+												DateTime.now().startOf('day').weekday >= 5
+													? DateTime.now().startOf('day').set({ weekday: 5 })
+													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+											).as('weeks') || 1))
+											return total
+										}, 0))
+									}}
+								</DataTableCell>
 								<DataTableCell class="hidden md:table-cell" />
 								<DataTableCell class="hidden md:table-cell" />
 								<DataTableCell numeric>
