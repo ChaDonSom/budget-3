@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountBatchUpdateController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TemplateController;
 use App\Notifications\SelfNotification;
@@ -55,3 +56,5 @@ Route::prefix('accounts')->middleware('auth:sanctum')->group(function() {
 });
 
 Route::middleware('auth:sanctum')->resource('templates', TemplateController::class);
+
+Route::middleware('auth:sanctum')->resource('batch-updates', AccountBatchUpdateController::class);

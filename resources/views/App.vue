@@ -36,6 +36,12 @@
 							Templates
 						</Button>
 					</RouterLink>
+					<RouterLink :to="{ name: 'history' }">
+						<Button :disabled="!auth.authenticated || $route.name == 'history'" :raised="$route.name == 'history'">
+							<template #leading-icon>history</template>
+							History
+						</Button>
+					</RouterLink>
 					<Button @click="auth.logout">Log out</Button>
 				</div>
 			</template>

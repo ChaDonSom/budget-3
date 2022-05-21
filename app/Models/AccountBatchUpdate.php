@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AccountBatchUpdate extends Model
 {
@@ -40,12 +41,15 @@ class AccountBatchUpdate extends Model
      * @return Collection<Account>
      */
     public function handle($forward = true) {
+        $accounts = $this->accounts()->get();
         $batch = DB::select('select batch from audits where batch is not null order by created_at desc limit 1');
         // If nothing has been done yet, a blank slate...
         if (!count($batch)) $batch = 1;
         else $batch = $batch[0]->batch + 1;
 
-        foreach ($this->accounts as $account) {
+        foreach ($accounts as $account) {
+            if (!$forward) Log::info("Reversing changes for account {$account->name}, {$account->pivot->amount}");
+            else Log::info("Making changes for account {$account->name}, {$account->pivot->amount}");
             Cache::put("account-batch-update-batch-{$account->pivot->id}", $batch, 60);
             Cache::put("account-batch-update-batch-{$account->pivot->id}-batch-id", $this->id, 60);
             $amount = $forward
@@ -56,12 +60,12 @@ class AccountBatchUpdate extends Model
 
         $this->fill([
             'batch' => $batch,
-            'done_at' => Carbon::now()
+            'done_at' => $forward ? Carbon::now() : null
         ])->save();
 
         // TODO: send notifications? Or schedule them for later, not now (midnight)
 
-        return $this->accounts;
+        return $accounts;
     }
 
     // TODO: a 'reverse' function, that way we can use it to posthumously edit the batchupdate to undo and have it go in later

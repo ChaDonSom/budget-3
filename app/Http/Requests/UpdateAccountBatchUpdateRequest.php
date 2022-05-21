@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Account;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAccountBatchUpdateRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class UpdateAccountBatchUpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +26,24 @@ class UpdateAccountBatchUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'id' => 'required|numeric|exists:account_batch_updates,id',
+            'accounts' => [
+                'required',
+                'array',
+                function ($attribute, $value, $fail) {
+                    $keys = array_keys($value);
+                    if (Account::find($keys)?->count() != count($keys)) {
+                        return $fail("Some of the $attribute listed don't exist.");
+                    }
+                }
+            ],
+            'accounts.*.amount' => 'required|numeric|min:0|max:10000000',
+            'accounts.*.modifier' => [
+                'required',
+                'numeric',
+                Rule::in([1, -1])  
+            ],
+            'date' => 'date',
         ];
     }
 }
