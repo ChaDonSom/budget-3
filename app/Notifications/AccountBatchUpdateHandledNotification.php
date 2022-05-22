@@ -53,7 +53,7 @@ class AccountBatchUpdateHandledNotification extends Notification
         $count = $this->accounts->count();
         $s = $count == 1 ? '' : 's';
         $names = Str::limit($this->accounts->map(fn($a) => $a->name)->join(', '), 100);
-        $title = "Transaction for {$names} posted";
+        $title = "Transaction posted for {$names}";
         return PusherMessage::create()
                     ->web()
                     ->sound('success')
