@@ -93,6 +93,7 @@ class AccountController extends Controller
             'user_id' => Auth::user()->id,
             'batch' => $batch,
             'date' => $request->date,
+            'notify_me' => $request->notify_me,
         ]);
 
         // Attach to accounts with change info

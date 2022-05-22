@@ -83,6 +83,13 @@
           <template #leading-icon>replay</template>
           Reset
         </Button>
+				
+				<transition name="opacity-0-scale-097-150ms">
+					<div v-if="areAnyBatchDifferences" class="my-7">
+						<input type="checkbox" v-model="batchForm.notify_me" id="notify_me">
+						<label for="notify_me"> Notify me when this change is made</label>
+					</div>
+				</transition>
 
 				<transition name="error-message">
           <div class="flex">
@@ -91,8 +98,10 @@
             </p>
           </div>
 				</transition>
-      </div>
 
+				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
+				<div class="my-32" v-if="areAnyBatchDifferences"></div>
+      </div>
 
 			<div class="my-7">
 				<p v-for="message of messages" :key="message">{{ message }}</p>
@@ -279,6 +288,7 @@ const batchForm = useForm('/api/batch-updates', {
   user_id: auth.user?.id,
   date: batchDate.value.toFormat('yyyy-MM-dd'),
 	accounts: batchDifferences.value,
+	notify_me: false,
 })
 const batchUpdates = useBatchUpdates()
 async function loadBatchUpdate() {
@@ -300,7 +310,7 @@ async function loadBatchUpdate() {
 }
 onMounted(loadBatchUpdate)
 async function saveBatchUpdate() {
-	batchForm.reset({ name: batchForm.name, user_id: batchForm.user_id, accounts: batchDifferences.value })
+	batchForm.reset({ user_id: batchForm.user_id, accounts: batchDifferences.value })
 	await batchForm.createOrUpdate()
   setTimeout(() => router.back())
 }

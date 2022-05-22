@@ -15,7 +15,7 @@
         Dashboard
       -->
       <div v-if="auth.authenticated">
-        <h1 class="text-xl mt-5 mb-2">Budget</h1>
+        <h1 class="text-xl mt-4 mb-2">Budget</h1>
 				<div v-if="initiallyLoaded" class="mb-5">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
@@ -236,21 +236,26 @@
 				</Teleport>
 
 				<transition name="error-message">
-					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
+					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-10 break-word max-w-fit">
 						{{ batchForm.errors.message }}
 					</p>
 				</transition>
+
+				<transition name="opacity-0-scale-097-150ms">
+					<div v-if="areAnyBatchDifferences" class="my-7">
+						<input type="checkbox" v-model="batchForm.notify_me" id="notify_me">
+						<label for="notify_me"> Notify me when this change is made</label>
+					</div>
+				</transition>
+
+				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
+				<div class="my-32" v-if="areAnyBatchDifferences"></div>
       </div>
 
 
 			<div class="my-7">
 				<p v-for="message of messages" :key="message">{{ message }}</p>
 			</div>
-			<!--
-			<div class="my-7" v-if="auth.authenticated">
-				<Button @click="sendPushNotification">Send myself a push notification</Button>
-			</div>
-			-->
 		</div>
 	</div>
 </template>
@@ -424,6 +429,7 @@ function edit(account: Account) {
 const batchForm = useForm('/api/accounts/batch', {
 	accounts: batchDifferences.value,
 	date: batchDate.value.toFormat('yyyy-MM-dd'),
+	notify_me: false,
 })
 onMounted(() => {
 	if (route.params.template) {

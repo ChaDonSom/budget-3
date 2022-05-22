@@ -16,6 +16,7 @@ export type BatchUpdate = {
     user_id: number;
     batch: number;
     date: string;
+    notify_me: boolean;
 };
 export type BatchUpdateWithAccounts = BatchUpdate & {
     accounts: (Account & { pivot: { amount: number } })[];

@@ -72,6 +72,7 @@ class AccountBatchUpdateController extends Controller
         $batchUpdate->fill([
             'user_id' => Auth::user()->id,
             'date' => $request->date,
+            'notify_me' => $request->notify_me,
         ])->save();
 
         // Attach to accounts with change info

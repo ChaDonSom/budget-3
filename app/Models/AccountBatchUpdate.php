@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\AccountBatchUpdateHandledNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ class AccountBatchUpdate extends Model
         'batch',
         'done_at',
         'user_id',
+        'notify_me',
     ];
 
     public $casts = [
@@ -64,6 +66,11 @@ class AccountBatchUpdate extends Model
         ])->save();
 
         // TODO: send notifications? Or schedule them for later, not now (midnight)
+        Log::info($this->notify_me);
+        if ($forward && $this->notify_me) {
+            Log::info('Also notifying');
+            $this->user->notify(new AccountBatchUpdateHandledNotification($this, $accounts));
+        }
 
         return $accounts;
     }

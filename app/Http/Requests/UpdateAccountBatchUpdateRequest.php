@@ -44,6 +44,7 @@ class UpdateAccountBatchUpdateRequest extends FormRequest
                 Rule::in([1, -1])  
             ],
             'date' => 'date',
+            'notify_me' => 'present|boolean'
         ];
     }
 }
