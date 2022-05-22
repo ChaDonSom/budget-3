@@ -65,9 +65,12 @@ class AccountBatchUpdate extends Model
             'done_at' => $forward ? Carbon::now() : null
         ])->save();
 
-        // TODO: send notifications? Or schedule them for later, not now (midnight)
         if ($forward && $this->notify_me) {
-            $this->user->notify(new AccountBatchUpdateHandledNotification($this, $accounts));
+            $this->user->notify((new AccountBatchUpdateHandledNotification($this, $accounts))->delay(
+                app()->runningInConsole()
+                    ? now()->addHours(7) // 7 am rather than 12 am
+                    : now()
+            ));
         }
 
         return $accounts;
