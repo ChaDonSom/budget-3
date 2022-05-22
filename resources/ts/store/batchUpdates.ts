@@ -48,8 +48,8 @@ export async function fetchData(page: number = 1) {
 
     paginator.value = response.data
 
-    let result = {}
-    let ord = {}
+    let result: { [key: number]: BatchUpdateWithAccounts } = {};
+    let ord: { [key: number]: number } = {};
     for (let i = 0; i < response.data.data.length; i++) {
         let batchUpdate: BatchUpdateWithAccounts = response.data.data[i]
         result[batchUpdate.id] = batchUpdate

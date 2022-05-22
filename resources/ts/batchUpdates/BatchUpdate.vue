@@ -297,6 +297,7 @@ async function loadBatchUpdate() {
     batchForm.reset({
       ...batchForm,
       ...result,
+			notify_me: Boolean(result.notify_me),
       accounts: result.accounts.reduce((a, c) => {
         a[c.id] = {
           amount: Math.abs(c.pivot.amount / 100),
@@ -307,6 +308,7 @@ async function loadBatchUpdate() {
     })
     batchDifferences.value = batchForm.accounts
   }
+	console.log('batchForm.notify_me: ', batchForm.notify_me)
 }
 onMounted(loadBatchUpdate)
 async function saveBatchUpdate() {
