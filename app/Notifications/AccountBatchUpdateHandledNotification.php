@@ -59,7 +59,7 @@ class AccountBatchUpdateHandledNotification extends Notification
                     ->sound('success')
                     ->setOption('icon', config('app.url') . '/android-chrome-192x192.png')
                     ->title($title)
-                    ->body("$count account{$s} affected. $sum total difference. Make sure to confirm it goes through with your bank.")
+                    ->body("$count account{$s} affected. $sum total difference. Make sure to confirm it goes through with your bank, and schedule the next one if needed.")
                     ->link(($this->url ?? config('app.url')) . '/#/batch-updates/' . $this->batchUpdate->id);
     }
 
