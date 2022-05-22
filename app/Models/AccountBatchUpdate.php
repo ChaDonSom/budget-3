@@ -66,9 +66,7 @@ class AccountBatchUpdate extends Model
         ])->save();
 
         // TODO: send notifications? Or schedule them for later, not now (midnight)
-        Log::info($this->notify_me);
         if ($forward && $this->notify_me) {
-            Log::info('Also notifying');
             $this->user->notify(new AccountBatchUpdateHandledNotification($this, $accounts));
         }
 
