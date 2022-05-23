@@ -16,7 +16,9 @@ export type BatchUpdate = {
     user_id: number;
     batch: number;
     date: string;
+    done_at: string|null;
     notify_me: boolean;
+    weeks: number|null;
 };
 export type BatchUpdateWithAccounts = BatchUpdate & {
     accounts: (Account & { pivot: { amount: number } })[];
@@ -24,6 +26,8 @@ export type BatchUpdateWithAccounts = BatchUpdate & {
 export type BatchUpdatesData = { [key: string | number]: BatchUpdateWithAccounts };
 export type BatchUpdatesPaginator = {
     data: BatchUpdateWithAccounts[];
+    current_page: number,
+    last_page: number,
 }
 
 export const paginator = ref<BatchUpdatesPaginator|null>(null)
@@ -43,8 +47,13 @@ export const ordered: ComputedRef<BatchUpdateWithAccounts[]> = computed(() => {
     return Object.keys(order.value).map(key => v[order.value[Number(key)]])
 })
 
-export async function fetchData(page: number = 1) {
-    let response: AxiosResponse<BatchUpdatesPaginator> = await axios.get(`/api/batch-updates?page=${page}`);
+export async function fetchData(params?: { page?: number }) {
+    let p = {
+        page: 1,
+        ...params,
+    } as { [key: string]: string | number }
+    let queryString = Object.keys(p).map(key => `${key}=${p[key]}`).join('&')
+    let response: AxiosResponse<BatchUpdatesPaginator> = await axios.get(`/api/batch-updates?${queryString}`);
 
     paginator.value = response.data
 

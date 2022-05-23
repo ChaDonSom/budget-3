@@ -1,3 +1,4 @@
+import { BatchUpdate } from "@/ts/store/batchUpdates";
 import axios, { AxiosResponse } from "axios";
 import {
     ComponentPropsOptions,
@@ -15,7 +16,10 @@ export type Account = {
     name: string;
     amount: number;
     user_id: number;
-    batch_updates?: { batch: number, date: string, id: number, pivot: { amount: number } }[];
+    batch_updates?: (BatchUpdate & { pivot: { amount: number }})[];
+};
+export type AccountWithBatchUpdates = Account & {
+    batch_updates: (BatchUpdate & { pivot: { amount: number } })[];
 };
 export type AccountsData = { [key: string | number]: Account };
 

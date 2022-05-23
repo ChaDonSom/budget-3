@@ -51,7 +51,7 @@
 				<Teleport to="body">
 					<div v-if="initiallyLoaded">
 						<Fab
-								@click="saveBatchUpdate"
+								@click="saveBatchUpdate()"
 								icon="save"
 								class="fixed right-4 bottom-6"
 								style="z-index: 2;"
@@ -73,21 +73,54 @@
 					</div>
 				</Teleport>
 
-        <DeleteButton
-            v-if="batchForm.id && initiallyLoaded"
-            @click="deleteBatchUpdate"
-            :loading="batchForm.processingDelete"
-            :disabled="batchForm.processing"
-        />
-        <Button v-if="batchForm.isDirty" @click="loadBatchUpdate" secondary>
-          <template #leading-icon>replay</template>
-          Reset
-        </Button>
+				<transition name="opacity-0-scale-097-150ms" appear>
+					<DeleteButton
+							v-if="batchForm.id && initiallyLoaded"
+							@click="deleteBatchUpdate"
+							:loading="batchForm.processingDelete"
+							:disabled="batchForm.processing"
+					/>
+				</transition>
+				<transition name="opacity-0-scale-097-150ms" appear>
+					<Button v-if="batchForm.isDirty" @click="loadBatchUpdate" secondary>
+						<template #leading-icon>replay</template>
+						Reset
+					</Button>
+				</transition>
 				
 				<transition name="opacity-0-scale-097-150ms">
 					<div v-if="areAnyBatchDifferences" class="my-7">
 						<input type="checkbox" v-model="batchForm.notify_me" id="notify_me">
 						<label for="notify_me"> Notify me when this change is made</label>
+					</div>
+				</transition>
+
+				<transition name="opacity-0-scale-097-150ms" mode="out-in">
+					<div class="my-7" v-if="areAnyBatchDifferences">
+						<transition name="opacity-0-scale-097-150ms" mode="out-in">
+							<OutlinedTextfield
+									v-model="batchForm.weeks"
+									type="number"
+									step="1"
+									autoselect
+									autofocus
+									v-if="batchForm.weeks != null"
+							>
+								Preferred # of weeks to pay by
+							</OutlinedTextfield>
+						</transition>
+						<Button @click="batchForm.weeks = batchForm.weeks == null ? 4 : null">
+							{{ batchForm.weeks == null ? 'Set preferred payment schedule' : 'Remove payment schedule' }}
+						</Button>
+					</div>
+				</transition>
+
+				<transition name="opacity-0-scale-097-150ms" mode="out-in">
+					<div class="my-7" v-if="areAnyBatchDifferences">
+						<Button v-if="batchForm.isDirty" @click="saveBatchUpdate(true)">
+							<template #leading-icon>save</template>
+							Save as new
+						</Button>
 					</div>
 				</transition>
 
@@ -289,6 +322,7 @@ const batchForm = useForm('/api/batch-updates', {
   date: batchDate.value.toFormat('yyyy-MM-dd'),
 	accounts: batchDifferences.value,
 	notify_me: false,
+	weeks: null as number|null
 })
 const batchUpdates = useBatchUpdates()
 async function loadBatchUpdate() {
@@ -298,6 +332,7 @@ async function loadBatchUpdate() {
       ...batchForm,
       ...result,
 			notify_me: Boolean(result.notify_me),
+			weeks: result.weeks,
       accounts: result.accounts.reduce((a, c) => {
         a[c.id] = {
           amount: Math.abs(c.pivot.amount / 100),
@@ -311,8 +346,12 @@ async function loadBatchUpdate() {
 	console.log('batchForm.notify_me: ', batchForm.notify_me)
 }
 onMounted(loadBatchUpdate)
-async function saveBatchUpdate() {
-	batchForm.reset({ user_id: batchForm.user_id, accounts: batchDifferences.value })
+async function saveBatchUpdate(asNew = false) {
+	if (asNew) {
+		batchForm.reset({ id: null, user_id: batchForm.user_id, accounts: batchDifferences.value })
+	} else {
+		batchForm.reset({ user_id: batchForm.user_id, accounts: batchDifferences.value })
+	}
 	await batchForm.createOrUpdate()
   setTimeout(() => router.back())
 }

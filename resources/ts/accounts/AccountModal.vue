@@ -3,6 +3,7 @@
     <template #title>{{ Boolean(form.name) ? form.name : 'New account' }}</template>
     <OutlinedTextfield autoselect v-model="form.name" autofocus :error="form.errors.name">Name</OutlinedTextfield>
     <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
+    <Button @click="goToAccountHistory"><template #leading-icon>history</template>History</Button>
     <transition name="error-message">
       <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
         {{ form.errors.message }}
@@ -29,6 +30,7 @@ import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
 import { useAuth } from '@/ts/core/users/auth';
 import DollarsField from '@/ts/core/fields/DollarsField.vue';
 import { useForm } from '@/ts/store/forms';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   id: {
@@ -88,6 +90,12 @@ async function attemptClose() {
     if (form.isDirty) await modals.confirm(`Do you really want to leave unsaved changes?`)
     modals.close(props.id)
   } catch (e) {}
+}
+
+const router = useRouter()
+async function goToAccountHistory() {
+  await attemptClose()
+  router.push({ name: 'history', params: { account_id: form.id } })
 }
 </script>
 

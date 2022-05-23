@@ -43,7 +43,8 @@ class BatchUpdateAccountRequest extends FormRequest
                 Rule::in([1, -1])  
             ],
             'date' => 'date',
-            'notify_me' => 'present|boolean'
+            'notify_me' => 'present|boolean',
+            'weeks' => 'nullable|numeric|min:0',
         ];
     }
 }

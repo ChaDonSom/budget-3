@@ -94,6 +94,7 @@ class AccountController extends Controller
             'batch' => $batch,
             'date' => $request->date,
             'notify_me' => $request->notify_me,
+            'weeks' => $request->weeks,
         ]);
 
         // Attach to accounts with change info

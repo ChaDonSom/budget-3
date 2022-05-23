@@ -4,7 +4,12 @@
       BatchUpdates index
     -->
     <div v-if="auth.authenticated" class="text-center m-3">
-      <h1 class="text-xl mt-5">History</h1>
+      <h1 class="text-xl mt-5">
+        History
+        <span v-if="$route.params.account_id">
+          for account {{ accounts.data[Number($route.params.account_id)]?.name }}
+        </span>
+      </h1>
       <div v-if="initiallyLoaded" class="mb-5">
         <div v-if="!batchUpdatesValues.length" class="m-5">
           <p>✨ No transactions ✨</p>
@@ -46,10 +51,10 @@
           <template #paginator>
             <DataTablePaginator
                 :paginator="batchUpdates.paginator"
-                @first-page="batchUpdates.fetchData(1)"
-                @prev-page="batchUpdates.fetchData(batchUpdates.paginator?.current_page - 1)"
-                @next-page="batchUpdates.fetchData(batchUpdates.paginator?.current_page + 1)"
-                @last-page="batchUpdates.fetchData(batchUpdates.paginator?.last_page)"
+                @first-page="batchUpdates.fetchData({ page: 1 })"
+                @prev-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.current_page ?? 0) - 1 })"
+                @next-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.current_page ?? 0) + 1 })"
+                @last-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.last_page ?? 0) })"
             />
           </template>
         </DataTable>
@@ -64,7 +69,7 @@ import { BatchUpdate, BatchUpdateWithAccounts, useBatchUpdates } from '@/ts/stor
 import { useLocalStorage } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import { dollars } from '@/ts/core/utilities/currency';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import DataTable from '@/ts/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
 import DataTableRow from '@/ts/core/tables/DataTableRow.vue';
@@ -72,9 +77,12 @@ import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
 import Fab from '@/ts/core/buttons/Fab.vue';
 import IconButton from '@/ts/core/buttons/IconButton.vue';
 import DataTablePaginator from '@/ts/core/tables/DataTablePaginator.vue';
+import { useAccounts } from '@/ts/store/accounts';
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuth()
+const accounts = useAccounts()
 
 const initiallyLoadedBatchUpdates = ref(false)
 const initiallyLoaded = computed(() => {
@@ -83,7 +91,7 @@ const initiallyLoaded = computed(() => {
 
 const batchUpdates = useBatchUpdates()
 const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWithAccounts[])
-batchUpdates.fetchData().then(() => initiallyLoadedBatchUpdates.value = true)
+batchUpdates.fetchData(route.params).then(() => initiallyLoadedBatchUpdates.value = true)
 
 function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })

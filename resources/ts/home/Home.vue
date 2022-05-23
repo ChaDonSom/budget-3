@@ -28,22 +28,25 @@
 							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate" class="hidden md:table-cell">
 								Next date
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden md:table-cell">
-								Min. to cover
-							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden md:table-cell">
-								Over min.
-							</DataTableHeaderCell>
 							<DataTableHeaderCell
 									sortable
 									numeric
 									column-id="nextAmount"
 									:sort="sort.nextAmount"
-									class="hidden md:table-cell"
+									class="hidden lg:table-cell"
 							>
 								Next amount
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden md:table-cell">
+							<DataTableHeaderCell
+									class="hidden lg:table-cell"
+									v-tooltip="'Minimum current balance needed to make the payment on time with ideal weekly saving'"
+							>
+								Ideal min.
+							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden lg:table-cell">
+								Over min.
+							</DataTableHeaderCell>
+							<DataTableHeaderCell class="hidden sm:table-cell">
 								% covered
 							</DataTableHeaderCell>
 							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
@@ -54,68 +57,84 @@
 							</DataTableHeaderCell>
 						</template>
 						<template #body>
-							<DataTableRow v-for="account of sortedAccounts">
+							<DataTableRow
+									v-for="account of sortedAccounts"
+									:key="account.id"
+									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdates(account) ? fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
+							>
 								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
 								<DataTableCell class="hidden md:table-cell">
-									<div v-if="account.batch_updates?.[0]?.date">
-										{{ account.batch_updates?.[0]?.date }}
+									<div v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date" style="width: 100px;">
+										<FlatPickr
+												:modelValue="account.batch_updates?.[0]?.date"
+												:config="{
+													disableMobile: true,
+													altInput: true,
+													altInputClass: 'bg-transparent',
+													onChange: preventFlatPickrChange.bind(null, account.batch_updates?.[0]?.date),
+												}"
+										/>
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell">
-									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
-										{{
-											dollars((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
-												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
-													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
-													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).diff(
-												// Now's previous friday
-												DateTime.now().startOf('day').weekday >= 5
-													? DateTime.now().startOf('day').set({ weekday: 5 })
-													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).as('weeks') || 1)))
-										}}
-									</div>
-								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell">
-									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
-										{{
-											(account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
-												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
-													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
-													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).diff(
-												// Now's previous friday
-												DateTime.now().startOf('day').weekday >= 5
-													? DateTime.now().startOf('day').set({ weekday: 5 })
-													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).as('weeks') || 1))
-											?
-											dollars((account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
-												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
-													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
-													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).diff(
-												// Now's previous friday
-												DateTime.now().startOf('day').weekday >= 5
-													? DateTime.now().startOf('day').set({ weekday: 5 })
-													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).as('weeks') || 1)))
-											: ''
-										}}
-									</div>
-								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell" numeric>
+								<DataTableCell class="hidden lg:table-cell" numeric>
 									<div v-if="account.batch_updates?.[0]?.pivot?.amount">
 										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell" numeric>
+								<DataTableCell class="hidden lg:table-cell">
+									<div v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date" class="text-gray-400"
+											v-tooltip="{
+												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
+												html: true
+											}"
+									>
+										{{
+											dollars(
+												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+												-
+												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
+											)
+										}}
+									</div>
+								</DataTableCell>
+								<DataTableCell class="hidden lg:table-cell">
+									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
+										{{
+											(account.amount / 100) - (
+												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+												-
+												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
+											)
+											?
+											dollars((account.amount / 100) - (
+												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+												-
+												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))))
+											)
+											: ''
+										}}
+									</div>
+								</DataTableCell>
+								<DataTableCell class="hidden sm:table-cell" numeric>
 									<div
 											v-if="account.batch_updates?.[0]?.pivot?.amount"
+											v-tooltip="`Required: ${
+												Math.round((
+														(
+															idealWeeks(account.batch_updates?.[0])
+															- fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
+														)
+														/ idealWeeks(account.batch_updates?.[0])
+												) * 100)
+											}% (${
+											dollars(
+												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+												-
+												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
+											)})`"
 											:class="{
-												'text-blue-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) == 100,
-												'text-green-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) > 100,
+												'text-blue-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) == Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
+												'text-green-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) > Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
 											}"
 									>
 										{{ Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) }} %
@@ -159,27 +178,26 @@
 							<DataTableRow class="sticky-bottom-row">
 								<DataTableCell />
 								<DataTableCell class="hidden md:table-cell" />
-								<DataTableCell class="hidden md:table-cell" />
-								<DataTableCell class="hidden md:table-cell">
+								<DataTableCell class="hidden lg:table-cell" />
+								<DataTableCell class="hidden lg:table-cell" />
+								<DataTableCell class="hidden lg:table-cell">
 									Total:
 									{{
 										dollars(accounts.values.reduce((total, account) => {
-											if (account && account.batch_updates?.[0]?.pivot?.amount) total += (account.amount / 100) - (Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) * (1 / (( // That date's previous friday
-												DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').weekday >= 5
-													? DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').set({ weekday: 5 })
-													: DateTime.fromFormat(account.batch_updates?.[0]?.date, 'yyyy-MM-dd').startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).diff(
-												// Now's previous friday
-												DateTime.now().startOf('day').weekday >= 5
-													? DateTime.now().startOf('day').set({ weekday: 5 })
-													: DateTime.now().startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-											).as('weeks') || 1))
+											if (account && account.batch_updates?.[0]?.pivot?.amount) total += (account.amount / 100) - (
+												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+												-
+												(
+													((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) / idealWeeks(account.batch_updates?.[0]))
+													*
+													// How many weeks left till then
+													fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
+												))
 											return total
 										}, 0))
 									}}
 								</DataTableCell>
-								<DataTableCell class="hidden md:table-cell" />
-								<DataTableCell class="hidden md:table-cell" />
+								<DataTableCell class="hidden sm:table-cell" />
 								<DataTableCell numeric>
 									Total:
 									{{ dollars(accountsTotal) }}
@@ -248,6 +266,24 @@
 					</div>
 				</transition>
 
+				<transition name="opacity-0-scale-097-150ms" mode="out-in">
+					<div class="my-7" v-if="areAnyBatchDifferences">
+						<OutlinedTextfield
+								v-model="batchForm.weeks"
+								type="number"
+								step="1"
+								autoselect
+								autofocus
+								v-if="batchForm.weeks != null"
+						>
+							Preferred # of weeks to pay by
+						</OutlinedTextfield>
+						<Button @click="batchForm.weeks = batchForm.weeks == null ? 4 : null">
+							{{ batchForm.weeks == null ? 'Set preferred payment schedule' : 'Remove payment schedule' }}
+						</Button>
+					</div>
+				</transition>
+
 				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
 				<div class="my-32" v-if="areAnyBatchDifferences"></div>
       </div>
@@ -267,7 +303,7 @@ import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
-import { useAccounts, Account } from '@/ts/store/accounts';
+import { useAccounts, Account, AccountWithBatchUpdates } from '@/ts/store/accounts';
 import { dollars } from '@/ts/core/utilities/currency'
 import DataTable from '@/ts/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
@@ -286,6 +322,10 @@ import OutlinedTextfield from '@/ts/core/fields/OutlinedTextfield.vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { TemplateWithAccounts } from '@/ts/store/templates';
 import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
+// @ts-ignore
+import FlatPickr from 'vue-flatpickr-component';
+import 'flatpickr/dist/flatpickr.css';
+import { BatchUpdate, BatchUpdateWithAccounts } from '@/ts/store/batchUpdates';
 
 const auth = useAuth()
 const route = useRoute()
@@ -308,6 +348,10 @@ function sendPushNotification() {
 	})
 }
 
+function preventFlatPickrChange(date: string, selectedDates: [], dateStr: string, instance: { setDate: Function }) {
+	instance.setDate(date)
+}
+
 
 /**
 	---------------------------------------------------
@@ -326,7 +370,7 @@ const accounts = useAccounts()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 
-const sortedAccounts: Ref<Account[]> = ref([])
+const sortedAccounts: Ref<(Account|AccountWithBatchUpdates)[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort-v2', {
 	name: {
 		value: 'none',
@@ -372,7 +416,7 @@ watch(
 					delete result.nextDate
 					delete result.nextAmount
 					return result
-				}) as Account[]
+				}) as (Account|AccountWithBatchUpdates)[]
 				if (hideProgress.value) hideProgress.value()
 				initiallySorted.value = true
 				worker.terminate()
@@ -381,6 +425,41 @@ watch(
 	},
 	{ deep: true, immediate: true }
 )
+
+// Table helpers
+function fridaysUntil(date: DateTime, now: DateTime = DateTime.now()): number {
+	return (( // That date's previous friday
+		date.startOf('day').weekday >= 5
+			? date.startOf('day').set({ weekday: 5 })
+			: date.startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+	).diff(
+		// Now's previous friday
+		now.startOf('day').weekday >= 5
+			? now.startOf('day').set({ weekday: 5 })
+			: now.startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
+	).as('weeks'))
+}
+function toDateTime(date: string) {
+	return DateTime.fromFormat(date, 'yyyy-MM-dd')
+}
+function idealWeeks(batchUpdate: BatchUpdate) {
+	return batchUpdate?.weeks ?? 4
+}
+function idealPayment(batchUpdate: BatchUpdate & { pivot: { amount: number }}) {
+	return (Math.abs(batchUpdate?.pivot?.amount / 100)) / idealWeeks(batchUpdate)
+}
+function emergencySaving(account: AccountWithBatchUpdates) {
+	let batchUpdate = account.batch_updates[0]
+	let currentBalance = account.amount / 100
+	let paymentToCover = Math.abs(batchUpdate.pivot.amount / 100)
+	let weeks = fridaysUntil(toDateTime(batchUpdate.date)) || 1
+	let perWeek = (paymentToCover - currentBalance) / weeks
+	return dollars(perWeek)
+}
+function isAccountWithBatchUpdates(account: Account|AccountWithBatchUpdates): account is AccountWithBatchUpdates
+{
+	return !!account.batch_updates?.[0]
+}
 
 /**
 	---------------------------------------------------
@@ -430,6 +509,7 @@ const batchForm = useForm('/api/accounts/batch', {
 	accounts: batchDifferences.value,
 	date: batchDate.value.toFormat('yyyy-MM-dd'),
 	notify_me: false,
+	weeks: null as number|null
 })
 onMounted(() => {
 	if (route.params.template) {
