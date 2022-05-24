@@ -114,19 +114,21 @@
 									<div
 											v-if="account.batch_updates?.[0]?.pivot?.amount"
 											v-tooltip="`Required: ${
-												Math.round((
-														(
-															idealWeeks(account.batch_updates?.[0])
-															- fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
-														)
-														/ idealWeeks(account.batch_updates?.[0])
-												) * 100)
-											}% (${
-											dollars(
-												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-												-
-												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
-											)})`"
+													Math.round((
+															(
+																idealWeeks(account.batch_updates?.[0])
+																- fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
+															)
+															/ idealWeeks(account.batch_updates?.[0])
+													) * 100)
+												}% (${
+												dollars(
+													Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+													-
+													(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
+												)})
+											`"
+											class="select-none"
 											:class="{
 												'text-blue-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) == Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
 												'text-green-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) > Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
