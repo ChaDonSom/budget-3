@@ -530,15 +530,11 @@ async function saveBatch() {
 	let data = await batchForm.post() as { accounts: [] } // Will be an AccountBatchUpdate, either done, or to be done later
 	// has accounts, which have pivots describing the change
 	// has audits, but are not returned here (I imagine they won't be useful here)
-	if (batchForm.httpStatus == 200) {
-	} else if (batchForm.httpStatus == 202) {
-		// Store batchUpdate for showing 'next' items
-	}
-	for (let account of data.accounts) {
-		accounts.receive(account)
-	}
+	for (let account of data.accounts) accounts.receive(account)
 	clearBatchDifferences()
 	currentlyEditingDifference.value = null
+	batchDate.value	= DateTime.now()
+	batchForm.date = batchDate.value.toFormat('yyyy-MM-dd')
 }
 onBeforeRouteLeave(async () => {
 	try {
