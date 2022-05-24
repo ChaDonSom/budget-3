@@ -12,12 +12,15 @@
               Name
             </DataTableHeaderCell>
             <DataTableHeaderCell numeric>
-              <!-- Controls -->&nbsp;
+              <Button @click="showAllAccounts = !showAllAccounts">
+								<template #leading-icon>{{ showAllAccounts ? 'check_box' : 'check_box_outline_blank' }}</template>
+								Show all
+							</Button>
             </DataTableHeaderCell>
           </template>
           <template #body>
             <DataTableRow v-for="account of sortedAccounts">
-              <DataTableCell>{{ account.name }}</DataTableCell>
+              <DataTableCell @click="$router.push({ name: 'history', query: { account_id: account.id } })">{{ account.name }}</DataTableCell>
               <DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
                 <div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
                   <IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
@@ -103,7 +106,7 @@
 									type="number"
 									step="1"
 									autoselect
-									autofocus
+									:autofocus="!batchUpdates.data[String($route.params.id)]?.weeks"
 									v-if="batchForm.weeks != null"
 							>
 								Preferred # of weeks to pay by
@@ -197,6 +200,7 @@ function sendPushNotification() {
 	})
 }
 
+const showAllAccounts = ref(false)
 
 /**
 	---------------------------------------------------
@@ -241,35 +245,6 @@ function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "asce
 	else sort.value[event.columnId].value = event.sortValue
 	sort.value[event.columnId].at = (new Date()).valueOf()
 }
-watch(
-	() => [accounts.values, sort.value],
-	() => {
-		const worker = new Worker('worker.js')
-		worker.postMessage({
-			type: 'SORT_ACCOUNTS',
-			accounts: JSON.stringify(accounts.values.map(account => ({
-				...account,
-				nextDate: account.batch_updates?.[0]?.date ?? '',
-				nextAmount: account.batch_updates?.[0]?.pivot?.amount ?? 0,
-			}))),
-			sort: JSON.stringify(sort.value)
-		})
-		worker.addEventListener('message', event => {
-			if (event.data?.type == 'SORT_ACCOUNTS') {
-				sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
-					let result = a
-					delete result.nextDate
-					delete result.nextAmount
-					return result
-				}) as Account[]
-				if (hideProgress.value) hideProgress.value()
-				initiallySorted.value = true
-				worker.terminate()
-			}
-		})
-	},
-	{ deep: true, immediate: true }
-)
 
 /**
 	---------------------------------------------------
@@ -343,9 +318,41 @@ async function loadBatchUpdate() {
     })
     batchDifferences.value = batchForm.accounts
   }
-	console.log('batchForm.notify_me: ', batchForm.notify_me)
 }
-onMounted(loadBatchUpdate)
+onMounted(async () => {
+	await loadBatchUpdate()
+
+	watch(
+		() => [accounts.values, sort.value, showAllAccounts.value, batchForm.accounts],
+		() => {
+			const worker = new Worker('worker.js')
+			worker.postMessage({
+				type: 'SORT_ACCOUNTS',
+				accounts: JSON.stringify(accounts.values.map(account => ({
+					...account,
+					nextDate: account.batch_updates?.[0]?.date ?? '',
+					nextAmount: account.batch_updates?.[0]?.pivot?.amount ?? 0,
+				}))),
+				sort: JSON.stringify(sort.value),
+				filter: JSON.stringify({ ids: !showAllAccounts.value ? batchForm.accounts : null })
+			})
+			worker.addEventListener('message', event => {
+				if (event.data?.type == 'SORT_ACCOUNTS') {
+					sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
+						let result = a
+						delete result.nextDate
+						delete result.nextAmount
+						return result
+					}) as Account[]
+					if (hideProgress.value) hideProgress.value()
+					initiallySorted.value = true
+					worker.terminate()
+				}
+			})
+		},
+		{ deep: true, immediate: true }
+	)
+})
 async function saveBatchUpdate(asNew = false) {
 	if (asNew) {
 		batchForm.reset({ id: null, user_id: batchForm.user_id, accounts: batchDifferences.value })

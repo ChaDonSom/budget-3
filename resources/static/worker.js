@@ -7,11 +7,12 @@
  */
 
 onmessage = function(event) {
-  let sort, result
+  let sort, filter, result
   switch (event.data?.type) {
     case 'SORT_ACCOUNTS':
       let accounts = JSON.parse(event.data.accounts)
       sort = JSON.parse(event.data.sort)
+      filter = event.data.filter ? JSON.parse(event.data.filter) : null
 
       result = accounts.slice()
       function applySort(name) {
@@ -24,6 +25,8 @@ onmessage = function(event) {
       Object.keys(sort)
         .sort((a, b) => sort[a]?.at == sort[b]?.at ? 0 : sort[a]?.at < sort[b]?.at ? 1 : -1)
         .forEach(applySort);
+
+      if (filter?.ids) result = result.filter(i => filter.ids[i.id]);
 
       postMessage({
         type: 'SORT_ACCOUNTS',

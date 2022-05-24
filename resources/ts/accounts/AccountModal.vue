@@ -95,7 +95,7 @@ async function attemptClose() {
 const router = useRouter()
 async function goToAccountHistory() {
   await attemptClose()
-  router.push({ name: 'history', params: { account_id: form.id } })
+  router.push({ name: 'history', query: { account_id: form.id } })
 }
 </script>
 
