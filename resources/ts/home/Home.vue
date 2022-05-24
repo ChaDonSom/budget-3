@@ -608,4 +608,12 @@ code {
 		}
 	}
 }
+
+:deep(.mdc-data-table) {
+	.mdc-data-table__cell {
+		padding-inline: 8px;
+		&:first-child { padding-left: 16px; }
+		&:last-child { padding-right: 16px; }
+	}
+}
 </style>
