@@ -10,6 +10,11 @@
           for account {{ accounts.data[Number($route.query.account_id)]?.name }}
         </span>
       </h1>
+      <div v-if="initiallyLoaded">
+        <Button @click="includeFuture = !includeFuture">
+          <template #leading-icon>{{ includeFuture ? 'check_box' : 'check_box_outline_blank' }}</template>Include future transactions
+        </Button>
+      </div>
       <div v-if="initiallyLoaded" class="mb-5">
         <div v-if="!batchUpdatesValues.length" class="m-5">
           <p>✨ No transactions ✨</p>
@@ -78,6 +83,7 @@ import Fab from '@/ts/core/buttons/Fab.vue';
 import IconButton from '@/ts/core/buttons/IconButton.vue';
 import DataTablePaginator from '@/ts/core/tables/DataTablePaginator.vue';
 import { useAccounts } from '@/ts/store/accounts';
+import Button from '@/ts/core/buttons/Button.vue';
 
 const router = useRouter()
 const route = useRoute()
@@ -89,9 +95,16 @@ const initiallyLoaded = computed(() => {
 	return (initiallyLoadedBatchUpdates.value)
 })
 
+const includeFuture = useLocalStorage('budget-history-include-future', false)
 const batchUpdates = useBatchUpdates()
 const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWithAccounts[])
-batchUpdates.fetchData(route.query).then(() => initiallyLoadedBatchUpdates.value = true)
+batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
+  .then(() => initiallyLoadedBatchUpdates.value = true)
+
+watch(
+  () => includeFuture.value,
+  () => batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
+)
 
 function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })

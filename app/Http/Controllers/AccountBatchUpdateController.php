@@ -38,6 +38,10 @@ class AccountBatchUpdateController extends Controller
                     ]),
                 fn($query) => $query->with('accounts')
             )
+            ->when(
+                !request()->boolean('include_future'),
+                fn($query) => $query->whereNotNull('done_at')
+            )
             ->whereIn('user_id', $users->pluck('id')->values())
             ->orderBy('date', 'desc')
             ->orderBy('updated_at', 'desc')

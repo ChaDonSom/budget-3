@@ -47,7 +47,7 @@ export const ordered: ComputedRef<BatchUpdateWithAccounts[]> = computed(() => {
     return Object.keys(order.value).map(key => v[order.value[Number(key)]])
 })
 
-export async function fetchData(params?: { page?: number }) {
+export async function fetchData(params?: { page?: number, [key: string]: any }) {
     let p = {
         page: 1,
         ...params,
