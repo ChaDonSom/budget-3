@@ -6,8 +6,8 @@
     <div v-if="auth.authenticated" class="text-center m-3">
       <h1 class="text-xl mt-5">
         History
-        <span v-if="$route.params.account_id">
-          for account {{ accounts.data[Number($route.params.account_id)]?.name }}
+        <span v-if="$route.query.account_id">
+          for account {{ accounts.data[Number($route.query.account_id)]?.name }}
         </span>
       </h1>
       <div v-if="initiallyLoaded" class="mb-5">
@@ -91,7 +91,7 @@ const initiallyLoaded = computed(() => {
 
 const batchUpdates = useBatchUpdates()
 const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWithAccounts[])
-batchUpdates.fetchData(route.params).then(() => initiallyLoadedBatchUpdates.value = true)
+batchUpdates.fetchData(route.query).then(() => initiallyLoadedBatchUpdates.value = true)
 
 function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })
