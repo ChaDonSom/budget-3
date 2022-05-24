@@ -64,16 +64,11 @@
 							>
 								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
 								<DataTableCell class="hidden md:table-cell">
-									<div v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date" style="width: 100px;">
-										<FlatPickr
-												:modelValue="account.batch_updates?.[0]?.date"
-												:config="{
-													disableMobile: true,
-													altInput: true,
-													altInputClass: 'bg-transparent',
-													onChange: preventFlatPickrChange.bind(null, account.batch_updates?.[0]?.date),
-												}"
-										/>
+									<div
+											v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date"
+											@click="$router.push({ name: 'batch-updates-show', params: { id: account.batch_updates?.[0]?.id } })"
+									>
+										{{ account.batch_updates?.[0]?.date }}
 									</div>
 								</DataTableCell>
 								<DataTableCell class="hidden lg:table-cell" numeric>
