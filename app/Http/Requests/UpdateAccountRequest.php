@@ -35,6 +35,8 @@ class UpdateAccountRequest extends FormRequest
             ],
             'amount' => 'required|numeric|min:0',
             'user_id' => 'required|exists:users,id',
+            'favorited_users' => 'present|array',
+            'favorited_users.*.id' => 'exists:users,id',
         ];
     }
 }

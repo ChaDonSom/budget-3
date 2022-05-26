@@ -26,4 +26,8 @@ class Account extends Model implements Auditable
     public function batchUpdates() {
         return $this->belongsToMany(AccountBatchUpdate::class)->withPivot(['amount']);
     }
+
+    public function favoritedUsers() {
+        return $this->belongsToMany(User::class, 'account_favorited_user', 'account_id', 'favorited_user_id');
+    }
 }

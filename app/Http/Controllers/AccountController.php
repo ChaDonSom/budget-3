@@ -32,8 +32,11 @@ class AccountController extends Controller
         $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
         return Account::query()
             ->whereIn('user_id', $users->pluck('id')->values())
-            // We _would_ like to see batchUpdates for index, but only the not-done ones
-            ->with(['batchUpdates' => fn($query) => $query->notDone()])
+            ->with([
+                'favoritedUsers',
+                // We _would_ like to see batchUpdates for index, but only the not-done ones
+                'batchUpdates' => fn($query) => $query->notDone()
+            ])
             ->get()
             ->keyBy('id');
     }
@@ -59,7 +62,10 @@ class AccountController extends Controller
      */
     public function show(Account $account)
     {
-        return $account->load(['batchUpdates' => fn($query) => $query->notDone()]);
+        return $account->load([
+            'favoritedUsers',
+            'batchUpdates' => fn($query) => $query->notDone()
+        ]);
     }
 
     /**
@@ -71,9 +77,13 @@ class AccountController extends Controller
      */
     public function update(UpdateAccountRequest $request, Account $account)
     {
-        $account->fill($request->validated())->save();
+        $validated = $request->validated();
 
-        $account->load(['batchUpdates' => fn($query) => $query->notDone()]);
+        $account->fill($validated)->save();
+
+        $account->favoritedUsers()->sync(collect($validated['favorited_users'])->pluck('id'));
+
+        $account->load(['favoritedUsers', 'batchUpdates' => fn($query) => $query->notDone()]);
 
         return $account;
     }

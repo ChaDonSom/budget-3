@@ -1,3 +1,4 @@
+import { User } from "@/ts/core/users/auth";
 import { BatchUpdate } from "@/ts/store/batchUpdates";
 import axios, { AxiosResponse } from "axios";
 import {
@@ -17,6 +18,7 @@ export type Account = {
     amount: number;
     user_id: number;
     batch_updates?: (BatchUpdate & { pivot: { amount: number }})[];
+    favorited_users?: User[];
 };
 export type AccountWithBatchUpdates = Account & {
     batch_updates: (BatchUpdate & { pivot: { amount: number } })[];

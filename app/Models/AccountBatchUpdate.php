@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\AccountBatchUpdateHandledNotification;
+use App\Notifications\FavoriteAccountUpdatedNotification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class AccountBatchUpdate extends Model
 {
@@ -69,9 +71,18 @@ class AccountBatchUpdate extends Model
         if ($forward && $this->notify_me) {
             $this->user->notify((new AccountBatchUpdateHandledNotification($this, $accounts))->delay(
                 app()->runningInConsole()
-                    ? now()->addHours(7) // 7 am rather than 12 am
+                    ? now()->addHours(10) // 10 am rather than 12 am midnight
                     : now()
             ));
+        }
+
+        if ($forward && $this->accounts->flatMap(fn($a) => $a->favoritedUsers)->count()) {
+            foreach ($this->accounts as $account) {
+                Notification::send(
+                    $account->favoritedUsers,
+                    new FavoriteAccountUpdatedNotification($this, $account)
+                );
+            }
         }
 
         return $accounts;
