@@ -79,7 +79,7 @@ class AccountBatchUpdate extends Model
         if ($forward && $this->accounts->flatMap(fn($a) => $a->favoritedUsers)->count()) {
             foreach ($this->accounts as $account) {
                 Notification::send(
-                    $account->favoritedUsers,
+                    $account->favoritedUsers->filter(fn($u) => $u->id != $this->user_id),
                     new FavoriteAccountUpdatedNotification($this, $account)
                 );
             }
