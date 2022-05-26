@@ -20,12 +20,16 @@
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh;">
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh; max-width: 90vw;">
 						<template #header>
-							<DataTableHeaderCell sortable column-id="name" :sort="sort.name">
+							<DataTableHeaderCell sortable column-id="name" :sort="sort.name"
+									:class="{ 'hidden': !columnsToShow.name }"
+							>
 								Name
 							</DataTableHeaderCell>
-							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate" class="hidden md:table-cell">
+							<DataTableHeaderCell sortable column-id="nextDate" :sort="sort.nextDate"
+									:class="{ 'hidden': !columnsToShow.nextDate }"
+							>
 								Next date
 							</DataTableHeaderCell>
 							<DataTableHeaderCell
@@ -33,27 +37,45 @@
 									numeric
 									column-id="nextAmount"
 									:sort="sort.nextAmount"
-									class="hidden lg:table-cell"
+									:class="{ 'hidden': !columnsToShow.nextAmount }"
 							>
 								Next amount
 							</DataTableHeaderCell>
 							<DataTableHeaderCell
-									class="hidden lg:table-cell"
+									sortable
+									numeric
+									column-id="minimum"
+									:sort="sort.minimum"
+									:class="{ 'hidden': !columnsToShow.minimum }"
 									v-tooltip="'Minimum current balance needed to make the payment on time with ideal weekly saving'"
 							>
-								Ideal min.
+								Minimum
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden lg:table-cell">
-								Over min.
+							<DataTableHeaderCell
+									:class="{ 'hidden': !columnsToShow.overMinimum }"
+									sortable
+									numeric
+									column-id="overMinimum"
+									:sort="sort.overMinimum"
+							>
+								Over/under min.
 							</DataTableHeaderCell>
-							<DataTableHeaderCell class="hidden sm:table-cell">
+							<DataTableHeaderCell
+									:class="{ 'hidden': !columnsToShow.percentCovered }"
+									sortable
+									numeric
+									column-id="percentCovered"
+									:sort="sort.percentCovered"
+							>
 								% covered
 							</DataTableHeaderCell>
-							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount">
+							<DataTableHeaderCell sortable numeric column-id="amount" :sort="sort.amount"
+									:class="{ 'hidden': !columnsToShow.amount }"
+							>
 								Amount
 							</DataTableHeaderCell>
 							<DataTableHeaderCell numeric>
-								<!-- Controls -->&nbsp;
+								<IconButton @click="editTableSettings">more_vert</IconButton>
 							</DataTableHeaderCell>
 						</template>
 						<template #body>
@@ -62,57 +84,55 @@
 									:key="account.id"
 									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdates(account) ? fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
 							>
-								<DataTableCell @click="editAccount(account.id)">{{ account.name }}</DataTableCell>
-								<DataTableCell class="hidden md:table-cell">
+								<DataTableCell @click="editAccount(account.id)" style="white-space: normal;"
+										:class="{ 'hidden': !columnsToShow.name }"
+								>
+									<div class="flex items-center gap-1">
+										<IconButton v-if="account.favorited_users?.some(i => i.id == auth.user?.id)" :density="-5" primary
+												v-tooltip="`Favorite`"
+										>
+											push_pin
+										</IconButton>
+										{{ account.name }}
+									</div>
+								</DataTableCell>
+								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date"
+											v-if="isAccountWithBatchUpdates(account)"
 											@click="$router.push({ name: 'batch-updates-show', params: { id: account.batch_updates?.[0]?.id } })"
 									>
-										{{ account.batch_updates?.[0]?.date }}
+										{{ toDateTime(account.nextDate).toFormat('M/dd') }}
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden lg:table-cell" numeric>
-									<div v-if="account.batch_updates?.[0]?.pivot?.amount">
-										{{ dollars(account.batch_updates?.[0]?.pivot?.amount / 100) }}
+								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" numeric>
+									<div v-if="isAccountWithBatchUpdates(account)">
+										{{ dollars(account.nextAmount / 100) }}
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden lg:table-cell">
-									<div v-if="isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.date" class="text-gray-400"
+								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
+									<div v-if="isAccountWithBatchUpdates(account)" class="text-gray-400"
 											v-tooltip="{
 												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
 												html: true
 											}"
 									>
-										{{
-											dollars(
-												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-												-
-												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
-											)
-										}}
+										{{ dollars(account.minimum) }}
 									</div>
 								</DataTableCell>
-								<DataTableCell class="hidden lg:table-cell">
-									<div v-if="account.batch_updates?.[0]?.date" class="text-gray-400">
-										{{
-											(account.amount / 100) - (
-												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-												-
-												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
-											) > 0
-											?
-											dollars((account.amount / 100) - (
-												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-												-
-												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))))
-											)
-											: ''
-										}}
-									</div>
-								</DataTableCell>
-								<DataTableCell class="hidden sm:table-cell" numeric>
+								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
-											v-if="account.batch_updates?.[0]?.pivot?.amount"
+											v-if="isAccountWithBatchUpdates(account)"
+											:class="{
+												'text-gray-400': account.overMinimum >= 0,
+												'text-red-400': account.overMinimum < 0,
+											}"
+									>
+										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
+									</div>
+								</DataTableCell>
+								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" numeric>
+									<div
+											v-if="isAccountWithBatchUpdates(account)"
 											v-tooltip="`Required: ${
 													Math.round((
 															(
@@ -130,14 +150,14 @@
 											`"
 											class="select-none"
 											:class="{
-												'text-blue-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) == Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
-												'text-green-600': Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) > Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
+												'text-blue-600': account.percentCovered == Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
+												'text-green-600': account.percentCovered > Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
 											}"
 									>
-										{{ Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100) }} %
+										{{ account.percentCovered }} %
 									</div>
 								</DataTableCell>
-								<DataTableCell numeric>
+								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.amount }">
 									{{ dollars(account.amount / 100) }}
 									<br v-if="batchDifferences[account.id]">
 									<span v-if="batchDifferences[account.id]" class="text-gray-400"
@@ -153,7 +173,9 @@
 									</span>
 								</DataTableCell>
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
-									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
+									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]"
+											style="white-space: nowrap;"
+									>
 										<IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
 										<IconButton :density="-3" @click.stop="startDepositing(account)">add</IconButton>
 									</div>
@@ -161,6 +183,7 @@
 											v-else-if="batchDifferences[account.id]"
 											@click.stop="edit(account)"
 											class="w-full h-full flex items-center gap-2"
+											style="white-space: nowrap;"
 									>
 										<IconButton
 												:density="-5"
@@ -173,11 +196,11 @@
 								</DataTableCell>
 							</DataTableRow>
 							<DataTableRow class="sticky-bottom-row">
-								<DataTableCell />
-								<DataTableCell class="hidden md:table-cell" />
-								<DataTableCell class="hidden lg:table-cell" />
-								<DataTableCell class="hidden lg:table-cell" />
-								<DataTableCell class="hidden lg:table-cell">
+								<DataTableCell :class="{ 'hidden': !columnsToShow.name }"/>
+								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" />
+								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" />
+								<DataTableCell :class="{ 'hidden': !columnsToShow.minimum }" />
+								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric style="white-space: normal;">
 									Total:
 									{{
 										dollars(accounts.values.reduce((total, account) => {
@@ -197,8 +220,8 @@
 										}, 0))
 									}}
 								</DataTableCell>
-								<DataTableCell class="hidden sm:table-cell" />
-								<DataTableCell numeric>
+								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" />
+								<DataTableCell numeric style="white-space: normal;" :class="{ 'hidden': !columnsToShow.amount }">
 									Total:
 									{{ dollars(accountsTotal) }}
 									<br v-if="areAnyBatchDifferences">
@@ -326,6 +349,17 @@ import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
 import FlatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { BatchUpdate, BatchUpdateWithAccounts } from '@/ts/store/batchUpdates';
+import { toDateTime } from '@/ts/core/utilities/datetime';
+import {
+	idealPayment,
+	idealWeeks,
+	fridaysUntil,
+	isAccountWithBatchUpdates,
+	emergencySaving,
+	minimumToMakeNextPayment
+} from '@/ts/home/homeFunctions';
+import TableSettingsModal from '@/ts/home/TableSettingsModal.vue'
+import { columnsToShow } from '@/ts/home/store';
 
 const auth = useAuth()
 const route = useRoute()
@@ -352,6 +386,12 @@ function preventFlatPickrChange(date: string, selectedDates: [], dateStr: string
 	instance.setDate(date)
 }
 
+function editTableSettings() {
+	modals.open({
+		modal: markRaw(TableSettingsModal),
+	})
+}
+
 
 /**
 	---------------------------------------------------
@@ -370,8 +410,18 @@ const accounts = useAccounts()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 
-const sortedAccounts: Ref<(Account|AccountWithBatchUpdates)[]> = ref([])
-const sort = useLocalStorage('budget-accounts-index-sort-v2', {
+const sortedAccounts: Ref<(Account|(AccountWithBatchUpdates & {
+	nextDate: string,
+	nextAmount: number,
+	minimum: number,
+	overMinimum: number,
+	percentCovered: number,
+}))[]> = ref([])
+const sort = useLocalStorage('budget-accounts-index-sort-v5', {
+	isFavorite: {
+		value: 'descending',
+		at: DateTime.now().valueOf()
+	},
 	name: {
 		value: 'none',
 		at: null as number|null,
@@ -387,7 +437,19 @@ const sort = useLocalStorage('budget-accounts-index-sort-v2', {
 	nextAmount: {
 		value: 'none',
 		at: null as number|null,
-	}
+	},
+	minimum: {
+		value: 'none',
+		at: null as number|null,
+	},
+	overMinimum: {
+		value: 'none',
+		at: null as number|null,
+	},
+	percentCovered: {
+		value: 'none',
+		at: null as number|null,
+	},
 })
 const hideProgress = ref<Function|null>(null)
 function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "ascending"|"descending", hideProgress: Function }) {
@@ -406,6 +468,14 @@ watch(
 				...account,
 				nextDate: account.batch_updates?.[0]?.date ?? '',
 				nextAmount: account.batch_updates?.[0]?.pivot?.amount ?? 0,
+				minimum: isAccountWithBatchUpdates(account) ? minimumToMakeNextPayment(account) : null,
+				overMinimum: isAccountWithBatchUpdates(account)
+					? (account.amount / 100) - minimumToMakeNextPayment(account)
+					: null,
+				percentCovered: isAccountWithBatchUpdates(account)
+					? Math.round(((account.amount / 100) / (Math.abs(account.batch_updates?.[0]?.pivot?.amount) / 100)) * 100)
+					: null,
+				isFavorite: Boolean(account.favorited_users?.some(i => i.id == auth.user?.id))
 			}))),
 			sort: JSON.stringify(sort.value)
 		})
@@ -413,10 +483,14 @@ watch(
 			if (event.data?.type == 'SORT_ACCOUNTS') {
 				sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
 					let result = a
-					delete result.nextDate
-					delete result.nextAmount
 					return result
-				}) as (Account|AccountWithBatchUpdates)[]
+				}) as (Account|(AccountWithBatchUpdates & {
+					nextDate?: string,
+					nextAmount?: number,
+					minimum?: number,
+					overMinimum?: number,
+					percentCovered?: number,
+				}))[]
 				if (hideProgress.value) hideProgress.value()
 				initiallySorted.value = true
 				worker.terminate()
@@ -425,41 +499,6 @@ watch(
 	},
 	{ deep: true, immediate: true }
 )
-
-// Table helpers
-function fridaysUntil(date: DateTime, now: DateTime = DateTime.now()): number {
-	return (( // That date's previous friday
-		date.startOf('day').weekday >= 5
-			? date.startOf('day').set({ weekday: 5 })
-			: date.startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-	).diff(
-		// Now's previous friday
-		now.startOf('day').weekday >= 5
-			? now.startOf('day').set({ weekday: 5 })
-			: now.startOf('day').minus({ weeks: 1 }).set({ weekday: 5 })
-	).as('weeks'))
-}
-function toDateTime(date: string) {
-	return DateTime.fromFormat(date, 'yyyy-MM-dd')
-}
-function idealWeeks(batchUpdate: BatchUpdate) {
-	return batchUpdate?.weeks ?? 4
-}
-function idealPayment(batchUpdate: BatchUpdate & { pivot: { amount: number }}) {
-	return (Math.abs(batchUpdate?.pivot?.amount / 100)) / idealWeeks(batchUpdate)
-}
-function emergencySaving(account: AccountWithBatchUpdates) {
-	let batchUpdate = account.batch_updates[0]
-	let currentBalance = account.amount / 100
-	let paymentToCover = Math.abs(batchUpdate.pivot.amount / 100)
-	let weeks = fridaysUntil(toDateTime(batchUpdate.date)) || 1
-	let perWeek = (paymentToCover - currentBalance) / weeks
-	return dollars(perWeek)
-}
-function isAccountWithBatchUpdates(account: Account|AccountWithBatchUpdates): account is AccountWithBatchUpdates
-{
-	return !!account.batch_updates?.[0]
-}
 
 /**
 	---------------------------------------------------
@@ -615,7 +654,8 @@ code {
 }
 
 :deep(.mdc-data-table) {
-	.mdc-data-table__cell {
+	.mdc-data-table__cell, .mdc-data-table__header-cell {
+		white-space: normal;
 		padding-inline: 8px;
 		&:first-child { padding-left: 16px; }
 		&:last-child { padding-right: 16px; }

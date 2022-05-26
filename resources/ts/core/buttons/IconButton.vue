@@ -2,7 +2,11 @@
 <button
     ref="mainRef"
     class="mdc-icon-button material-icons"
-    :class="{ [`density-${density}`]: density }"
+    :class="{
+      [`density-${density}`]: density,
+      'primary': primary,
+      'secondary': secondary,
+    }"
 >
   <div class="mdc-icon-button__ripple"></div>
   <span class="mdc-icon-button__focus-ring"></span>
@@ -19,6 +23,12 @@ const props = defineProps({
     type: Number,
     default: () => 0,
   },
+  primary: {
+    type: Boolean,
+  },
+  secondary: {
+    type: Boolean,
+  }
 })
 
 const mainRef = ref(null)
@@ -44,6 +54,12 @@ $densities: (-5, -4, -3, -2, -1);
     &.density-#{$density} {
       @include icon-button-theme.density($density);
     }
+  }
+  &.primary {
+    color: mdc-theme.$primary-200;
+  }
+  &.secondary {
+    color: mdc-theme.$secondary-200;
   }
 }
 </style>
