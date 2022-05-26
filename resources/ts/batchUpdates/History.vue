@@ -63,6 +63,15 @@
             />
           </template>
         </DataTable>
+				<Teleport to="body">
+          <Fab
+              v-if="$route.query.account_id"
+              @click="newBatchUpdate"
+              :icon="'add'"
+              class="fixed right-4 bottom-6"
+              style="z-index: 2;"
+          />
+        </Teleport>
       </div>
     </div>
   </div>
@@ -109,12 +118,18 @@ watch(
 function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })
 }
+function newBatchUpdate() {
+  router.push({ name: 'batch-updates-show', params: { id: 'new', account_id: String(route.query.account_id) } })
+}
 </script>
 
 <style scoped lang="scss">
 @use "@/css/transitions";
 
 :deep(.not-done) {
-  * { color: #737373; }
+  * {
+    color: #737373;
+    font-style: italic;
+  }
 }
 </style>

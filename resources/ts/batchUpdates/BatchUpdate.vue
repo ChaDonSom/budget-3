@@ -2,7 +2,11 @@
 	<div>
 		<div class="text-center m-3">
       <div v-if="initiallyLoaded" class="mb-5">
-        <h1 class="text-xl mt-5">Edit changes {{ DateTime.fromFormat(batchForm.date, 'yyyy-MM-dd') <= DateTime.now() ? 'made' : 'to be made' }} {{ DateTime.fromFormat(batchForm.date, 'yyyy-MM-dd').toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY) }}</h1>
+        <h1 class="text-xl mt-5">
+					{{ $route.params.id != 'new' ? 'Edit' : 'New' }} changes 
+					{{ toDateTime(batchForm.date) <= DateTime.now() ? 'made' : 'to be made' }} 
+					{{ toDateTime(batchForm.date).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY) }}
+				</h1>
         <p v-if="!sortedAccounts.length" class="m-5">
           ✨ No accounts ✨
         </p>
@@ -178,6 +182,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
 import { BatchUpdateWithAccounts, useBatchUpdates } from '@/ts/store/batchUpdates';
 import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
+import { toDateTime } from '@/ts/core/utilities/datetime';
 
 const auth = useAuth()
 const route = useRoute()
@@ -318,6 +323,15 @@ async function loadBatchUpdate() {
     })
     batchDifferences.value = batchForm.accounts
   }
+	if (route.params.id == 'new' && route.params.account_id) {
+		batchDifferences.value = {
+			[Number(route.params.account_id)]: {
+				amount: 0,
+				modifier: 1,
+			}
+		}
+		batchForm.accounts = batchDifferences.value
+	}
 }
 onMounted(async () => {
 	await loadBatchUpdate()
