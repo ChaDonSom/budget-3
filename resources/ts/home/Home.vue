@@ -99,7 +99,7 @@
 												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
 												-
 												(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
-											)
+											) > 0
 											?
 											dollars((account.amount / 100) - (
 												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
@@ -181,15 +181,18 @@
 									Total:
 									{{
 										dollars(accounts.values.reduce((total, account) => {
-											if (account && account.batch_updates?.[0]?.pivot?.amount) total += (account.amount / 100) - (
-												Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-												-
-												(
-													((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) / idealWeeks(account.batch_updates?.[0]))
-													*
-													// How many weeks left till then
-													fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
-												))
+											if (account && account.batch_updates?.[0]?.pivot?.amount) {
+												let overMinimum = (account.amount / 100) - (
+													Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+													-
+													(
+														((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) / idealWeeks(account.batch_updates?.[0]))
+														*
+														// How many weeks left till then
+														fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
+													))
+												total += overMinimum <= account.amount ? overMinimum : account.amount
+											}
 											return total
 										}, 0))
 									}}
