@@ -97,6 +97,11 @@ const thBindableAttributes = computed(() => {
  */
 @use "./index" as tables;
 
+.mdc-data-table__header-cell .mdc-data-table__sort-icon-button {
+	position: absolute;
+	left: calc(50% - 14px);
+	bottom: -8px;
+}
 .mdc-data-table__header-cell::after {
   content: '';
   display: block;

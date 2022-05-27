@@ -110,7 +110,9 @@
 									</div>
 								</DataTableCell>
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
-									<div v-if="isAccountWithBatchUpdates(account)" class="text-gray-400"
+									<div
+											v-if="isAccountWithBatchUpdates(account)"
+											class="text-gray-400 select-none"
 											v-tooltip="{
 												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
 												html: true
@@ -660,12 +662,5 @@ code {
 		&:first-child { padding-left: 16px; }
 		&:last-child { padding-right: 16px; }
 	}
-}
-
-:deep(.mdc-data-table__header-cell .mdc-data-table__sort-icon-button) {
-	position: absolute;
-	left: calc(50% - 14px);
-	bottom: -8px;
-	// transform: scale(0.8);
 }
 </style>
