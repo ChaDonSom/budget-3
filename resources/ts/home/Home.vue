@@ -124,9 +124,11 @@
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
 											v-if="isAccountWithBatchUpdates(account)"
+											v-tooltip="account.amount <= 0 ? `True amount is only ${dollars(account.amount)}` : ''"
 											:class="{
 												'text-gray-400': account.overMinimum >= 0,
 												'text-red-400': account.overMinimum < 0,
+												'italic text-orange-400': account.amount <= 0,
 											}"
 									>
 										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
@@ -243,7 +245,7 @@
 					</DataTable>
 				</div>
 
-				<CircularScrim :loading="batchForm.processing" />
+				<CircularScrim :loading="batchForm.processing || loading" />
 				<Teleport to="body">
 					<div v-if="initiallyLoaded">
 						<Fab
@@ -601,11 +603,15 @@ function newAccount() {
 		modal: markRaw(AccountModalVue), props: {}
 	})
 }
-function editAccount(id: number) {
+const loading = ref(false)
+async function editAccount(id: number) {
+	loading.value = true
+	await accounts.fetchAccount(id)
 	modals.open({
 		modal: markRaw(AccountModalVue),
 		props: { accountId: id }
 	})
+	loading.value = false
 }
 </script>
 

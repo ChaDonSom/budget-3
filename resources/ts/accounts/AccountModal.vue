@@ -1,8 +1,12 @@
 <template>
   <Modal @close="attemptClose">
     <template #title>{{ Boolean(form.name) ? form.name : 'New account' }}</template>
-    <OutlinedTextfield autoselect v-model="form.name" autofocus :error="form.errors.name">Name</OutlinedTextfield>
-    <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
+    <template v-if="initiallyLoaded">
+      <OutlinedTextfield autoselect v-model="form.name" :autofocus="!accountId" :error="form.errors.name">
+        Name
+      </OutlinedTextfield>
+      <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
+    </template>
 
     <div
         v-if="isAccountWithBatchUpdates(form)
@@ -137,13 +141,14 @@ const isFavorite = computed({
       form.favorited_users = form.favorited_users?.filter(i => i.id != auth.user?.id)
     }
   }
-});
+})
 
+const initiallyLoaded = ref(false);
 (async () => {
   if (props.accountId) {
-    let result = await accounts.fetchAccount(props.accountId)
-    form.reset<Account>(result)
+    form.reset<Account>(accounts.data[props.accountId])
   }
+  initiallyLoaded.value = true
 })()
 
 async function save() {
