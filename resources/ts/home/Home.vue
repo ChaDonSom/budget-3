@@ -124,11 +124,11 @@
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
 											v-if="isAccountWithBatchUpdates(account)"
-											v-tooltip="account.amount <= 0 ? `True amount is only ${dollars(account.amount)}` : ''"
+											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
 												'text-gray-400': account.overMinimum >= 0,
 												'text-red-400': account.overMinimum < 0,
-												'italic text-orange-400': account.amount <= 0,
+												'italic text-orange-400': (account.amount / 100) < account.overMinimum,
 											}"
 									>
 										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
@@ -207,18 +207,10 @@
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric style="white-space: normal;">
 									Total:
 									{{
-										dollars(accounts.values.reduce((total, account) => {
-											if (account && account.batch_updates?.[0]?.pivot?.amount) {
-												let overMinimum = (account.amount / 100) - (
-													Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-													-
-													(
-														((Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)) / idealWeeks(account.batch_updates?.[0]))
-														*
-														// How many weeks left till then
-														fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
-													))
-												total += overMinimum <= account.amount ? overMinimum : account.amount
+										dollars(sortedAccounts.reduce((total, account) => {
+											if (account && isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.pivot?.amount) {
+												let overMinimum = account.overMinimum
+												total += overMinimum <= (account.amount / 100) ? overMinimum : (account.amount / 100)
 											}
 											return total
 										}, 0))
