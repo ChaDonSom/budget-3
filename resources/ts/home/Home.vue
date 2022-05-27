@@ -541,7 +541,7 @@ function edit(account: Account) {
 		difference: batchDifferences.value[account.id],
 	} })
 }
-const batchForm = useForm('/api/accounts/batch', {
+const batchForm = useForm('/api/batch-updates', {
 	accounts: batchDifferences.value,
 	date: batchDate.value.toFormat('yyyy-MM-dd'),
 	notify_me: false,
