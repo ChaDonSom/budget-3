@@ -68,7 +68,17 @@
             </DataTableRow>
             <DataTableRow class="sticky-bottom-row">
               <DataTableCell />
-              <DataTableCell />
+              <DataTableCell>
+								{{
+									dollars(sortedAccounts.reduce((total, account) => {
+										if (account && isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.pivot?.amount) {
+											let overMinimum = idealPayment(account.batch_updates?.[0])
+											total += overMinimum
+										}
+										return total
+									}, 0))
+								}}
+							</DataTableCell>
               <DataTableCell numeric>
                 <div v-if="areAnyBatchDifferences">{{ dollars(batchTotal) }}</div>
               </DataTableCell>
