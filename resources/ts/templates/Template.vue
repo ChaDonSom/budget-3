@@ -3,7 +3,12 @@
 		<div class="text-center m-3">
       <div v-if="initiallyLoaded" class="mb-5">
         <h1 class="text-xl mt-5">{{ Boolean(batchForm.name) ? batchForm.name : 'New template' }}</h1>
-        <OutlinedTextfield autoselect v-model="batchForm.name" autofocus :error="batchForm.errors.name">
+        <OutlinedTextfield
+						autoselect
+						v-model="batchForm.name"
+						:autofocus="!batchForm.name"
+						:error="batchForm.errors.name"
+				>
           Name
         </OutlinedTextfield>
         <p v-if="!sortedAccounts.length" class="m-5">
@@ -14,13 +19,33 @@
             <DataTableHeaderCell sortable column-id="name" :sort="sort.name">
               Name
             </DataTableHeaderCell>
+						<DataTableHeaderCell>
+							Ideal
+						</DataTableHeaderCell>
             <DataTableHeaderCell numeric>
               <!-- Controls -->&nbsp;
             </DataTableHeaderCell>
           </template>
           <template #body>
             <DataTableRow v-for="account of sortedAccounts">
-              <DataTableCell>{{ account.name }}</DataTableCell>
+              <DataTableCell
+									@click="editAccount(account.id)"
+							>
+								<div style="white-space: normal;">
+									{{ account.name }}
+								</div>
+							</DataTableCell>
+              <DataTableCell>
+								<div
+										v-if="isAccountWithBatchUpdates(account)"
+										v-tooltip="`Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`"
+										class="select-none"
+								>
+									{{ dollars(idealPayment(account.batch_updates?.[0])) }}
+									*
+									{{ idealWeeks(account.batch_updates?.[0]) }}
+								</div>
+							</DataTableCell>
               <DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
                 <div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]">
                   <IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
@@ -42,6 +67,7 @@
               </DataTableCell>
             </DataTableRow>
             <DataTableRow class="sticky-bottom-row">
+              <DataTableCell />
               <DataTableCell />
               <DataTableCell numeric>
                 <div v-if="areAnyBatchDifferences">{{ dollars(batchTotal) }}</div>
@@ -127,6 +153,8 @@ import { Template, TemplateWithAccounts, useTemplates } from '@/ts/store/templat
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/ts/core/buttons/DeleteButton.vue';
 import CircularScrim from '../core/loaders/CircularScrim.vue';
+import { emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/ts/home/homeFunctions';
+import { toDateTime } from '@/ts/core/utilities/datetime';
 
 const props = defineProps({
   id: {
@@ -325,6 +353,13 @@ onBeforeRouteLeave(async () => {
 		return false
 	}
 })
+
+function editAccount(id: number) {
+	modals.open({
+		modal: markRaw(AccountModalVue),
+		props: { accountId: id }
+	})
+}
 </script>
 
 <style scoped lang="scss">
@@ -370,6 +405,15 @@ code {
 		input.mdc-text-field__input {
 			z-index: 2;
 		}
+	}
+}
+
+:deep(.mdc-data-table) {
+	.mdc-data-table__cell, .mdc-data-table__header-cell {
+		white-space: normal;
+		padding-inline: 8px;
+		&:first-child { padding-left: 16px; }
+		&:last-child { padding-right: 16px; }
 	}
 }
 </style>
