@@ -5,8 +5,7 @@
     <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
 
     <div
-        v-if="!columnsToShow.nextDate
-          && isAccountWithBatchUpdates(form)
+        v-if="isAccountWithBatchUpdates(form)
           && form.batch_updates?.[0]?.date
           && form.batch_updates?.[0]?.pivot?.amount"
         class="flex items-center"
