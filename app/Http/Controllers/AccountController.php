@@ -128,7 +128,10 @@ class AccountController extends Controller
 
         $batchUpdate = AccountBatchUpdate::query()
             // Specifically ensure the batchUpdates on each of this one's accounts are only the not-done ones
-            ->with(['accounts.batchUpdates' => fn($query) => $query->notDone()])
+            ->with([
+                'accounts.batchUpdates' => fn($query) => $query->notDone(),
+                'accounts.favoritedUsers'
+            ])
             ->find($batchUpdate->id);
 
         return response($batchUpdate, $httpCode);
