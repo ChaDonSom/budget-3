@@ -24,6 +24,8 @@ class AccountBatchUpdateController extends Controller
      */
     public function index()
     {
+        if (request()->account_ids) $accountIds = json_decode(request()->account_ids);
+        else $accountIds = null;
         $user = Auth::user();
         $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
         return AccountBatchUpdate::query()
@@ -36,7 +38,18 @@ class AccountBatchUpdateController extends Controller
                     ->with([
                         'accounts' => fn($query) => $query->where('accounts.id', request()->account_id)
                     ]),
-                fn($query) => $query->with('accounts')
+                fn($query) => $query
+                    ->when(
+                        $accountIds,
+                        fn($query) => $query->whereHas(
+                                'accounts',
+                                fn($query) => $query->whereIn('accounts.id', $accountIds)
+                            )
+                            ->with([
+                                'accounts' => fn($query) => $query->whereIn('accounts.id', $accountIds)
+                            ]),
+                        fn($query) => $query->with('accounts')   
+                    )
             )
             ->when(
                 !request()->boolean('include_future'),
