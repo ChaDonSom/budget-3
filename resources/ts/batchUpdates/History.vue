@@ -11,10 +11,28 @@
         </span>
       </h1>
       <div v-if="initiallyLoaded">
-        <Button @click="includeFuture = !includeFuture">
+        <Button @click="dateRange = dateRange !== false ? false : ''; includeFuture = dateRange !== false ? false : includeFuture">
+          <template #leading-icon>{{ dateRange !== false ? 'check_box' : 'check_box_outline_blank' }}</template>
+          By date range
+        </Button>
+        <FlatPickr
+            v-if="dateRange !== false"
+            :modelValue="dateRange"
+            :config="{
+              mode: 'range',
+              onReady: (selectedDates: any, dateStr: any, instance: { open: Function }) => {
+                instance.open()
+              },
+              onClose: (selectedDates: any, dateStr: any, instance: { }) => {
+                dateRangeArray = selectedDates
+              }
+            }"
+        />
+        <Button @click="includeFuture = !includeFuture; dateRange = includeFuture ? false : dateRange">
           <template #leading-icon>{{ includeFuture ? 'check_box' : 'check_box_outline_blank' }}</template>Include future transactions
         </Button>
       </div>
+      <CircularScrim :loading="loading" />
       <div v-if="initiallyLoaded" class="mb-5">
         <div v-if="!batchUpdatesValues.length" class="m-5">
           <p>✨ No transactions ✨</p>
@@ -113,28 +131,51 @@ import DataTablePaginator from '@/ts/core/tables/DataTablePaginator.vue';
 import { Account, useAccounts } from '@/ts/store/accounts';
 import Button from '@/ts/core/buttons/Button.vue';
 import { toDateTime } from '@/ts/core/utilities/datetime';
+// @ts-ignore
+import FlatPickr from 'vue-flatpickr-component';
+import 'flatpickr/dist/flatpickr.css';
+import { DateTime } from 'luxon';
+import CircularScrim from '@/ts/core/loaders/CircularScrim.vue';
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuth()
 const accounts = useAccounts()
 
+const loading = ref(true)
 const initiallyLoadedBatchUpdates = ref(false)
 const initiallyLoaded = computed(() => {
 	return (initiallyLoadedBatchUpdates.value)
 })
 
+const dateRange = ref<string|false>(false)
+const dateRangeArray = ref<Date[]>([])
+watch(
+  () => dateRange.value,
+  to => {
+    if (to === false) dateRangeArray.value = []
+  }
+)
 const includeFuture = useLocalStorage('budget-history-include-future', false)
 const batchUpdates = useBatchUpdates()
 const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWithAccounts[])
 watch(
-  () => ([ route.query, includeFuture.value ]),
+  () => ([ route.query, includeFuture.value, dateRangeArray.value ]),
   async () => {
-    await batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
+    if (dateRange.value !== false && dateRangeArray.value.length != 2) return
+    loading.value = true
+    await batchUpdates.fetchData({
+      ...route.query,
+      include_future: includeFuture.value,
+      date_range: dateRange.value !== false
+        ? JSON.stringify(dateRangeArray.value.map(i => DateTime.fromJSDate(i).toFormat('yyyy-MM-dd')))
+        : '[]',
+    })
     if (route.query.account_id && !accounts.data[Number(route.query.account_id)]) {
       accounts.fetchAccount(Number(route.query.account_id))
     }
     initiallyLoadedBatchUpdates.value = true
+    loading.value = false
   },
   { deep: true, immediate: true }
 )

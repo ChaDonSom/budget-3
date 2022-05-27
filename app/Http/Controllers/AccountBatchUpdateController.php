@@ -26,6 +26,11 @@ class AccountBatchUpdateController extends Controller
     {
         if (request()->account_ids) $accountIds = json_decode(request()->account_ids);
         else $accountIds = null;
+        if (request()->date_range) {
+            $dateRange = json_decode(request()->date_range);
+            $dateRange = count($dateRange) ? $dateRange : null;
+        } else $dateRange = null;
+
         $user = Auth::user();
         $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
         return AccountBatchUpdate::query()
@@ -52,8 +57,12 @@ class AccountBatchUpdateController extends Controller
                     )
             )
             ->when(
-                !request()->boolean('include_future'),
+                !request()->boolean('include_future') && !$dateRange,
                 fn($query) => $query->whereNotNull('done_at')
+            )
+            ->when(
+                $dateRange && !request()->boolean('include_future'),
+                fn($query) => $query->where('date', '>=', $dateRange[0])->where('date', '<=', $dateRange[1] ?? $dateRange[0])
             )
             ->whereIn('user_id', $users->pluck('id')->values())
             ->orderBy('date', 'desc')
