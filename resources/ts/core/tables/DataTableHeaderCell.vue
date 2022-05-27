@@ -15,7 +15,7 @@
             aria-label="Sort by dessert"
             :aria-describedby="`sort-status-label-${uid}`"
         >
-          arrow_upward
+          arrow_drop_up
         </button>
         <div class="mdc-data-table__header-cell-label">
           <slot></slot>
@@ -26,7 +26,7 @@
             aria-label="Sort by dessert"
             :aria-describedby="`sort-status-label-${uid}`"
         >
-          arrow_upward
+          arrow_drop_up
         </button>
         <div class="mdc-data-table__sort-status-label" aria-hidden="true" :id="`sort-status-label-${uid}`"></div>
       </div>

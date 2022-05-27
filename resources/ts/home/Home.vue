@@ -661,4 +661,11 @@ code {
 		&:last-child { padding-right: 16px; }
 	}
 }
+
+:deep(.mdc-data-table__header-cell .mdc-data-table__sort-icon-button) {
+	position: absolute;
+	left: calc(50% - 14px);
+	bottom: -8px;
+	// transform: scale(0.8);
+}
 </style>
