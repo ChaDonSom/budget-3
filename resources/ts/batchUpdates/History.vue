@@ -40,14 +40,33 @@
                 :class="{ 'not-done': !batchUpdate.done_at }"
             >
               <DataTableCell style="white-space: normal;">
-                <span v-if="batchUpdate.accounts.length < 5">
-                  {{ batchUpdate.accounts.map(i => i.name).join(', ') }}
-                </span>
-                <span v-else>
-                  {{ batchUpdate.accounts.map(i => i.name).join(', ').substring(0, 35) }}...
-                </span>
+                <div class="flex items-center">
+                  <IconButton
+                      v-if="notFilteredForAccounts(batchUpdate.accounts)"
+                      :density="-4"
+                      secondary
+                      style="font-style: normal;"
+                      @click.stop="$router.push({ name: 'history', query: 
+                        batchUpdate.accounts.length > 1
+                          ? { 
+                            account_ids: JSON.stringify(batchUpdate.accounts.map(i => i.id))
+                          }
+                          : {
+                            account_id: batchUpdate.accounts[0].id
+                          } 
+                      })"
+                  >
+                    filter_alt
+                  </IconButton>
+                  <span v-if="batchUpdate.accounts.length < 5">
+                    {{ batchUpdate.accounts.map(i => i.name).join(', ') }}
+                  </span>
+                  <span v-else>
+                    {{ batchUpdate.accounts.map(i => i.name).join(', ').substring(0, 35) }}...
+                  </span>
+                </div>
               </DataTableCell>
-              <DataTableCell>{{ batchUpdate.date }}</DataTableCell>
+              <DataTableCell>{{ toDateTime(batchUpdate.date).toFormat('M/dd') }}</DataTableCell>
               <DataTableCell numeric>
 								{{ dollars(batchUpdate.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}
 							</DataTableCell>
@@ -91,8 +110,9 @@ import DataTableCell from '@/ts/core/tables/DataTableCell.vue';
 import Fab from '@/ts/core/buttons/Fab.vue';
 import IconButton from '@/ts/core/buttons/IconButton.vue';
 import DataTablePaginator from '@/ts/core/tables/DataTablePaginator.vue';
-import { useAccounts } from '@/ts/store/accounts';
+import { Account, useAccounts } from '@/ts/store/accounts';
 import Button from '@/ts/core/buttons/Button.vue';
+import { toDateTime } from '@/ts/core/utilities/datetime';
 
 const router = useRouter()
 const route = useRoute()
@@ -107,13 +127,25 @@ const initiallyLoaded = computed(() => {
 const includeFuture = useLocalStorage('budget-history-include-future', false)
 const batchUpdates = useBatchUpdates()
 const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWithAccounts[])
-batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
-  .then(() => initiallyLoadedBatchUpdates.value = true)
-
 watch(
-  () => includeFuture.value,
-  () => batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
+  () => ([ route.query, includeFuture.value ]),
+  async () => {
+    await batchUpdates.fetchData({ ...route.query, include_future: includeFuture.value })
+    if (route.query.account_id && !accounts.data[Number(route.query.account_id)]) {
+      accounts.fetchAccount(Number(route.query.account_id))
+    }
+    initiallyLoadedBatchUpdates.value = true
+  },
+  { deep: true, immediate: true }
 )
+
+function notFilteredForAccounts(accounts: Account[]) {
+  let ids = route.query.account_id
+    ? [Number(route.query.account_id)]
+    : (JSON.parse(String(route.query.account_ids ?? "[]")) as string[])?.map(i => Number(i))
+  let aIds = accounts.map(a => a.id)
+  return !ids.every(i => aIds.includes(i)) || !aIds.every(i => ids.includes(i))
+}
 
 function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })
@@ -131,5 +163,14 @@ function newBatchUpdate() {
     color: #737373;
     font-style: italic;
   }
+}
+
+:deep(.mdc-data-table) {
+	.mdc-data-table__cell, .mdc-data-table__header-cell {
+		white-space: normal;
+		padding-inline: 8px;
+		&:first-child { padding-left: 16px; }
+		&:last-child { padding-right: 16px; }
+	}
 }
 </style>
