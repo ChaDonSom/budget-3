@@ -112,7 +112,7 @@
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
 									<div
 											v-if="isAccountWithBatchUpdates(account)"
-											class="text-gray-400 select-none"
+											class="text-gray-400 select-none whitespace-nowrap"
 											v-tooltip="{
 												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
 												html: true
@@ -130,6 +130,7 @@
 												'text-red-400': account.overMinimum < 0,
 												'italic text-orange-400': (account.amount / 100) < account.overMinimum,
 											}"
+											class="whitespace-nowrap"
 									>
 										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
 									</div>
