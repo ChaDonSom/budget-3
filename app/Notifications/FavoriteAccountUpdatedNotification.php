@@ -52,12 +52,13 @@ class FavoriteAccountUpdatedNotification extends Notification
     public function toPushNotification($notifiable)
     {
         $diff = Money::USD($this->account->pivot->amount);
+        $total = Money::USD($this->account->amount);
         return PusherMessage::create()
                     ->web()
                     ->sound('success')
                     ->setOption('icon', config('app.url') . '/android-chrome-192x192.png')
                     ->title("Favorite account {$this->account->name} modified")
-                    ->body("$diff total difference, for a new total of {$this->account->amount}.")
+                    ->body("$diff total difference, for a new total of {$total}.")
                     ->link(($this->url ?? config('app.url')) . '/#/batch-updates/' . $this->batchUpdate->id);
     }
 
