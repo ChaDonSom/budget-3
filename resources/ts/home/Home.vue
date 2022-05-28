@@ -323,7 +323,7 @@ import { vite_asset } from '@/ts/core/utilities/build'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
-import { useAccounts, Account, AccountWithBatchUpdates } from '@/ts/store/accounts';
+import { useAccounts, Account, AccountWithBatchUpdates, useAccountsStore } from '@/ts/store/accounts';
 import { dollars } from '@/ts/core/utilities/currency'
 import DataTable from '@/ts/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/ts/core/tables/DataTableHeaderCell.vue';
@@ -403,7 +403,7 @@ const initiallyLoaded = computed(() => {
 	)
 })
 
-const accounts = useAccounts()
+const accounts = useAccountsStore()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 

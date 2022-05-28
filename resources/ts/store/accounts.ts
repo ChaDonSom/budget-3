@@ -1,6 +1,8 @@
-import { User } from "@/ts/core/users/auth";
-import { BatchUpdate } from "@/ts/store/batchUpdates";
+import { useAuth, User } from "@/ts/core/users/auth";
+import { BatchUpdate, BatchUpdateWithAccounts, useBatchUpdates } from "@/ts/store/batchUpdates";
+import { useEcho } from "@/ts/store/echo";
 import axios, { AxiosResponse } from "axios";
+import { defineStore } from "pinia";
 import {
     ComponentPropsOptions,
     computed,
@@ -39,6 +41,19 @@ export const values: ComputedRef<Account[]> = computed(() => {
 export async function fetchData() {
     let response: AxiosResponse<AccountsData> = await axios.get("/api/accounts");
     data.value = response.data
+    const echo = useEcho()
+    const auth = useAuth()
+    const batchUpdates = useBatchUpdates()
+    echo.echo.private(`AccountBatchUpdates.User.${auth.user?.id}`).listen(
+        'AccountBatchUpdateSaved',
+        (payload: { update: BatchUpdateWithAccounts }) => {
+            console.log(`Got broadcast for batchUpdate ${payload.update.id}, updating in store...`)
+            batchUpdates.receive(payload.update)
+            for (let account of payload.update.accounts) {
+                data.value[account.id].amount = account.amount
+            }
+        }
+    )
 }
 
 export async function fetchAccount(id: number) {
@@ -73,3 +88,15 @@ export function useAccounts(props?: ComponentPropsOptions, context?: SetupContex
         remove,
     })
 }
+
+export const useAccountsStore = defineStore('accounts', () => {
+    return {
+        data,
+        keys,
+        values,
+        fetchData,
+        fetchAccount,
+        receive,
+        remove,
+    };
+})
