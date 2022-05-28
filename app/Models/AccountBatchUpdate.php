@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\AccountBatchUpdateSaved;
 use App\Notifications\AccountBatchUpdateHandledNotification;
 use App\Notifications\FavoriteAccountUpdatedNotification;
 use Carbon\Carbon;
@@ -18,7 +19,7 @@ class AccountBatchUpdate extends Model
 {
     use HasFactory;
     use SoftDeletes;
-    
+
     public $fillable = [
         'date',
         'batch',
@@ -84,6 +85,8 @@ class AccountBatchUpdate extends Model
                 );
             }
         }
+
+        AccountBatchUpdateSaved::dispatch($this);
 
         return $accounts;
     }

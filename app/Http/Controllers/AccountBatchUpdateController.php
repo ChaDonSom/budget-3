@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AccountBatchUpdateSaved;
 use App\Http\Requests\BatchUpdateAccountRequest;
 use App\Http\Requests\UpdateAccountBatchUpdateRequest;
 use App\Models\AccountBatchUpdate;
@@ -110,7 +111,7 @@ class AccountBatchUpdateController extends Controller
             $httpCode = 200;
         } else {
             // Schedule changes for later and let the client know
-            $batchUpdate->accounts;
+            AccountBatchUpdateSaved::dispatch($batchUpdate);
             $httpCode = 202; // 201: created, 202: accepted (but will be processed later)
         }
 
@@ -173,6 +174,7 @@ class AccountBatchUpdateController extends Controller
             $httpCode = 200;
         } else {
             // Schedule changes for later (done already by this line) and let the client know
+            AccountBatchUpdateSaved::dispatch($batchUpdate);
             $httpCode = 202; // 201: created, 202: accepted (but will be processed later)
         }
 
