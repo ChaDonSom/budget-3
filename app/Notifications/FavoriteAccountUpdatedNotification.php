@@ -40,7 +40,7 @@ class FavoriteAccountUpdatedNotification extends Notification
      */
     public function via($notifiable)
     {
-        return [PusherChannel::class];
+        return [ PusherChannel::class ];
     }
 
     /**
@@ -56,10 +56,11 @@ class FavoriteAccountUpdatedNotification extends Notification
         return PusherMessage::create()
                     ->web()
                     ->sound('success')
-                    ->setOption('icon', config('app.url') . '/android-chrome-192x192.png')
-                    ->title("Favorite account {$this->account->name} modified")
-                    ->body("$diff total difference, for a new total of {$total}.")
-                    ->link(($this->url ?? config('app.url')) . '/#/batch-updates/' . $this->batchUpdate->id);
+                    ->setOption('icon', config('app.url') . '/build/android-chrome-192x192.png')
+                    ->setOption('badge', config('app.url') . '/build/safari-pinned-tab.svg')
+                    ->title($this->getTitle())
+                    ->body($this->getMessage())
+                    ->link($this->getAction());
     }
 
     /**
@@ -73,5 +74,22 @@ class FavoriteAccountUpdatedNotification extends Notification
         return [
             //
         ];
+    }
+
+    public function getTitle(): string
+    {
+        return "Favorite account {$this->account->name} modified";
+    }
+
+    public function getMessage(): string
+    {
+        $diff = Money::USD($this->account->pivot->amount);
+        $total = Money::USD($this->account->amount);
+        return "$diff total difference, for a new total of {$total}.";
+    }
+
+    public function getAction(): string
+    {
+        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id . '?notification_uuid=' . $this->uuid;
     }
 }

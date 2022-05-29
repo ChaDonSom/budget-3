@@ -38,7 +38,7 @@ class AccountBatchUpdateHandledNotification extends Notification
      */
     public function via($notifiable)
     {
-        return [PusherChannel::class];
+        return [ PusherChannel::class ];
     }
 
     /**
@@ -57,10 +57,11 @@ class AccountBatchUpdateHandledNotification extends Notification
         return PusherMessage::create()
                     ->web()
                     ->sound('success')
-                    ->setOption('icon', config('app.url') . '/android-chrome-192x192.png')
-                    ->title($title)
-                    ->body("$count account{$s} affected. $sum total difference. Make sure to confirm it goes through with your bank, and schedule the next one if needed.")
-                    ->link(($this->url ?? config('app.url')) . '/#/batch-updates/' . $this->batchUpdate->id);
+                    ->setOption('icon', config('app.url') . '/build/android-chrome-192x192.png')
+                    ->setOption('badge', config('app.url') . '/build/safari-pinned-tab.svg')
+                    ->title($this->getTitle())
+                    ->body($this->getMessage())
+                    ->link($this->getAction());
     }
 
     /**
@@ -74,5 +75,26 @@ class AccountBatchUpdateHandledNotification extends Notification
         return [
             //
         ];
+    }
+
+    public function getTitle(): string
+    {
+        $names = Str::limit($this->accounts->map(fn($a) => $a->name)->join(', '), 100);
+        $title = "Transaction posted for {$names}";
+        return $title;
+    }
+
+    public function getMessage(): string
+    {
+        $sum = Money::USD($this->accounts->sum('pivot.amount'));
+        $count = $this->accounts->count();
+        $s = $count == 1 ? '' : 's';
+        $message = "$count account{$s} affected. $sum total difference. Make sure to confirm it goes through with your bank, and schedule the next one if needed.";
+        return $message;
+    }
+
+    public function getAction(): string
+    {
+        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id . '?notification_uuid=' . $this->uuid;
     }
 }
