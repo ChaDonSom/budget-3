@@ -57,8 +57,8 @@ class AccountBatchUpdateHandledNotification extends Notification
         return PusherMessage::create()
                     ->web()
                     ->sound('success')
-                    ->setOption('icon', config('app.url') . '/build/android-chrome-192x192.png')
-                    ->setOption('badge', config('app.url') . '/build/safari-pinned-tab.svg')
+                    ->setOption('icon', '/build/android-chrome-192x192.png')
+                    ->setOption('badge', '/build/safari-pinned-tab.svg')
                     ->title($this->getTitle())
                     ->body($this->getMessage())
                     ->link($this->getAction());
