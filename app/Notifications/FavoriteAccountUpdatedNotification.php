@@ -83,7 +83,9 @@ class FavoriteAccountUpdatedNotification extends Notification
 
     public function getTitle(): string
     {
-        return "Favorite account {$this->account->name} modified";
+        $diff = Money::USD($this->account->pivot->amount);
+        $total = Money::USD($this->account->amount);
+        return "$diff to {$this->account->name}: now $total";
     }
 
     public function getMessage(): string

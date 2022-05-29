@@ -84,8 +84,9 @@ class AccountBatchUpdateHandledNotification extends Notification
 
     public function getTitle(): string
     {
+        $sum = Money::USD($this->accounts->sum('pivot.amount'));
         $names = Str::limit($this->accounts->map(fn($a) => $a->name)->join(', '), 100);
-        $title = "Transaction posted for {$names}";
+        $title = "$sum to {$names}";
         return $title;
     }
 
@@ -94,7 +95,7 @@ class AccountBatchUpdateHandledNotification extends Notification
         $sum = Money::USD($this->accounts->sum('pivot.amount'));
         $count = $this->accounts->count();
         $s = $count == 1 ? '' : 's';
-        $message = "$count account{$s} affected. $sum total difference. Make sure to confirm it goes through with your bank, and schedule the next one if needed.";
+        $message = "$count account{$s} affected. Make sure to confirm it goes through with your bank, and schedule the next one if needed.";
         return $message;
     }
 
