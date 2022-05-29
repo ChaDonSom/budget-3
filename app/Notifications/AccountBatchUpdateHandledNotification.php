@@ -95,6 +95,6 @@ class AccountBatchUpdateHandledNotification extends Notification
 
     public function getAction(): string
     {
-        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id . '?notification_uuid=' . $this->uuid;
+        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id;
     }
 }
