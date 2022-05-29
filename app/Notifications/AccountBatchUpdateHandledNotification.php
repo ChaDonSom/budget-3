@@ -63,7 +63,7 @@ class AccountBatchUpdateHandledNotification extends Notification
                             'title' => $this->getTitle(),
                             'body' => $this->getMessage(),
                             'deep_link' => $this->getAction(),
-                            'badge' => config('app.url') . '/build/safari-pinned-tab.svg',
+                            'badge' => config('app.url') . '/build/badge-monochrome.png',
                         ]
                     ])
                     ->setOption('webhookUrl', config('app.url') . '/beams/incoming');

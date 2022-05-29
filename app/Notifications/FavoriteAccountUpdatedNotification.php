@@ -55,12 +55,17 @@ class FavoriteAccountUpdatedNotification extends Notification
         $total = Money::USD($this->account->amount);
         return PusherMessage::create()
                     ->web()
-                    ->sound('success')
-                    ->setOption('icon', config('app.url') . '/build/android-chrome-192x192.png')
-                    ->setOption('badge', config('app.url') . '/build/safari-pinned-tab.svg')
-                    ->title($this->getTitle())
-                    ->body($this->getMessage())
-                    ->link($this->getAction());
+                    ->setOption('web', [
+                        'notification' => [
+                            'icon' => config('app.url') . '/build/android-chrome-192x192.png',
+                            'hide_notification_if_site_has_focus' => true,
+                            'title' => $this->getTitle(),
+                            'body' => $this->getMessage(),
+                            'deep_link' => $this->getAction(),
+                            'badge' => config('app.url') . '/build/badge-monochrome.png',
+                        ]
+                    ])
+                    ->setOption('webhookUrl', config('app.url') . '/beams/incoming');
     }
 
     /**
