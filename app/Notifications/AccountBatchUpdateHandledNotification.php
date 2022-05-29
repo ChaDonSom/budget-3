@@ -61,7 +61,14 @@ class AccountBatchUpdateHandledNotification extends Notification
                     ->setOption('badge', '/build/safari-pinned-tab.svg')
                     ->title($this->getTitle())
                     ->body($this->getMessage())
-                    ->link($this->getAction());
+                    ->link($this->getAction())
+                    ->setOption('web', [
+                        'icon' => config('app.url') . '/build/android-chrome-192x192.png',
+                        'hide_notification_if_site_has_focus' => true,
+                        'deep_link' => $this->getAction(),
+                        'badge' => config('app.url') . '/build/safari-pinned-tab.svg',
+                    ])
+                    ->setOption('webhookUrl', config('app.url') . '/beams/incoming');
     }
 
     /**
