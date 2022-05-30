@@ -27,9 +27,8 @@ PusherPushNotifications.onNotificationReceived = ({
     // Copied from the source code: https://github.com/pusher/push-notifications-web/blob/2ee625ebd7d9a179ba83c74f0eeac4e571861fa9/src/service-worker.js#L116
     // Modified to include badge
     const handleNotificationModified = async (payloadFromCallback) => {
-        const hideNotificationIfSiteHasFocus =
-            payloadFromCallback.notification
-                .hide_notification_if_site_has_focus === true;
+        console.log('handleNotificationModified')
+        const hideNotificationIfSiteHasFocus = payloadFromCallback.notification.hide_notification_if_site_has_focus === true;
         if (
             hideNotificationIfSiteHasFocus &&
             (await self.PusherPushNotifications._hasFocusedClient())
@@ -49,7 +48,7 @@ PusherPushNotifications.onNotificationReceived = ({
             data: {
                 pusher: {
                     customerPayload: payloadFromCallback,
-                    pusherMetadata,
+                    pusherMetadata: payload.data.pusher,
                 },
             },
         };
