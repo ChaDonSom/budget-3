@@ -17,6 +17,49 @@ cleanupOutdatedCaches()
 
 precacheAndRoute(self.__WB_MANIFEST)
 
+PusherPushNotifications.onNotificationReceived = ({
+    payload,
+    pushEvent,
+    handleNotification,
+}) => {
+    // payload.notification.title = "A new title!";
+
+    // Copied from the source code: https://github.com/pusher/push-notifications-web/blob/2ee625ebd7d9a179ba83c74f0eeac4e571861fa9/src/service-worker.js#L116
+    // Modified to include badge
+    const handleNotificationModified = async (payloadFromCallback) => {
+        const hideNotificationIfSiteHasFocus =
+            payloadFromCallback.notification
+                .hide_notification_if_site_has_focus === true;
+        if (
+            hideNotificationIfSiteHasFocus &&
+            (await self.PusherPushNotifications._hasFocusedClient())
+        ) {
+            return;
+        }
+
+        const title = payloadFromCallback.notification.title || "";
+        const body = payloadFromCallback.notification.body || "";
+        const icon = payloadFromCallback.notification.icon;
+        const badge = payloadFromCallback.notification.badge || "";
+
+        const options = {
+            body,
+            icon,
+            badge,
+            data: {
+                pusher: {
+                    customerPayload: payloadFromCallback,
+                    pusherMetadata,
+                },
+            },
+        };
+
+        return self.registration.showNotification(title, options);
+    };
+
+    pushEvent.waitUntil(handleNotificationModified(payload));
+};
+
 registerRoute(
     /^https:\/\/fonts\.googleapis\.com\/.*/i,
     new CacheFirst({
