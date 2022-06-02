@@ -11,24 +11,25 @@
         </span>
       </h1>
       <div v-if="initiallyLoaded">
-        <Button @click="dateRange = dateRange !== false ? false : ''; includeFuture = dateRange !== false ? false : includeFuture">
-          <template #leading-icon>{{ dateRange !== false ? 'check_box' : 'check_box_outline_blank' }}</template>
+        <Button @click="enableDateRange = !enableDateRange; includeFuture = enableDateRange == false ? false : includeFuture">
+          <template #leading-icon>{{ enableDateRange ? 'check_box' : 'check_box_outline_blank' }}</template>
           By date range
         </Button>
         <FlatPickr
-            v-if="dateRange !== false"
+            v-if="enableDateRange != false"
             :modelValue="dateRange"
             :config="{
               mode: 'range',
               onReady: (selectedDates: any, dateStr: any, instance: { open: Function }) => {
-                instance.open()
+                if (!loadedWithDateRange || hasDisabledDateRange) instance.open()
               },
               onClose: (selectedDates: any, dateStr: any, instance: { }) => {
+                dateRange = dateStr
                 dateRangeArray = selectedDates
               }
             }"
         />
-        <Button @click="includeFuture = !includeFuture; dateRange = includeFuture ? false : dateRange">
+        <Button @click="includeFuture = !includeFuture; enableDateRange = includeFuture ? false : enableDateRange">
           <template #leading-icon>{{ includeFuture ? 'check_box' : 'check_box_outline_blank' }}</template>Include future transactions
         </Button>
       </div>
@@ -148,12 +149,21 @@ const initiallyLoaded = computed(() => {
 	return (initiallyLoadedBatchUpdates.value)
 })
 
-const dateRange = ref<string|false>(false)
-const dateRangeArray = ref<Date[]>([])
+const enableDateRange = useLocalStorage('budget-history-date-range-enabled', false)
+const loadedWithDateRange = enableDateRange.value
+const hasDisabledDateRange = ref(false)
+const dateRange = useLocalStorage('budget-history-date-range', '')
+const dateRangeArray = useLocalStorage<Date[]>('budget-history-date-range-array', [], {
+  serializer: {
+    read: (raw: string) => JSON.parse(raw).map((i: string) => new Date(i)),
+    write: (value: Date[]) => JSON.stringify(value)
+  }
+})
 watch(
-  () => dateRange.value,
-  to => {
-    if (to === false) dateRangeArray.value = []
+  () => enableDateRange.value,
+  (to, from) => {
+    if (!to) dateRangeArray.value = [] as Date[]
+    if (from && !to) hasDisabledDateRange.value = true
   }
 )
 const includeFuture = useLocalStorage('budget-history-include-future', false)
@@ -162,12 +172,12 @@ const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWit
 watch(
   () => ([ route.query, includeFuture.value, dateRangeArray.value ]),
   async () => {
-    if (dateRange.value !== false && dateRangeArray.value.length != 2) return
+    if (enableDateRange.value && dateRangeArray.value.length != 2) return
     loading.value = true
     await batchUpdates.fetchData({
       ...route.query,
       include_future: includeFuture.value,
-      date_range: dateRange.value !== false
+      date_range: enableDateRange.value
         ? JSON.stringify(dateRangeArray.value.map(i => DateTime.fromJSDate(i).toFormat('yyyy-MM-dd')))
         : '[]',
     })
