@@ -1,10 +1,13 @@
 <?php
 
+use App\Events\PushNotificationUpdated;
 use App\Http\Controllers\AccountBatchUpdateController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TemplateController;
 use App\Notifications\SelfNotification;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
@@ -21,7 +24,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user()->load(['sharedUsers', 'usersWhoSharedToMe']);
+    return $request->user()->load([
+        'sharedUsers',
+        'usersWhoSharedToMe',
+        'notifications' => fn($query) => $query->whereNull('read_at')
+    ]);
 });
 
 Route::prefix('beams')->middleware('auth:sanctum')->group(function () {
@@ -47,6 +54,19 @@ Route::prefix('beams')->middleware('auth:sanctum')->group(function () {
         $beamsToken = $beamsClient->generateToken((string) "App.Models.User.{$request->user()->id}");
         return Response::json($beamsToken);
     });
+
+    Route::post('/incoming', function (Request $request) {
+        Log::info('found pusher beams incoming webhook');
+        Log::info($request);
+        return response('', 200);
+    });
+});
+
+Route::get('/dismiss-notification/{id}', function ($uuid) {
+    $notification = DatabaseNotification::where('data', 'like', '%"uuid":"' . $uuid . '"%')->firstOrFail();
+    $notification->markAsRead();
+    PushNotificationUpdated::dispatch($notification, $notification->notifiable);
+    return $notification;
 });
 
 Route::middleware('auth:sanctum')->resource('accounts', AccountController::class);
