@@ -2,7 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Events\PushNotificationCreated;
 use App\Models\AccountBatchUpdate;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,6 +14,7 @@ use NotificationChannels\PusherPushNotifications\PusherChannel;
 use NotificationChannels\PusherPushNotifications\PusherMessage;
 use Illuminate\Support\Str;
 use Cknow\Money\Money;
+use Ramsey\Uuid\Uuid;
 
 class AccountBatchUpdateHandledNotification extends Notification
 {
@@ -25,9 +28,10 @@ class AccountBatchUpdateHandledNotification extends Notification
     public function __construct(
         public AccountBatchUpdate $batchUpdate,
         public Collection $accounts,
+        public string|null $uuid = null,
     )
     {
-        //
+        $this->uuid = Uuid::fromDateTime(Carbon::now());
     }
 
     /**
@@ -38,7 +42,11 @@ class AccountBatchUpdateHandledNotification extends Notification
      */
     public function via($notifiable)
     {
-        return [ PusherChannel::class ];
+        PushNotificationCreated::dispatch($this, $notifiable);
+        return [
+            PusherChannel::class,
+            'database',
+        ];
     }
 
     /**
@@ -49,24 +57,18 @@ class AccountBatchUpdateHandledNotification extends Notification
      */
     public function toPushNotification($notifiable)
     {
-        $sum = Money::USD($this->accounts->sum('pivot.amount'));
-        $count = $this->accounts->count();
-        $s = $count == 1 ? '' : 's';
-        $names = Str::limit($this->accounts->map(fn($a) => $a->name)->join(', '), 100);
-        $title = "Transaction posted for {$names}";
         return PusherMessage::create()
-                    ->web()
-                    ->setOption('web', [
-                        'notification' => [
-                            'icon' => config('app.url') . '/build/android-chrome-192x192.png',
-                            'hide_notification_if_site_has_focus' => true,
-                            'title' => $this->getTitle(),
-                            'body' => $this->getMessage(),
-                            'deep_link' => $this->getAction(),
-                            'badge' => config('app.url') . '/build/badge-monochrome.png',
-                        ]
-                    ])
-                    ->setOption('webhookUrl', config('app.url') . '/beams/incoming');
+            ->web()
+            ->setOption('web', [
+                'notification' => [
+                    'icon' => config('app.url') . '/build/android-chrome-192x192.png',
+                    'hide_notification_if_site_has_focus' => true,
+                    'title' => $this->getTitle(),
+                    'body' => $this->getMessage(),
+                    'deep_link' => $this->getAction(),
+                    'badge' => config('app.url') . '/build/badge-monochrome.png',
+                ]
+            ]);
     }
 
     /**
@@ -78,7 +80,10 @@ class AccountBatchUpdateHandledNotification extends Notification
     public function toArray($notifiable)
     {
         return [
-            //
+            'uuid' => $this->uuid,
+            'title' => $this->getTitle(),
+            'message' => $this->getMessage(),
+            'action' => $this->getAction(),
         ];
     }
 
@@ -101,6 +106,6 @@ class AccountBatchUpdateHandledNotification extends Notification
 
     public function getAction(): string
     {
-        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id;
+        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id . '?notification_uuid=' . $this->uuid;
     }
 }

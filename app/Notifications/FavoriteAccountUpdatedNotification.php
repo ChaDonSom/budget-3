@@ -2,8 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Events\PushNotificationCreated;
 use App\Models\Account;
 use App\Models\AccountBatchUpdate;
+use Carbon\Carbon;
 use Cknow\Money\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,6 +15,7 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\PusherPushNotifications\PusherChannel;
 use NotificationChannels\PusherPushNotifications\PusherMessage;
 use Illuminate\Support\Str;
+use Ramsey\Uuid\Uuid;
 
 class FavoriteAccountUpdatedNotification extends Notification
 {
@@ -27,9 +30,10 @@ class FavoriteAccountUpdatedNotification extends Notification
     public function __construct(
         public AccountBatchUpdate $batchUpdate,
         public Account $account,
+        public ?string $uuid = null,
     )
     {
-        //
+        $this->uuid = Uuid::fromDateTime(Carbon::now());
     }
 
     /**
@@ -40,7 +44,11 @@ class FavoriteAccountUpdatedNotification extends Notification
      */
     public function via($notifiable)
     {
-        return [ PusherChannel::class ];
+        PushNotificationCreated::dispatch($this, $notifiable);
+        return [
+            PusherChannel::class,
+            'database',
+        ];
     }
 
     /**
@@ -51,21 +59,18 @@ class FavoriteAccountUpdatedNotification extends Notification
      */
     public function toPushNotification($notifiable)
     {
-        $diff = Money::USD($this->account->pivot->amount);
-        $total = Money::USD($this->account->amount);
         return PusherMessage::create()
-                    ->web()
-                    ->setOption('web', [
-                        'notification' => [
-                            'icon' => config('app.url') . '/build/android-chrome-192x192.png',
-                            'hide_notification_if_site_has_focus' => true,
-                            'title' => $this->getTitle(),
-                            'body' => $this->getMessage(),
-                            'deep_link' => $this->getAction(),
-                            'badge' => config('app.url') . '/build/badge-monochrome.png',
-                        ]
-                    ])
-                    ->setOption('webhookUrl', config('app.url') . '/beams/incoming');
+            ->web()
+            ->setOption('web', [
+                'notification' => [
+                    'icon' => config('app.url') . '/build/android-chrome-192x192.png',
+                    'hide_notification_if_site_has_focus' => true,
+                    'title' => $this->getTitle(),
+                    'body' => $this->getMessage(),
+                    'deep_link' => $this->getAction(),
+                    'badge' => config('app.url') . '/build/badge-monochrome.png',
+                ]
+            ]);
     }
 
     /**
@@ -77,7 +82,10 @@ class FavoriteAccountUpdatedNotification extends Notification
     public function toArray($notifiable)
     {
         return [
-            //
+            'uuid' => $this->uuid,
+            'title' => $this->getTitle(),
+            'message' => $this->getMessage(),
+            'action' => $this->getAction(),
         ];
     }
 
@@ -97,6 +105,6 @@ class FavoriteAccountUpdatedNotification extends Notification
 
     public function getAction(): string
     {
-        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id;
+        return config('app.url') . '/#/batch-updates/' . $this->batchUpdate->id . '?notification_uuid=' . $this->uuid;
     }
 }
