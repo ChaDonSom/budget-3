@@ -210,8 +210,9 @@
 									{{
 										dollars(sortedAccounts.reduce((total, account) => {
 											if (account && isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.pivot?.amount) {
-												let overMinimum = account.overMinimum
-												total += overMinimum <= (account.amount / 100) ? overMinimum : (account.amount / 100)
+												total += account.overMinimum <= (account.amount / 100)
+													? account.overMinimum
+													: (account.amount / 100)
 											}
 											return total
 										}, 0))

@@ -87,6 +87,17 @@
 			:id="modal.id"
 		/>
 	</transition-group>
+	<Snackbar v-for="notification of auth.user?.notifications" :timeout="-1"
+	>
+		{{ notification.data.title }}<br>
+		{{ notification.data.message }}
+		<template #actions>
+			<SnackbarActionButton>
+				<a :href="notification.data.action">Open</a>
+			</SnackbarActionButton>
+			<SnackbarDismissButton @click="dismissNotification(notification.data.uuid)">close</SnackbarDismissButton>
+		</template>
+	</Snackbar>
 </template>
 
 <script setup lang="ts">
@@ -96,6 +107,12 @@ import { onMounted, ref, watch } from 'vue';
 import { useOnline, useScroll, useWindowScroll } from '@vueuse/core';
 import { useModals } from '@/ts/store/modals';
 import IconButton from '@/ts/core/buttons/IconButton.vue';
+import Snackbar from '@/ts/core/snackbars/Snackbar.vue';
+import SnackbarActionButton from '@/ts/core/snackbars/SnackbarActionButton.vue';
+import SnackbarDismissButton from '@/ts/core/snackbars/SnackbarDismissButton.vue';
+import { useRoute } from 'vue-router';
+import axios from 'axios';
+import { useEcho } from '@/ts/store/echo';
 
 const auth = useAuth()
 
@@ -115,15 +132,63 @@ watch(y, () => {
 })
 
 const hasInitiallyLoaded = ref(false)
+type Notification = {
+	id: string,
+	read_at: string | null,
+	data: { title: string, message: string, action: string, uuid: string }
+}
 onMounted(async () => {
 	if (!auth.authenticated || !auth.user) {
 		await auth.getUser()
+		echo.echo.private(`App.Models.User.${auth.user?.id}`)
+			.listen(
+				'PushNotificationCreated',
+				(payload: { notification: Notification }) => {
+					if (auth.user?.notifications) auth.user.notifications.unshift(payload.notification)
+				}
+			)
+			.listen(
+				'PushNotificationUpdated',
+				(payload: { notification: Notification }) => {
+					console.log('PushNotificationUpdated')
+					if (auth.user?.notifications) {
+						// Update the notification or remove it if the update is to mark it read
+						let index = auth.user.notifications.findIndex(n => n.data.uuid == payload.notification.data.uuid)
+						if (index != -1) {
+							auth.user.notifications[index] = payload.notification
+							if (payload.notification.read_at) {
+								let temp = auth.user.notifications
+								temp.splice(index)
+								auth.user.notifications = temp
+							}
+						}
+					}
+				}
+			)
 	}
 
 	hasInitiallyLoaded.value = true
 })
 
 const modals = useModals()
+const route = useRoute()
+const echo = useEcho()
+
+// Dismiss notification:
+// when we go to the notification's action
+watch(
+	() => route.query,
+	to => {
+		if (to.notification_uuid) dismissNotification(String(to.notification_uuid))
+	},
+	{ deep: true, immediate: true }
+)
+// This is also called when we just hit the x button to dismiss notifications directly
+async function dismissNotification(id: string) {
+	let response = await axios.get(`/api/dismiss-notification/${id}`)
+	let index = auth.user?.notifications.findIndex(i => i.id == response.data.id)
+	if (auth.user && index && index != -1) auth.user.notifications[index] = response.data
+}
 </script>
 
 <style scoped lang="scss">

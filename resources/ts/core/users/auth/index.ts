@@ -12,6 +12,16 @@ export type User = {
     [key: string]: any;
     shared_users?: User[];
     users_who_shared_to_me?: User[];
+    notifications: {
+        id: string,
+        read_at: string|null,
+        data: {
+            uuid: string,
+            title: string,
+            message: string,
+            action: string,
+        }
+    }[];
 };
 
 export const useAuth = defineStore('auth', {
