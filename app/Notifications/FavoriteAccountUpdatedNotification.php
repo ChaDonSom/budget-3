@@ -44,7 +44,9 @@ class FavoriteAccountUpdatedNotification extends Notification
      */
     public function via($notifiable)
     {
-        PushNotificationCreated::dispatch($this, $notifiable);
+        PushNotificationCreated::dispatch(
+            $notifiable, $this->uuid, $this->getTitle(), $this->getMessage(), $this->getAction()
+        );
         return [
             PusherChannel::class,
             'database',

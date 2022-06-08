@@ -24,8 +24,11 @@ class PushNotificationCreated implements ShouldBroadcast
      * @return void
      */
     public function __construct(
-        public AccountBatchUpdateHandledNotification|FavoriteAccountUpdatedNotification $notification,
-        public User $user
+        public User $user,
+        public string $uuid,
+        public string $title,
+        public string $message,
+        public string $action,
     )
     {
         //
@@ -46,10 +49,10 @@ class PushNotificationCreated implements ShouldBroadcast
         return [
             'notification' => [
                 'data' => [
-                    'uuid' => $this->notification->uuid,
-                    'title' => $this->notification->getTitle(),
-                    'message' => $this->notification->getMessage(),
-                    'action' => $this->notification->getAction(),
+                    'uuid' => $this->uuid,
+                    'title' => $this->title,
+                    'message' => $this->message,
+                    'action' => $this->action,
                 ]
             ]
         ];
