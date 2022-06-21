@@ -19,7 +19,6 @@
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
-        "marvinlabs/laravel-discord-logger": "^1.2",
         "owen-it/laravel-auditing": "^13.0",
         "pusher/pusher-php-server": "^7.0",
         "pusher/pusher-push-notifications": "^1.1"
