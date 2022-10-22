@@ -33,13 +33,25 @@ npm install
 npm start
 ```
 
-Or, if you want background tasks for each process:
-```bash
-php artisan serve & # the Laravel server
+[View the Vue readme](./vue-readme.md)
 
-php artisan queue:listen & # if you'd like to run Laravel queue jobs
+[View the Laravel readme](./laravel-readme.md)
 
-npm run dev & # the Vite server
+# Publish it
+
+## Using Laravel Forge
+
+**Update your nginx config:** provide two different `location` blocks: one for the frontend, one for the backend. Use explicitly-registered routes for your backend, for both legibility and safety (and because no other way works). These will replace the existing `location /` block.
+```nginx
+location / {
+    # {{ ROOT_PATH }}/dist in a Forge Template
+    root /home/user/domain.com/dist;
+    try_files $uri $uri/ /index.html;
+}
+
+location ~ ^\/(api|sanctum|login|logout|register|user|_ignition|password-reset|clockwork|__clockwork).* {
+    # {{ PATH }} in a Forge Template
+    root /home/user/domain.com/public;
+    try_files $uri $uri/ /index.php?$query_string;
+}
 ```
-
-**Note: use `:8000`, for Laravel's server, rather than `:3000`, for Vite's server.** The `laravel-vite` package sets things up to run vite's features from port `8000`.
