@@ -1,18 +1,21 @@
-import { useAuth, User } from "@/core/users/auth";
-import { BatchUpdate, BatchUpdateWithAccounts, useBatchUpdates } from "@/store/batchUpdates";
+import { useAuth, type User } from "@/core/users/auth";
+import type { BatchUpdate, BatchUpdateWithAccounts } from "@/store/batchUpdates";
+import { useBatchUpdates } from "@/store/batchUpdates";
 import { useEcho } from "@/store/echo";
-import axios, { AxiosResponse } from "axios";
+import axios, { type AxiosResponse } from "axios";
 import { defineStore } from "pinia";
 import {
-    ComponentPropsOptions,
     computed,
-    ComputedRef,
     reactive,
     ref,
-    SetupContext,
     toRefs,
     watch,
 } from "vue";
+import type {
+    ComponentPropsOptions,
+    ComputedRef,
+    SetupContext,
+} from "vue"
 
 export type Account = {
     id: number;

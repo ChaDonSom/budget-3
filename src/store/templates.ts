@@ -1,15 +1,17 @@
-import { Account } from "@/store/accounts";
-import axios, { AxiosResponse } from "axios";
+import type { Account } from "@/store/accounts";
+import axios, { type AxiosResponse } from "axios";
 import {
-    ComponentPropsOptions,
     computed,
-    ComputedRef,
     reactive,
     ref,
-    SetupContext,
     toRefs,
     watch,
 } from "vue";
+import type {
+    SetupContext,
+    ComputedRef,
+    ComponentPropsOptions,
+} from "vue"
 
 export type Template = {
     id: number;

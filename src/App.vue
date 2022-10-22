@@ -118,7 +118,7 @@ import SnackbarActionButton from '@/core/snackbars/SnackbarActionButton.vue';
 import SnackbarDismissButton from '@/core/snackbars/SnackbarDismissButton.vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
-import { useEcho } from '@/ts/store/echo';
+import { useEcho } from '@/store/echo';
 
 const title = import.meta.env.VITE_APP_NAME
 const prod = import.meta.env.PROD

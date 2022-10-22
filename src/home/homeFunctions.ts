@@ -1,7 +1,7 @@
 import { dollars } from "@/core/utilities/currency";
 import { toDateTime } from "@/core/utilities/datetime";
-import { Account, AccountWithBatchUpdates } from "@/store/accounts";
-import { BatchUpdate } from "@/store/batchUpdates";
+import type { Account, AccountWithBatchUpdates } from "@/store/accounts";
+import type { BatchUpdate } from "@/store/batchUpdates";
 import { DateTime } from "luxon";
 
 export function idealWeeks(batchUpdate: BatchUpdate) {

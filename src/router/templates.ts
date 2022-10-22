@@ -1,4 +1,4 @@
-import { RouteRecordRaw } from "vue-router";
+import type { RouteRecordRaw } from "vue-router";
 import Templates from "@/templates/Templates.vue";
 import Template from "@/templates/Template.vue";
 

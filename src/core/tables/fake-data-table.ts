@@ -22,12 +22,12 @@
  */
 
 import { MDCComponent } from "@material/base/component";
-import { SpecificEventListener } from "@material/base/types";
-import { MDCCheckbox, MDCCheckboxFactory } from "@material/checkbox/component";
+import type { SpecificEventListener } from "@material/base/types";
+import { MDCCheckbox, type MDCCheckboxFactory } from "@material/checkbox/component";
 import { closest } from "@material/dom/ponyfill";
 import { MDCLinearProgress } from "@material/linear-progress/component";
 
-import { MDCDataTableAdapter } from "@material/data-table/adapter";
+import type { MDCDataTableAdapter } from "@material/data-table/adapter";
 import {
     cssClasses,
     dataAttributes,
@@ -37,7 +37,7 @@ import {
     SortValue,
 } from "@material/data-table/constants";
 import { MDCDataTableFoundation } from "@material/data-table/foundation";
-import {
+import type {
     MDCDataTableRowSelectionChangedEventDetail,
     RowClickEventData,
 } from "@material/data-table/types";
