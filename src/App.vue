@@ -58,7 +58,7 @@
     <div class="fixed top-1 right-1 flex z-10">
         <transition name="auth-buttons" mode="out-in">
             <div v-if="auth.authenticated">
-                <Button @click="auth.logout">Log out</Button>
+                <!-- <Button @click="auth.logout">Log out</Button> -->
             </div>
             <div v-else class="flex">
                 <transition name="auth-buttons" mode="out-in">
