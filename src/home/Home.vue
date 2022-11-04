@@ -82,7 +82,7 @@
 							<DataTableRow
 									v-for="account of sortedAccounts"
 									:key="account.id"
-									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdates(account) ? fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
+									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndSortedFields(account) ? fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
 							>
 								<DataTableCell @click="editAccount(account.id)" style="white-space: normal;"
 										:class="{ 'hidden': !columnsToShow.name }"
@@ -98,20 +98,20 @@
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdates(account)"
+											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
 											@click="$router.push({ name: 'batch-updates-show', params: { id: account.batch_updates?.[0]?.id } })"
 									>
 										{{ toDateTime(account.nextDate).toFormat('M/dd') }}
 									</div>
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" numeric>
-									<div v-if="isAccountWithBatchUpdates(account)">
+									<div v-if="isAccountWithBatchUpdatesAndSortedFields(account)">
 										{{ dollars(account.nextAmount / 100) }}
 									</div>
 								</DataTableCell>
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
 									<div
-											v-if="isAccountWithBatchUpdates(account)"
+											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
 											class="text-gray-400 select-none whitespace-nowrap"
 											v-tooltip="{
 												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
@@ -123,7 +123,7 @@
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdates(account)"
+											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
 												'text-gray-400': account.overMinimum >= 0,
@@ -137,7 +137,7 @@
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdates(account)"
+											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
 											v-tooltip="`Required: ${
 													Math.round((
 															(
@@ -209,7 +209,7 @@
 									Total:
 									{{
 										dollars(sortedAccounts.reduce((total, account) => {
-											if (account && isAccountWithBatchUpdates(account) && account.batch_updates?.[0]?.pivot?.amount) {
+											if (account && isAccountWithBatchUpdatesAndSortedFields(account) && account.batch_updates?.[0]?.pivot?.amount) {
 												total += account.overMinimum <= (account.amount / 100)
 													? account.overMinimum
 													: (account.amount / 100)
@@ -318,12 +318,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, Ref, markRaw } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, type Ref, markRaw } from 'vue';
 import Button from '@/core/buttons/Button.vue'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
-import { useAccounts, Account, AccountWithBatchUpdates, useAccountsStore } from '@/store/accounts';
+import { useAccounts, type Account, type AccountWithBatchUpdates, useAccountsStore } from '@/store/accounts';
 import { dollars } from '@/core/utilities/currency'
 import DataTable from '@/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/core/tables/DataTableHeaderCell.vue';
@@ -340,12 +340,12 @@ import { useForm } from '@/store/forms';
 import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/core/fields/OutlinedTextfield.vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
-import { TemplateWithAccounts } from '@/store/templates';
+import type { TemplateWithAccounts } from '@/store/templates';
 import CircularScrim from '@/core/loaders/CircularScrim.vue';
 // @ts-ignore
 import FlatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
-import { BatchUpdate, BatchUpdateWithAccounts } from '@/store/batchUpdates';
+import { type BatchUpdate, type BatchUpdateWithAccounts } from '@/store/batchUpdates';
 import { toDateTime } from '@/core/utilities/datetime';
 import {
 	idealPayment,
@@ -407,13 +407,20 @@ const accounts = useAccountsStore()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 
-const sortedAccounts: Ref<(Account|(AccountWithBatchUpdates & {
+
+type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 	nextDate: string,
 	nextAmount: number,
 	minimum: number,
 	overMinimum: number,
 	percentCovered: number,
-}))[]> = ref([])
+}
+function isAccountWithBatchUpdatesAndSortedFields(
+	account: Account | AccountWithBatchUpdates | AccountWithBatchUpdatesAndSortedFields
+): account is AccountWithBatchUpdatesAndSortedFields {
+	return !!account.batch_updates?.[0];
+}
+const sortedAccounts: Ref<(Account|AccountWithBatchUpdatesAndSortedFields)[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort-v5', {
 	isFavorite: {
 		value: 'descending',
