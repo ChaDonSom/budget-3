@@ -653,7 +653,7 @@ code {
 :deep(.opaque) {
 	.mdc-text-field {
 		.mdc-notched-outline__leading, .mdc-notched-outline__trailing, .mdc-notched-outline__notch {
-			background-color: white;
+			background-color: var(--color-background);
 		}
 		input.mdc-text-field__input {
 			z-index: 2;

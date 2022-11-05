@@ -15,7 +15,7 @@ export function idealPayment(
 }
 
 export function fridaysUntil(date: DateTime, now: DateTime = DateTime.now()): number {
-    return (
+    return Math.round(
         // That date's previous friday
         (
             date.startOf("day").weekday >= 5
