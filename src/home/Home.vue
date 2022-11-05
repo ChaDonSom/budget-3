@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="text-center m-3">
+		<div class="text-center my-3 mx-0 md:mx-3">
       <!--
         Welcome sign :)
       -->
@@ -20,7 +20,7 @@
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh; max-width: 90vw;">
+					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh;" class="max-w-full md:max-w-[95vw]">
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name"
 									:class="{ 'hidden': !columnsToShow.name }"
