@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { useAuth } from '@/core/users/auth';
-import { Template, TemplateWithAccounts, useTemplates } from '@/store/templates';
+import { type Template, type TemplateWithAccounts, useTemplates } from '@/store/templates';
 import { useLocalStorage } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import { dollars } from '@/core/utilities/currency';

@@ -156,12 +156,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, Ref, markRaw } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, type Ref, markRaw } from 'vue';
 import Button from '@/core/buttons/Button.vue'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
-import { useAccounts, Account } from '@/store/accounts';
+import { useAccounts, type Account } from '@/store/accounts';
 import { dollars } from '@/core/utilities/currency'
 import DataTable from '@/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/core/tables/DataTableHeaderCell.vue';
@@ -178,7 +178,7 @@ import { DateTime } from 'luxon'
 import OutlinedTextfield from '@/core/fields/OutlinedTextfield.vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import CircularScrim from '@/core/loaders/CircularScrim.vue';
-import { BatchUpdateWithAccounts, useBatchUpdates } from '@/store/batchUpdates';
+import { type BatchUpdateWithAccounts, useBatchUpdates } from '@/store/batchUpdates';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import { toDateTime } from '@/core/utilities/datetime';
 
