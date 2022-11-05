@@ -2,34 +2,41 @@
   <Modal @close="modals.close(id)">
     <template #title><h1 class="text-xl">Table settings</h1></template>
     <h2>Columns to show</h2>
-    <div class="flex flex-col gap-3 my-2">
+    <div class="flex flex-col my-2">
       <div>
-        <input v-model="columnsToShow.name" type="checkbox" class="ml-3" id="name">
-        <label for="name" class="ml-1">Name</label>
+        <MdcSwitch v-model="columnsToShow.name" class="ml-3" id="name">
+          Name
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.nextDate" type="checkbox" class="ml-3" id="nextDate">
-        <label for="nextDate" class="ml-1">Next date</label>
+        <MdcSwitch v-model="columnsToShow.nextDate" class="ml-3" id="nextDate">
+          Next date
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.nextAmount" type="checkbox" class="ml-3" id="nextAmount">
-        <label for="nextAmount" class="ml-1">Next amount</label>
+        <MdcSwitch v-model="columnsToShow.nextAmount" class="ml-3" id="nextAmount">
+          Next amount
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.minimum" type="checkbox" class="ml-3" id="minimum">
-        <label for="minimum" class="ml-1">Minimum</label>
+        <MdcSwitch v-model="columnsToShow.minimum" class="ml-3" id="minimum">
+          Minimum
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.overMinimum" type="checkbox" class="ml-3" id="overMinimum">
-        <label for="overMinimum" class="ml-1">Over/under min.</label>
+        <MdcSwitch v-model="columnsToShow.overMinimum" class="ml-3" id="overMinimum">
+          Over/under min.
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.percentCovered" type="checkbox" class="ml-3" id="percentCovered">
-        <label for="percentCovered" class="ml-1">% covered</label>
+        <MdcSwitch v-model="columnsToShow.percentCovered" class="ml-3" id="percentCovered">
+          % covered
+        </MdcSwitch>
       </div>
       <div>
-        <input v-model="columnsToShow.amount" type="checkbox" class="ml-3" id="amount">
-        <label for="amount" class="ml-1">Amount</label>
+        <MdcSwitch v-model="columnsToShow.amount" class="ml-3" id="amount">
+          Amount
+        </MdcSwitch>
       </div>
     </div>
     <template #actions>
@@ -47,6 +54,7 @@ import { useModals } from '@/store/modals';
 import { useAuth } from '@/core/users/auth';
 import { useRouter } from 'vue-router';
 import { columnsToShow } from '@/home/store';
+import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const props = defineProps({
   id: {
