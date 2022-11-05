@@ -106,7 +106,7 @@ const thBindableAttributes = computed(() => {
 .mdc-data-table__header-cell .mdc-data-table__sort-icon-button {
     position: absolute;
     left: calc(50% - 14px);
-    bottom: -8px;
+    bottom: -16px;
 }
 
 .mdc-data-table__header-cell::after {
