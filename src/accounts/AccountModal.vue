@@ -55,12 +55,14 @@
     -->
 
     <div class="ml-4 my-4">
-      <input type="checkbox" v-model="isFavorite" :id="`favorite-account-${form.id}`">
-      <label :for="`favorite-account-${form.id}`" class="ml-2">Favorite</label>
+      <MdcSwitch 
+          v-model="isFavorite"
+          :id="`favorite-account-${form.id}`"
+      >Favorite</MdcSwitch>
     </div>
     <Button v-if="accountId" @click="goToAccountHistory"><template #leading-icon>history</template>History</Button>
     <transition name="error-message">
-      <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit">
+      <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit text-red-800">
         {{ form.errors.message }}
       </p>
     </transition>
@@ -78,7 +80,7 @@ import Modal from '@/core/modals/Modal.vue';
 import Button from '@/core/buttons/Button.vue';
 import SaveButton from '@/core/buttons/SaveButton.vue';
 import { useModals } from '@/store/modals';
-import { Account, useAccounts } from '@/store/accounts';
+import { type Account, useAccounts } from '@/store/accounts';
 import { computed, onMounted, ref } from 'vue';
 import OutlinedTextfield from '@/core/fields/OutlinedTextfield.vue';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
@@ -98,8 +100,9 @@ import {
 import { toDateTime } from '@/core/utilities/datetime';
 import { columnsToShow } from '@/home/store';
 import IconButton from '@/core/buttons/IconButton.vue';
-import { BatchUpdate } from '@/store/batchUpdates';
+import type { BatchUpdate } from '@/store/batchUpdates';
 import { DateTime } from 'luxon';
+import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const props = defineProps({
   id: {
