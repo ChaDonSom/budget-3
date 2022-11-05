@@ -58,7 +58,7 @@
 									column-id="overMinimum"
 									:sort="sort.overMinimum"
 							>
-								Over/under min.
+								Over / under min.
 							</DataTableHeaderCell>
 							<DataTableHeaderCell
 									:class="{ 'hidden': !columnsToShow.percentCovered }"
@@ -133,6 +133,12 @@
 											class="whitespace-nowrap"
 									>
 										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
+										<br v-if="batchDifferences[account.id]">
+										<span v-if="batchDifferences[account.id]" class="text-gray-400"
+												:class="{'text-red-400': account.overMinimum + batchDifferences[account.id].resolved < 0}"
+										>
+											{{ dollars(account.overMinimum + batchDifferences[account.id].resolved) }}
+										</span>
 									</div>
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" numeric>
@@ -166,15 +172,9 @@
 									{{ dollars(account.amount / 100) }}
 									<br v-if="batchDifferences[account.id]">
 									<span v-if="batchDifferences[account.id]" class="text-gray-400"
-											:class="{'text-red-400': (account.amount / 100) + (
-												batchDifferences[account.id].amount * batchDifferences[account.id].modifier
-											) < 0}"
+											:class="{'text-red-400': (account.amount / 100) + batchDifferences[account.id].resolved < 0}"
 									>
-										{{ dollars(
-											(account.amount / 100) + (
-												batchDifferences[account.id].amount * batchDifferences[account.id].modifier
-											)
-										) }}
+										{{ dollars((account.amount / 100) + batchDifferences[account.id].resolved) }}
 									</span>
 								</DataTableCell>
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
@@ -282,8 +282,9 @@
 
 				<transition name="opacity-0-scale-097-150ms">
 					<div v-if="areAnyBatchDifferences" class="my-7">
-						<input type="checkbox" v-model="batchForm.notify_me" id="notify_me">
-						<label for="notify_me"> Notify me when this change is made</label>
+						<MdcSwitch v-model="batchForm.notify_me" id="notify_me">
+							Notify me when this change is made
+						</MdcSwitch>
 					</div>
 				</transition>
 
@@ -353,10 +354,12 @@ import {
 	fridaysUntil,
 	isAccountWithBatchUpdates,
 	emergencySaving,
-	minimumToMakeNextPayment
-} from '@/home/homeFunctions';
+	minimumToMakeNextPayment,
+BatchDifference
+} from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import { columnsToShow } from '@/home/store';
+import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const auth = useAuth()
 const route = useRoute()
@@ -510,26 +513,26 @@ watch(
 	---------------------------------------------------
  */
 const currentlyEditingDifference = ref<number|null>(null)
-const batchDifferences = ref({} as { [key: number]: { amount: number, modifier: 1|-1 } })
+const batchDifferences = ref({} as { [key: number]: BatchDifference })
 const batchDate = ref<DateTime>(DateTime.now())
 const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
 const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
 function startWithdrawing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: -1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
 }
 function startDepositing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: 1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })

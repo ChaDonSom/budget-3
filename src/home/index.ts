@@ -3,6 +3,7 @@ import { toDateTime } from "@/core/utilities/datetime";
 import type { Account, AccountWithBatchUpdates } from "@/store/accounts";
 import type { BatchUpdate } from "@/store/batchUpdates";
 import { DateTime } from "luxon";
+import { ref } from "vue";
 
 export function idealWeeks(batchUpdate: BatchUpdate) {
     return batchUpdate?.weeks ?? 4;
@@ -51,3 +52,16 @@ export function minimumToMakeNextPayment(account: AccountWithBatchUpdates) {
     return Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
         - (idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
 }
+
+export class BatchDifference {
+	public amount: number = 0
+	public modifier: 1|-1 = 1
+	constructor({ amount, modifier }: { amount: number, modifier: 1|-1 }) {
+		this.amount = amount
+		this.modifier = modifier
+	}
+	get resolved() {
+		return this.amount * this.modifier
+	}
+}
+export const latestBatchDifference = ref<BatchDifference|null>(null)

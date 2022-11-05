@@ -3,6 +3,12 @@
       ref="mainRef"
       @close="modals.close(id)"
   >
+    <Button
+        v-if="latestBatchDifference && latestBatchDifference.amount"
+        @click="useLatestBatchDifference"
+    >
+      {{ latestBatchDifference.resolved * -1 }}
+    </Button>
     <DollarsField
         :density="-4"
         :icon="difference.modifier == 1 ? 'add' : 'remove'"
@@ -41,9 +47,11 @@
 <script setup lang="ts">
 import DollarsField from '@/core/fields/DollarsField.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, onUnmounted, ref, watch, type PropType } from 'vue';
 import Modal from '@/core/modals/Modal.vue';
 import { useModals } from '@/store/modals';
+import { BatchDifference, latestBatchDifference } from '@/home';
+import Button from '../core/buttons/Button.vue';
 
 const props = defineProps({
   id: {
@@ -51,7 +59,7 @@ const props = defineProps({
     required: true,
   },
   difference: {
-    type: Object,
+    type: Object as PropType<BatchDifference>,
     required: true,
   }
 })
@@ -76,6 +84,17 @@ function modify() {
     props.difference.modifier = trueAmount >= 0 ? 1 : -1
   }
   modifying.value = null
+}
+
+onBeforeUnmount(() => {
+  latestBatchDifference.value = props.difference
+})
+function useLatestBatchDifference() {
+  if (latestBatchDifference.value) {
+    props.difference.modifier = latestBatchDifference.value?.modifier == 1 ? -1 : 1
+    props.difference.amount = latestBatchDifference.value.amount
+    latestBatchDifference.value = null
+  }
 }
 
 const mainRef = ref<HTMLElement|null>(null)

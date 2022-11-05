@@ -96,7 +96,7 @@ import {
   isAccountWithBatchUpdates,
   emergencySaving,
   minimumToMakeNextPayment,
-} from '@/home/homeFunctions';
+} from '@/home';
 import { toDateTime } from '@/core/utilities/datetime';
 import { columnsToShow } from '@/home/store';
 import IconButton from '@/core/buttons/IconButton.vue';

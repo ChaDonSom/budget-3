@@ -161,7 +161,7 @@ import { type Template, type TemplateWithAccounts, useTemplates } from '@/store/
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import CircularScrim from '../core/loaders/CircularScrim.vue';
-import { emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home/homeFunctions';
+import { emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home';
 import { toDateTime } from '@/core/utilities/datetime';
 
 const props = defineProps({
