@@ -161,7 +161,7 @@ import { type Template, type TemplateWithAccounts, useTemplates } from '@/store/
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import CircularScrim from '../core/loaders/CircularScrim.vue';
-import { emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home';
+import { BatchDifference, emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home';
 import { toDateTime } from '@/core/utilities/datetime';
 
 const props = defineProps({
@@ -272,26 +272,26 @@ watch(
 	---------------------------------------------------
  */
 const currentlyEditingDifference = ref<number|null>(null)
-const batchDifferences = ref({} as { [key: number]: { amount: number, modifier: 1|-1 } })
+const batchDifferences = ref({} as { [key: number]: BatchDifference })
 const batchDate = ref<DateTime>(DateTime.now())
 const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
 const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
 function startWithdrawing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: -1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
 }
 function startDepositing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: 1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
@@ -316,19 +316,19 @@ const batchForm = useForm('/api/templates', {
   name: '',
   id: null as number|null,
   user_id: auth.user?.id,
-	accounts: batchDifferences.value,
+	accounts: JSON.parse(JSON.stringify(batchDifferences.value)),
 })
 async function loadTemplate() {
   if (route.params.id && route.params.id != 'new') {
     let result = await templates.fetchTemplate(Number(route.params.id)) as TemplateWithAccounts
     batchForm.reset({
-      ...batchForm,
+      ...batchForm.internalForm,
       ...result,
       accounts: result.accounts.reduce((a, c) => {
-        a[c.id] = {
+        a[c.id] = new BatchDifference({
           amount: Math.abs(c.pivot.amount / 100),
           modifier: c.pivot.amount >= 0 ? 1 : -1
-        }
+        })
         return a
       }, {} as { [key: number]: { amount: number, modifier: 1|-1 } })
     })
@@ -337,7 +337,7 @@ async function loadTemplate() {
 }
 onMounted(loadTemplate)
 async function saveTemplate() {
-	batchForm.reset({ name: batchForm.name, user_id: batchForm.user_id, accounts: batchDifferences.value })
+	batchForm.reset({ name: batchForm.name, user_id: batchForm.user_id, accounts: JSON.parse(JSON.stringify(batchDifferences.value)) })
 	await batchForm.createOrUpdate()
   setTimeout(() => router.back())
 }
