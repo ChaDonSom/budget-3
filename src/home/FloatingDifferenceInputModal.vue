@@ -86,14 +86,18 @@ function modify() {
   modifying.value = null
 }
 
+const usedLatestBatchDifference = ref(false)
 onBeforeUnmount(() => {
-  latestBatchDifference.value = props.difference
+  if (!usedLatestBatchDifference.value) {
+    latestBatchDifference.value = props.difference
+  }
 })
 function useLatestBatchDifference() {
   if (latestBatchDifference.value) {
     props.difference.modifier = latestBatchDifference.value?.modifier == 1 ? -1 : 1
     props.difference.amount = latestBatchDifference.value.amount
     latestBatchDifference.value = null
+    usedLatestBatchDifference.value = true
   }
 }
 
