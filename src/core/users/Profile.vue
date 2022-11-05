@@ -29,7 +29,7 @@
     <transition name="error-message">
       <p
           v-if="form.errors.message || addUserForm.errors.message"
-          class="bg-red-200 rounded-3xl py-3 px-4 absolute" style="bottom: -4rem;"
+          class="bg-red-200 rounded-3xl py-3 px-4 absolute text-red-800" style="bottom: -4rem;"
       >
         {{ form.errors.message ?? (
           addUserForm.errors.message == 'No query results for model [App\\Models\\User].'
