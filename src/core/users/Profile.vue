@@ -48,7 +48,7 @@ import { useForm } from '@/store/forms';
 import Textfield from '@/core/fields/OutlinedTextfield.vue';
 import Button from '@/core/buttons/Button.vue';
 import { markRaw, ref } from 'vue';
-import SearchForUserTextfield from '@/core/users/SearchForUserTextfield.vue';
+import SearchForUserTextfield from '@/budget/users/SearchForUserTextfield.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
 import { useModals } from '@/store/modals';
 import PasswordModalVue from '@/core/users/auth/PasswordModal.vue';
