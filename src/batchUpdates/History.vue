@@ -20,7 +20,7 @@
             :modelValue="dateRange"
             :config="{
               mode: 'range',
-              onReady: (selectedDates: any, dateStr: any, instance: { open: Function }) => {
+              onReady: (selectedDates: any, dateStr: any, instance: { 'open': Function }) => {
                 if (!loadedWithDateRange || hasDisabledDateRange) instance.open()
               },
               onClose: (selectedDates: any, dateStr: any, instance: { }) => {
@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import { useAuth } from '@/core/users/auth';
-import { BatchUpdate, BatchUpdateWithAccounts, useBatchUpdates } from '@/store/batchUpdates';
+import { type BatchUpdate, type BatchUpdateWithAccounts, useBatchUpdates } from '@/store/batchUpdates';
 import { useLocalStorage } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 import { dollars } from '@/core/utilities/currency';
@@ -129,10 +129,9 @@ import DataTableCell from '@/core/tables/DataTableCell.vue';
 import Fab from '@/core/buttons/Fab.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
 import DataTablePaginator from '@/core/tables/DataTablePaginator.vue';
-import { Account, useAccounts } from '@/store/accounts';
+import { type Account, useAccounts } from '@/store/accounts';
 import Button from '@/core/buttons/Button.vue';
 import { toDateTime } from '@/core/utilities/datetime';
-// @ts-ignore
 import FlatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { DateTime } from 'luxon';
@@ -172,7 +171,11 @@ const batchUpdatesValues = computed(() => batchUpdates.ordered as BatchUpdateWit
 watch(
   () => ([ route.query, includeFuture.value, dateRangeArray.value ]),
   async () => {
-    if (enableDateRange.value && dateRangeArray.value.length != 2) return
+    if (enableDateRange.value && dateRangeArray.value.length != 2) {
+      initiallyLoadedBatchUpdates.value = true
+      loading.value = false
+      return
+    }
     loading.value = true
     await batchUpdates.fetchData({
       ...route.query,
@@ -208,6 +211,11 @@ function newBatchUpdate() {
 
 <style scoped lang="scss">
 @use "@/css/transitions";
+
+:deep(input.flatpickr-input) {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
 
 :deep(.not-done) {
   * {
