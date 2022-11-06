@@ -45,7 +45,6 @@ export function useForm<T>(url: string, form: T) {
     const httpStatus = ref<number | null>(null);
 
     async function submit(method: string, internalUrl?: string) {
-        console.log(`submitting ${method} to ${internalUrl}`)
         processing.value = true;
         if (method == "delete") processingDelete.value = true;
         recentlySuccessful.value = false;
@@ -59,11 +58,9 @@ export function useForm<T>(url: string, form: T) {
                     .delete(internalUrl ?? url)
                     .catch((e: any) => onError(e))) as AxiosResponse<string>;
             } else {
-                console.log("not delete")
                 response = (await (apiAxios as any)
                     [method](internalUrl ?? url, JSON.parse(JSON.stringify(internalForm)))
                     .catch((e: any) => onError(e))) as AxiosResponse<T>;
-                console.log("got response")
             }
             return onSuccess(response ?? undefined);
         } catch (e: any) {
@@ -152,7 +149,6 @@ export function useForm<T>(url: string, form: T) {
         else throw Error("Form has no id");
     };
     const createOrUpdate = async () => {
-        console.log('internalForm.id: ', internalForm.id);
         if (internalForm.id) return patch();
         return post();
     };
