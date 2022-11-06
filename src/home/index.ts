@@ -2,6 +2,7 @@ import { dollars } from "@/core/utilities/currency";
 import { toDateTime } from "@/core/utilities/datetime";
 import type { Account, AccountWithBatchUpdates } from "@/store/accounts";
 import type { BatchUpdate } from "@/store/batchUpdates";
+import { useLocalStorage } from "@vueuse/core";
 import { DateTime } from "luxon";
 import { ref } from "vue";
 
@@ -67,3 +68,13 @@ export class BatchDifference {
 	}
 }
 export const latestBatchDifference = ref<BatchDifference|null>(null)
+
+export const columnsToShow = useLocalStorage("budget-home-table-columns-to-show", {
+    name: true,
+    nextDate: false,
+    nextAmount: false,
+    minimum: false,
+    overMinimum: false,
+    percentCovered: false,
+    amount: true,
+});

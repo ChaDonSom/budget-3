@@ -53,7 +53,7 @@ import Button from '@/core/buttons/Button.vue';
 import { useModals } from '@/store/modals';
 import { useAuth } from '@/core/users/auth';
 import { useRouter } from 'vue-router';
-import { columnsToShow } from '@/home/store';
+import { columnsToShow } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const props = defineProps({

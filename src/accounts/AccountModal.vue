@@ -98,7 +98,7 @@ import {
   minimumToMakeNextPayment,
 } from '@/home';
 import { toDateTime } from '@/core/utilities/datetime';
-import { columnsToShow } from '@/home/store';
+import { columnsToShow } from '@/home';
 import IconButton from '@/core/buttons/IconButton.vue';
 import type { BatchUpdate } from '@/store/batchUpdates';
 import { DateTime } from 'luxon';

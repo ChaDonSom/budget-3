@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="text-center my-3 mx-0 md:mx-3">
+		<div class="text-center mx-0 md:mx-3 max-h-screen relative">
       <!--
         Welcome sign :)
       -->
@@ -14,13 +14,18 @@
       <!--
         Dashboard
       -->
-      <div v-if="auth.authenticated">
-        <h1 class="text-xl mt-4 mb-2">Budget</h1>
+      <div v-if="auth.authenticated" class="max-h-screen">
+        <h1 class="text-xl mb-2 mt-3">Budget</h1>
 				<div v-if="initiallyLoaded" class="mb-5">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh;" class="max-w-full md:max-w-[95vw]">
+					<DataTable
+							v-if="sortedAccounts.length"
+							style="max-height: calc(100vh - 3rem)"
+							class="max-w-full md:max-w-[95vw]"
+							@sort="updateSort"
+					>
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name"
 									:class="{ 'hidden': !columnsToShow.name }"
@@ -353,7 +358,7 @@ import {
 	isAccountWithBatchUpdates,
 	emergencySaving,
 	minimumToMakeNextPayment,
-BatchDifference
+	BatchDifference
 } from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import { columnsToShow } from '@/home';
