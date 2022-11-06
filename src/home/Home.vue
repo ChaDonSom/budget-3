@@ -82,8 +82,9 @@
 							<DataTableRow
 									v-for="account of sortedAccounts"
 									:key="account.id"
-									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndSortedFields(account) ? fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
+									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
 							>
+								<!-- Name -->
 								<DataTableCell @click="editAccount(account.id)" style="white-space: normal;"
 										:class="{ 'hidden': !columnsToShow.name }"
 								>
@@ -96,43 +97,48 @@
 										{{ account.name }}
 									</div>
 								</DataTableCell>
+								<!-- Next withdrawal date -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											@click="$router.push({ name: 'batch-updates-show', params: { id: account.batch_updates?.[0]?.id } })"
 									>
 										{{ toDateTime(account.nextDate).toFormat('M/dd') }}
 									</div>
 								</DataTableCell>
+								<!-- Next withdrawal amount -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" numeric>
-									<div v-if="isAccountWithBatchUpdatesAndSortedFields(account)">
+									<div v-if="isAccountWithBatchUpdatesAndDisplayFields(account)">
 										{{ dollars(account.nextAmount / 100) }}
 									</div>
 								</DataTableCell>
+								<!-- Minimum preferred amount -->
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
 									<div
-											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											class="text-gray-400 select-none whitespace-nowrap"
 											v-tooltip="{
-												content: `Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week over ${idealWeeks(account.batch_updates?.[0])} weeks<br>Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`,
+												content: tooltipToCompareIdealVsEmergency(account),
 												html: true
 											}"
 									>
 										{{ dollars(account.minimum) }}
 									</div>
 								</DataTableCell>
+								<!-- Over / under minimum -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
-												'text-gray-400': account.overMinimum >= 0,
-												'text-red-400': account.overMinimum < 0,
-												'italic text-orange-400': (account.amount / 100) < account.overMinimum,
+												'text-gray-500': account.overMinimum >= 0,
+												'text-red-500': account.overMinimum < 0,
+												'italic text-orange-500': (account.amount / 100) < account.overMinimum,
 											}"
 											class="whitespace-nowrap"
 									>
 										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
+										<!-- Over / under if difference will be saved -->
 										<br v-if="batchDifferences[account.id]">
 										<span v-if="batchDifferences[account.id]" class="text-gray-400"
 												:class="{'text-red-400': account.overMinimum + batchDifferences[account.id].resolved < 0}"
@@ -141,35 +147,27 @@
 										</span>
 									</div>
 								</DataTableCell>
+								<!-- Percent covered of next payment -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndSortedFields(account)"
-											v-tooltip="`Required: ${
-													Math.round((
-															(
-																idealWeeks(account.batch_updates?.[0])
-																- fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))
-															)
-															/ idealWeeks(account.batch_updates?.[0])
-													) * 100)
-												}% (${
-												dollars(
-													Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-													-
-													(idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
-												)})
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
+											v-tooltip="`Required: ${progressedTimeTowardNextBatchUpdatePercent(account)}% (${
+													dollars(idealProgressTowardNextBatchUpdate(account))
+												})
 											`"
 											class="select-none"
 											:class="{
-												'text-blue-600': account.percentCovered == Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
-												'text-green-600': account.percentCovered > Math.round(( ( idealWeeks(account.batch_updates?.[0]) - fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)) ) / idealWeeks(account.batch_updates?.[0]) ) * 100),
+												'text-blue-600': account.percentCovered == progressedTimeTowardNextBatchUpdatePercent(account),
+												'text-green-600': account.percentCovered > progressedTimeTowardNextBatchUpdatePercent(account),
 											}"
 									>
 										{{ account.percentCovered }} %
 									</div>
 								</DataTableCell>
+								<!-- Current amount -->
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.amount }">
 									{{ dollars(account.amount / 100) }}
+									<!-- New amount if difference will be saved -->
 									<br v-if="batchDifferences[account.id]">
 									<span v-if="batchDifferences[account.id]" class="text-gray-400"
 											:class="{'text-red-400': (account.amount / 100) + batchDifferences[account.id].resolved < 0}"
@@ -177,6 +175,7 @@
 										{{ dollars((account.amount / 100) + batchDifferences[account.id].resolved) }}
 									</span>
 								</DataTableCell>
+								<!-- Add / subtract actions -->
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
 									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]"
 											style="white-space: nowrap;"
@@ -196,35 +195,34 @@
 												@click.stop="clearBatchDifferenceFor(account)"
 										>close</IconButton>
 										{{ batchDifferences[account.id].modifier == 1 ? '+ ' : '' }}
-										{{ dollars(batchDifferences[account.id].amount * batchDifferences[account.id].modifier) }}
+										{{ dollars(batchDifferences[account.id].resolved) }}
 									</div>
 								</DataTableCell>
 							</DataTableRow>
+							<!-- Bottom sticky row (totals) -->
 							<DataTableRow class="sticky-bottom-row">
 								<DataTableCell :class="{ 'hidden': !columnsToShow.name }"/>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" />
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" />
 								<DataTableCell :class="{ 'hidden': !columnsToShow.minimum }" />
+								<!-- Total over / under minimum -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric style="white-space: normal;">
 									Total:
-									{{
-										dollars(sortedAccounts.reduce((total, account) => {
-											if (account && isAccountWithBatchUpdatesAndSortedFields(account) && account.batch_updates?.[0]?.pivot?.amount) {
-												total += account.overMinimum <= (account.amount / 100)
-													? account.overMinimum
-													: (account.amount / 100)
-											}
-											return total
-										}, 0))
-									}}
+									{{ dollars(overMinimumTotal) }}
+									<br v-if="areAnyBatchDifferences">
+									<span v-if="areAnyBatchDifferences" class="text-gray-500" :class="{ 'text-red-500': overMinimumTotal + batchTotal < 0 }">
+										{{ dollars(overMinimumTotal + batchTotal) }}
+									</span>
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" />
+								<!-- Total current amount -->
 								<DataTableCell numeric style="white-space: normal;" :class="{ 'hidden': !columnsToShow.amount }">
 									Total:
 									{{ dollars(accountsTotal) }}
 									<br v-if="areAnyBatchDifferences">
 									<span v-if="areAnyBatchDifferences">&nbsp;</span>
 								</DataTableCell>
+								<!-- Total action changes -->
 								<DataTableCell numeric>
 									<div v-if="areAnyBatchDifferences">
 										{{ dollars(batchTotal) }}
@@ -351,7 +349,7 @@ import { toDateTime } from '@/core/utilities/datetime';
 import {
 	idealPayment,
 	idealWeeks,
-	fridaysUntil,
+	weeksUntil,
 	isAccountWithBatchUpdates,
 	emergencySaving,
 	minimumToMakeNextPayment,
@@ -409,6 +407,16 @@ const initiallyLoaded = computed(() => {
 const accounts = useAccountsStore()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
 const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
+const overMinimumTotal = computed(() => {
+	return sortedAccounts.value.reduce((total, account) => {
+		if (account && isAccountWithBatchUpdatesAndDisplayFields(account) && account.batch_updates?.[0]?.pivot?.amount) {
+			total += account.overMinimum <= (account.amount / 100)
+				? account.overMinimum
+				: (account.amount / 100)
+		}
+		return total
+	}, 0)
+})
 
 
 type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
@@ -418,7 +426,7 @@ type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 	overMinimum: number,
 	percentCovered: number,
 }
-function isAccountWithBatchUpdatesAndSortedFields(
+function isAccountWithBatchUpdatesAndDisplayFields(
 	account: Account | AccountWithBatchUpdates | AccountWithBatchUpdatesAndSortedFields
 ): account is AccountWithBatchUpdatesAndSortedFields {
 	return !!account.batch_updates?.[0];
@@ -506,6 +514,32 @@ watch(
 	},
 	{ deep: true, immediate: true }
 )
+
+function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
+	let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
+	let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+	return `
+		Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
+		${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
+		Emergency ${emergencySaving(account)} / week for
+		${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
+	`
+}
+
+function progressedTimeTowardNextBatchUpdatePercent(account: AccountWithBatchUpdates) {
+	return Math.round((
+		(
+			idealWeeks(account.batch_updates?.[0])
+			- weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+		)
+		/ idealWeeks(account.batch_updates?.[0])
+	) * 100)
+}
+
+function idealProgressTowardNextBatchUpdate(account: AccountWithBatchUpdates) {
+	return Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
+		- (idealPayment(account.batch_updates?.[0]) * weeksUntil(toDateTime(account.batch_updates?.[0]?.date)))
+}
 
 /**
 	---------------------------------------------------

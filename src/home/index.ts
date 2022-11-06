@@ -33,6 +33,8 @@ export function fridaysUntil(date: DateTime, now: DateTime = DateTime.now()): nu
     );
 }
 
+export const weeksUntil = fridaysUntil
+
 export function isAccountWithBatchUpdates(
     account: Account | AccountWithBatchUpdates
 ): account is AccountWithBatchUpdates {
