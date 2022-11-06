@@ -97,8 +97,9 @@
 				
 				<transition name="opacity-0-scale-097-150ms">
 					<div v-if="areAnyBatchDifferences" class="my-7">
-						<input type="checkbox" v-model="batchForm.notify_me" id="notify_me">
-						<label for="notify_me"> Notify me when this change is made</label>
+						<MdcSwitch v-model="batchForm.notify_me" id="notify_me">
+							Notify me when this change is made
+						</MdcSwitch>
 					</div>
 				</transition>
 
@@ -181,6 +182,8 @@ import CircularScrim from '@/core/loaders/CircularScrim.vue';
 import { type BatchUpdateWithAccounts, useBatchUpdates } from '@/store/batchUpdates';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import { toDateTime } from '@/core/utilities/datetime';
+import { BatchDifference } from '@/home';
+import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const auth = useAuth()
 const route = useRoute()
@@ -255,26 +258,26 @@ function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "asce
 	---------------------------------------------------
  */
 const currentlyEditingDifference = ref<number|null>(null)
-const batchDifferences = ref({} as { [key: number]: { amount: number, modifier: 1|-1 } })
+const batchDifferences = ref({} as { [key: number]: BatchDifference })
 const batchDate = ref<DateTime>(DateTime.now())
 const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
 const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
 function startWithdrawing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: -1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
 }
 function startDepositing(account: Account) {
 	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = {
+	batchDifferences.value[account.id] = new BatchDifference({
 		amount: 0,
 		modifier: 1
-	}
+	})
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
@@ -323,10 +326,10 @@ async function loadBatchUpdate() {
   }
 	if (route.params.id == 'new' && route.params.account_id) {
 		batchDifferences.value = {
-			[Number(route.params.account_id)]: {
+			[Number(route.params.account_id)]: new BatchDifference({
 				amount: 0,
 				modifier: 1,
-			}
+			})
 		}
 		batchForm.accounts = batchDifferences.value
 	}
@@ -435,7 +438,7 @@ code {
 :deep(.opaque) {
 	.mdc-text-field {
 		.mdc-notched-outline__leading, .mdc-notched-outline__trailing, .mdc-notched-outline__notch {
-			background-color: white;
+			background-color: var(--color-background);
 		}
 		input.mdc-text-field__input {
 			z-index: 2;
