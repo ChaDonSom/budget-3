@@ -310,7 +310,7 @@ async function loadBatchUpdate() {
   if (route.params.id && route.params.id != 'new') {
     let result = await batchUpdates.fetchBatchUpdate(Number(route.params.id)) as BatchUpdateWithAccounts
     batchForm.reset({
-      ...batchForm,
+      ...batchForm.internalForm,
       ...result,
 			notify_me: Boolean(result.notify_me),
 			weeks: result.weeks,
