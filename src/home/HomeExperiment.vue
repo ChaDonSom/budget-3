@@ -196,7 +196,7 @@
 									>
 										<IconButton
 												:density="-5"
-												class="mr-2"
+												class="sm:mr-2"
 												@click.stop="clearBatchDifferenceFor(account)"
 										>close</IconButton>
 										{{ batchDifferences[account.id].modifier == 1 ? '+ ' : '' }}
@@ -253,22 +253,13 @@
 								class="fixed right-4 bottom-4"
 								style="z-index: 2;"
 						/>
-						<Fab
-								v-else
-								@click="saveBatch"
-								icon="save"
-								class="fixed right-4 bottom-6"
-								style="z-index: 2;"
-						/>
-						<OutlinedTextfield
-								type="date"
-								v-if="areAnyBatchDifferences"
-								v-model="batchForm.date"
-								class="fixed bottom-0 right-20 opaque"
-								style="z-index: 2;"
-						>
-							Date
-						</OutlinedTextfield>
+						<RouterLink v-if="areAnyBatchDifferences" :to="{ name: 'batch-updates-detail', params: { 'id': 'new' } }">
+							<Fab
+									icon="check"
+									class="fixed left-3 bottom-3"
+									style="z-index: 2;"
+							/>
+						</RouterLink>
 						<IconButton v-if="areAnyBatchDifferences" @click="clearBatchDifferences"
 								class="bottom-8 left-4"
 								style="position: fixed;"
@@ -282,32 +273,6 @@
 					<p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-10 break-word max-w-fit">
 						{{ batchForm.errors.message }}
 					</p>
-				</transition>
-
-				<transition name="opacity-0-scale-097-150ms">
-					<div v-if="areAnyBatchDifferences" class="my-7">
-						<MdcSwitch v-model="batchForm.notify_me" id="notify_me">
-							Notify me when this change is made
-						</MdcSwitch>
-					</div>
-				</transition>
-
-				<transition name="opacity-0-scale-097-150ms" mode="out-in">
-					<div class="my-7" v-if="areAnyBatchDifferences">
-						<OutlinedTextfield
-								v-model="batchForm.weeks"
-								type="number"
-								step="1"
-								autoselect
-								autofocus
-								v-if="batchForm.weeks != null"
-						>
-							Preferred # of weeks to pay by
-						</OutlinedTextfield>
-						<Button @click="batchForm.weeks = batchForm.weeks == null ? 4 : null">
-							{{ batchForm.weeks == null ? 'Set preferred payment schedule' : 'Remove payment schedule' }}
-						</Button>
-					</div>
 				</transition>
 
 				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
@@ -362,6 +327,7 @@ import {
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import { columnsToShow } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
+import { accountsTotal, areAnyBatchDifferences, batchDate, batchDifferences, batchForm, batchTotal, clearBatchDifferences, currentlyEditingDifference } from '@/batchUpdates';
 
 const auth = useAuth()
 const route = useRoute()
@@ -410,7 +376,6 @@ const initiallyLoaded = computed(() => {
 
 const accounts = useAccountsStore()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
-const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 const overMinimumTotal = computed(() => {
 	return sortedAccounts.value.reduce((total, account) => {
 		if (account && isAccountWithBatchUpdatesAndDisplayFields(account) && account.batch_updates?.[0]?.pivot?.amount) {
@@ -550,11 +515,6 @@ function idealProgressTowardNextBatchUpdate(account: AccountWithBatchUpdates) {
 	| Setting up withdraw/deposit batches
 	---------------------------------------------------
  */
-const currentlyEditingDifference = ref<number|null>(null)
-const batchDifferences = ref({} as { [key: number]: BatchDifference })
-const batchDate = ref<DateTime>(DateTime.now())
-const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
-const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
 function startWithdrawing(account: Account) {
 	currentlyEditingDifference.value = account.id
 	batchDifferences.value[account.id] = new BatchDifference({
@@ -579,22 +539,12 @@ function clearBatchDifferenceFor(account: Account) {
 	delete batchDifferences.value[account.id]
 	if (currentlyEditingDifference.value == account.id) currentlyEditingDifference.value = null
 }
-function clearBatchDifferences() {
-	batchDifferences.value = {}
-	currentlyEditingDifference.value = null
-}
 function edit(account: Account) {
 	currentlyEditingDifference.value = account.id
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
 }
-const batchForm = useForm('/api/batch-updates', {
-	accounts: batchDifferences.value,
-	date: batchDate.value.toFormat('yyyy-MM-dd'),
-	notify_me: false,
-	weeks: null as number|null
-})
 onMounted(() => {
 	if (route.params.template) {
 		let template: TemplateWithAccounts = JSON.parse(route.params.template as string)
@@ -611,25 +561,6 @@ onMounted(() => {
     })
     batchDifferences.value = batchForm.accounts
 		router.replace({ params: {} })
-	}
-})
-async function saveBatch() {
-	batchForm.reset({ accounts: batchDifferences.value, date: batchForm.date })
-	// @ts-ignore (forms assume the response looks like their data, this one's doesn't)
-	let data = await batchForm.post() as { accounts: [] } // Will be an AccountBatchUpdate, either done, or to be done later
-	// has accounts, which have pivots describing the change
-	// has audits, but are not returned here (I imagine they won't be useful here)
-	for (let account of data.accounts) accounts.receive(account)
-	clearBatchDifferences()
-	currentlyEditingDifference.value = null
-	batchDate.value	= DateTime.now()
-	batchForm.date = batchDate.value.toFormat('yyyy-MM-dd')
-}
-onBeforeRouteLeave(async () => {
-	try {
-		if (areAnyBatchDifferences.value) await modals.confirm("Do you really want to leave unsaved changes?")
-	} catch (e) {
-		return false
 	}
 })
 
