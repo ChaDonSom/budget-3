@@ -191,7 +191,7 @@
 									<div
 											v-else-if="batchDifferences[account.id]"
 											@click.stop="edit(account)"
-											class="w-full h-full flex items-center gap-2"
+											class="w-full h-full flex flex-wrap items-center gap-2"
 											style="white-space: nowrap;"
 									>
 										<IconButton
