@@ -15,8 +15,8 @@
         Dashboard
       -->
       <div v-if="auth.authenticated" class="max-h-screen">
-        <h1 class="text-xl mb-2 mt-3">Budget</h1>
-				<div v-if="initiallyLoaded" class="mb-5">
+        <h1 class="text-xl pb-2 pt-3">Budget</h1>
+				<div v-if="initiallyLoaded">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
@@ -311,12 +311,10 @@
 
 				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
 				<div class="my-32" v-if="areAnyBatchDifferences"></div>
+				<div class="my-7" v-if="messages.length">
+					<p v-for="message of messages" :key="message">{{ message }}</p>
+				</div>
       </div>
-
-
-			<div class="my-7">
-				<p v-for="message of messages" :key="message">{{ message }}</p>
-			</div>
 		</div>
 	</div>
 </template>
@@ -700,15 +698,6 @@ code {
 		input.mdc-text-field__input {
 			z-index: 2;
 		}
-	}
-}
-
-:deep(.mdc-data-table) {
-	.mdc-data-table__cell, .mdc-data-table__header-cell {
-		white-space: normal;
-		padding-inline: 8px;
-		&:first-child { padding-left: 16px; }
-		&:last-child { padding-right: 16px; }
 	}
 }
 </style>

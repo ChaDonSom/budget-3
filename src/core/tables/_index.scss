@@ -4,14 +4,10 @@
 @use "@material/data-table/data-table-theme" with (
   $shape-radius: mdc-theme.$table-shape-radius,
   // $default-density-scale: -3,
+  $cell-leading-padding: 2px,
+  $cell-trailing-padding: 2px,
 );
 @use "@material/data-table/data-table";
-
-@include checkbox.core-styles;
-@include icon-button.core-styles;
-@include data-table.core-styles;
-@include data-table.theme-baseline;
-// @include data-table-theme.density(-4);
 
 @mixin apply() {
   @include checkbox.core-styles;
@@ -19,4 +15,17 @@
   @include data-table.core-styles;
   @include data-table.theme-baseline;
   // @include data-table-theme.density(-4);
+
+  .mdc-data-table__cell, .mdc-data-table__header-cell {
+    white-space: normal;
+    --padding-base: 4px;
+    padding-inline: var(--padding-base);
+    &:first-child { padding-left: calc(var(--padding-base) * 2); }
+    &:last-child { padding-right: calc(var(--padding-base) * 2); }
+    @media (min-width: 640px) {
+      --padding-base: 8px;
+    }
+  }
 }
+
+@include apply;
