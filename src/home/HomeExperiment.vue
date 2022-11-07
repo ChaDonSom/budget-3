@@ -249,7 +249,8 @@
 								v-if="!areAnyBatchDifferences"
 								@click="newAccount"
 								:icon="'add'"
-								class="fixed right-4 bottom-6"
+								small
+								class="fixed right-4 bottom-4"
 								style="z-index: 2;"
 						/>
 						<Fab
