@@ -334,9 +334,9 @@ async function loadBatchUpdate() {
     })
     batchDifferences.value = batchForm.accounts
   }
-	if (route.params.id == 'new' && route.params.account_id) {
+	if (route.params.id == 'new' && route.query.account_id) {
 		batchDifferences.value = {
-			[Number(route.params.account_id)]: new BatchDifference({
+			[Number(route.query.account_id)]: new BatchDifference({
 				amount: 0,
 				modifier: 1,
 			})

@@ -211,7 +211,7 @@ function editBatchUpdate(id: number) {
   router.push({ name: 'batch-updates-show', params: { id } })
 }
 function newBatchUpdate() {
-  router.push({ name: 'batch-updates-show', params: { id: 'new', account_id: String(route.query.account_id) } })
+  router.push({ name: 'batch-updates-show', params: { id: 'new' }, query: { account_id: String(route.query.account_id) } })
 }
 </script>
 
