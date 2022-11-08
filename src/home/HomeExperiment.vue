@@ -288,8 +288,6 @@
 					</p>
 				</transition>
 
-				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
-				<div class="my-32" v-if="areAnyBatchDifferences"></div>
 				<div class="my-7" v-if="messages.length">
 					<p v-for="message of messages" :key="message">{{ message }}</p>
 				</div>
