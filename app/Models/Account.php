@@ -17,6 +17,7 @@ class Account extends Model implements Auditable
         'name',
         'amount',
         'user_id',
+        'note',
     ];
 
     public function user() {

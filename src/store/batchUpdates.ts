@@ -21,6 +21,7 @@ export type BatchUpdate = {
     done_at: string|null;
     notify_me: boolean;
     weeks: number|null;
+    note: string;
 };
 export type BatchUpdateWithAccounts = BatchUpdate & {
     accounts: (Account & { pivot: { amount: number } })[];

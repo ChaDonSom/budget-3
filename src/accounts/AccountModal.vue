@@ -6,6 +6,7 @@
         Name
       </OutlinedTextfield>
       <DollarsField autoselect v-model="amount" :error="form.errors.amount" @keydown-enter="save">Amount</DollarsField>
+      <OutlinedTextarea v-model="form.note">Note</OutlinedTextarea>
     </template>
 
     <div
@@ -103,6 +104,7 @@ import IconButton from '@/core/buttons/IconButton.vue';
 import type { BatchUpdate } from '@/store/batchUpdates';
 import { DateTime } from 'luxon';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
+import OutlinedTextarea from '../core/fields/OutlinedTextarea.vue';
 
 const props = defineProps({
   id: {
@@ -128,6 +130,7 @@ const form = useForm<Omit<Account, 'id'> & { id: number|null }>('/api/accounts',
   id: null,
   name: '',
   amount: 0,
+  note: '',
   user_id: auth.user?.id ?? 0,
   favorited_users: [],
   batch_updates: []

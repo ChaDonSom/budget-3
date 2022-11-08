@@ -41,9 +41,7 @@ class AccountBatchUpdateController extends Controller
                         'accounts',
                         fn($query) => $query->where('accounts.id', request()->account_id)
                     )
-                    ->with([
-                        'accounts' => fn($query) => $query->where('accounts.id', request()->account_id)
-                    ]),
+                    ->with(['accounts']),
                 fn($query) => $query
                     ->when(
                         $accountIds,
@@ -94,6 +92,7 @@ class AccountBatchUpdateController extends Controller
             'date' => $request->date,
             'notify_me' => $request->notify_me,
             'weeks' => $request->weeks,
+            'note' => $request->note,
         ]);
 
         // Attach to accounts with change info
@@ -156,6 +155,7 @@ class AccountBatchUpdateController extends Controller
             'user_id' => Auth::user()->id,
             'date' => $request->date,
             'notify_me' => $request->notify_me,
+            'note' => $request->note,
             'weeks' => $request->weeks,
         ])->save();
 

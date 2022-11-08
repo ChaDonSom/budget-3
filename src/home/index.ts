@@ -78,3 +78,7 @@ export const columnsToShow = useLocalStorage("budget-home-table-columns-to-show"
     percentCovered: false,
     amount: true,
 });
+
+export const homeSettings = useLocalStorage('budget-home-settings', {
+    historyButtons: false,
+})

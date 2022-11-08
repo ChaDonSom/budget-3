@@ -46,6 +46,7 @@ class UpdateAccountBatchUpdateRequest extends FormRequest
             'date' => 'date',
             'notify_me' => 'present|boolean',
             'weeks' => 'nullable|numeric|min:0',
+            'note' => 'string|max:1000',
         ];
     }
 }

@@ -22,6 +22,7 @@ export type Account = {
     name: string;
     amount: number;
     user_id: number;
+    note: string;
     batch_updates?: (BatchUpdate & { pivot: { amount: number }})[];
     favorited_users?: User[];
 };

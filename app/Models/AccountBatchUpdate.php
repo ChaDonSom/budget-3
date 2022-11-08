@@ -27,6 +27,7 @@ class AccountBatchUpdate extends Model
         'user_id',
         'notify_me',
         'weeks',
+        'note',
     ];
 
     public $casts = [

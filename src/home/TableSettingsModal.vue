@@ -39,6 +39,12 @@
         </MdcSwitch>
       </div>
     </div>
+    <h2>More settings</h2>
+    <div class="flex flex-col my-2">
+      <MdcSwitch v-model="homeSettings.historyButtons" class="ml-3" id="history-buttons">
+        Show history buttons in table
+      </MdcSwitch>
+    </div>
     <template #actions>
       <div class="flex justify-between">
         <Button @click="modals.close(id)" class="ml-auto">Done</Button>
@@ -53,7 +59,7 @@ import Button from '@/core/buttons/Button.vue';
 import { useModals } from '@/store/modals';
 import { useAuth } from '@/core/users/auth';
 import { useRouter } from 'vue-router';
-import { columnsToShow } from '@/home';
+import { columnsToShow, homeSettings } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
 
 const props = defineProps({

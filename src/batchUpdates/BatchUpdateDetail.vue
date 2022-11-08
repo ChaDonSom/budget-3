@@ -1,23 +1,24 @@
 <template>
   <div class="max-h-screen mx-3">
-    <h1 class="text-xl pb-2 pt-3">
+    <h1 class="text-xl pb-2 pt-3 text-center">
       {{ route.params.id == 'new' ? 'Make changes' : 'Edit changes' }}
     </h1>
-    <table v-if="areAnyBatchDifferences">
-      <tbody>
-        <tr v-for="account_id of Object.keys(batchDifferences)">
-          <td>{{ accounts.data[account_id]?.name }}</td>
-          <td class="pl-3 text-right">{{ dollars(batchDifferences[Number(account_id)].resolved) }}</td>
-        </tr>
-        <tr><td></td><td>&nbsp;</td></tr>
-        <tr><td>Total</td><td class="pl-3 text-right">{{ dollars(batchTotal) }}</td></tr>
-      </tbody>
-    </table>
-
+    <div class="flex justify-center">
+      <table v-if="areAnyBatchDifferences">
+        <tbody>
+          <tr v-for="account_id of Object.keys(batchDifferences)">
+            <td>{{ accounts.data[account_id]?.name }}</td>
+            <td class="pl-3 text-right">{{ dollars(batchDifferences[Number(account_id)].resolved) }}</td>
+          </tr>
+          <tr><td></td><td>&nbsp;</td></tr>
+          <tr><td>Total</td><td class="pl-3 text-right">{{ dollars(batchTotal) }}</td></tr>
+        </tbody>
+      </table>
+    </div>
 
 
     <transition name="opacity-0-scale-097-150ms">
-      <div v-if="areAnyBatchDifferences" class="my-3">
+      <div v-if="areAnyBatchDifferences" class="my-3 flex justify-center">
         <MdcSwitch v-model="batchForm.notify_me" id="notify_me">
           Notify me when this change is made
         </MdcSwitch>
@@ -25,7 +26,7 @@
     </transition>
 
     <transition name="opacity-0-scale-097-150ms" mode="out-in">
-      <div class="my-5" v-if="areAnyBatchDifferences">
+      <div class="my-5 flex flex-col items-center" v-if="areAnyBatchDifferences">
         <OutlinedTextfield v-model="batchForm.weeks" type="number" step="1" autoselect autofocus
           v-if="batchForm.weeks != null">
           Preferred # of weeks to pay by
@@ -37,10 +38,18 @@
     </transition>
 
     <transition name="opacity-0-scale-097-150ms" mode="out-in">
-      <div class="my-7" v-if="areAnyBatchDifferences">
-        <OutlinedTextfield type="date" v-if="areAnyBatchDifferences" v-model="batchForm.date" style="z-index: 2;">
+      <div class="my-7 flex justify-center" v-if="areAnyBatchDifferences">
+        <OutlinedTextfield type="date" v-if="areAnyBatchDifferences" v-model="batchForm.date">
           Date
         </OutlinedTextfield>
+      </div>
+    </transition>
+
+    <transition name="opacity-0-scale-097-150ms" mode="out-in">
+      <div class="my-7 flex justify-center" v-if="areAnyBatchDifferences">
+        <OutlinedTextarea v-if="areAnyBatchDifferences" v-model="batchForm.note">
+          Note
+        </OutlinedTextarea>
       </div>
     </transition>
 
@@ -73,6 +82,7 @@ import { useAccountsStore } from '@/store/accounts';
 import { dollars } from '@/core/utilities/currency';
 import { useModals } from '@/store/modals';
 import Fab from '../core/buttons/Fab.vue';
+import OutlinedTextarea from '../core/fields/OutlinedTextarea.vue';
 
 const route = useRoute()
 const router = useRouter()

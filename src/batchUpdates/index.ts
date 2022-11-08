@@ -11,7 +11,8 @@ export const batchForm = useForm('/api/batch-updates', {
 	accounts: batchDifferences.value,
 	date: batchDate.value.toFormat('yyyy-MM-dd'),
 	notify_me: false,
-	weeks: null as number|null
+	weeks: null as number|null,
+	note: '',
 })
 export const accountsTotal = computed(() => useAccountsStore().values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 export const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))

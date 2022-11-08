@@ -50,6 +50,9 @@
             <DataTableHeaderCell numeric>
               Amount
             </DataTableHeaderCell>
+            <DataTableHeaderCell>
+              Note
+            </DataTableHeaderCell>
           </template>
           <template #body>
             <DataTableRow
@@ -89,6 +92,9 @@
               <DataTableCell numeric>
 								{{ dollars(batchUpdate.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}
 							</DataTableCell>
+              <DataTableCell>
+                {{ batchUpdate.note.length > 35 ? batchUpdate.note.substring(0, 35) + '...' : batchUpdate.note }}
+              </DataTableCell>
             </DataTableRow>
           </template>
           <template #paginator>

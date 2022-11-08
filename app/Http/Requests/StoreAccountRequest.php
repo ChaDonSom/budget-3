@@ -29,6 +29,7 @@ class StoreAccountRequest extends FormRequest
                 'required',
                 Rule::unique('accounts', 'name')->where('deleted_at', null)->where('user_id', request()->user()->id),
             ],
+            'note' => 'string|max:1000',
             'amount' => 'required|numeric|min:0',
             'user_id' => 'required|exists:users,id',
         ];

@@ -33,6 +33,7 @@ class UpdateAccountRequest extends FormRequest
                     ->where('user_id', request()->user()->id)
                     ->ignore(request()->id)
             ],
+            'note' => 'string|max:1000',
             'amount' => 'required|numeric|min:0',
             'user_id' => 'required|exists:users,id',
             'favorited_users' => 'present|array',

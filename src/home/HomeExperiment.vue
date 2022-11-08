@@ -94,7 +94,20 @@
 										:class="{ 'hidden': !columnsToShow.name }"
 								>
 									<div class="flex items-center gap-1">
-										<IconButton v-if="account.favorited_users?.some(i => i.id == auth.user?.id)" :density="-5" primary
+										<RouterLink :to="{ name: 'history', query: { account_id: account.id } }">
+											<IconButton
+													v-if="homeSettings.historyButtons"
+													v-tooltip="`Transaction history`"
+													:density="-5"
+													@click.stop
+											>
+												history
+											</IconButton>
+										</RouterLink>
+										<IconButton
+												v-if="account.favorited_users?.some(i => i.id == auth.user?.id)"
+												:density="-5"
+												primary
 												v-tooltip="`Favorite`"
 										>
 											push_pin
@@ -322,10 +335,11 @@ import {
 	isAccountWithBatchUpdates,
 	emergencySaving,
 	minimumToMakeNextPayment,
-	BatchDifference
+	BatchDifference,
+	columnsToShow,
+	homeSettings,
 } from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
-import { columnsToShow } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
 import { accountsTotal, areAnyBatchDifferences, batchDate, batchDifferences, batchForm, batchTotal, clearBatchDifferences, currentlyEditingDifference } from '@/batchUpdates';
 

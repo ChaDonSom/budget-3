@@ -124,6 +124,14 @@
 				</transition>
 
 				<transition name="opacity-0-scale-097-150ms" mode="out-in">
+					<div class="my-7 flex justify-center" v-if="areAnyBatchDifferences">
+						<OutlinedTextarea v-if="areAnyBatchDifferences" v-model="batchForm.note">
+							Note
+						</OutlinedTextarea>
+					</div>
+				</transition>
+
+				<transition name="opacity-0-scale-097-150ms" mode="out-in">
 					<div class="my-7" v-if="areAnyBatchDifferences">
 						<Button v-if="batchForm.isDirty" @click="saveBatchUpdate(true)">
 							<template #leading-icon>save</template>
@@ -184,6 +192,7 @@ import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import { toDateTime } from '@/core/utilities/datetime';
 import { BatchDifference } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
+import OutlinedTextarea from '../core/fields/OutlinedTextarea.vue';
 
 const auth = useAuth()
 const route = useRoute()
@@ -301,6 +310,7 @@ const batchForm = useForm('/api/batch-updates', {
   id: null as number|null,
   user_id: auth.user?.id,
   date: batchDate.value.toFormat('yyyy-MM-dd'),
+	note: '',
 	accounts: batchDifferences.value,
 	notify_me: false,
 	weeks: null as number|null
