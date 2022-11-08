@@ -99,7 +99,7 @@
 													v-if="homeSettings.historyButtons"
 													v-tooltip="`Transaction history`"
 													:density="-5"
-													@click.stop
+													@click.stop="() => {}"
 											>
 												history
 											</IconButton>
