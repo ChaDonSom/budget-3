@@ -82,3 +82,7 @@ export const columnsToShow = useLocalStorage("budget-home-table-columns-to-show"
 export const homeSettings = useLocalStorage('budget-home-settings', {
     historyButtons: false,
 })
+
+export function accountIsOffMinimum(overMinimum: number) {
+    return Math.floor(Math.abs(overMinimum * 100)) == 0
+}

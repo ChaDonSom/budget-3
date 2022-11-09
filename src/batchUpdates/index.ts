@@ -15,7 +15,7 @@ export const batchForm = useForm('/api/batch-updates', {
 	note: '',
 })
 export const accountsTotal = computed(() => useAccountsStore().values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
-export const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
+export const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.resolved).reduce((a, c) => a + c, 0))
 
 export const currentlyEditingDifference = ref<number|null>(null)
 export function clearBatchDifferences() {

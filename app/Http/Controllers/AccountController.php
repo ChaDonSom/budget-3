@@ -11,6 +11,7 @@ use App\Models\AccountBatchUpdate;
 use App\Models\BatchUpdateAccount;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -26,19 +27,21 @@ class AccountController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $users = collect([$user])->concat($user->usersWhoSharedToMe)->concat($user->sharedUsers)->unique();
-        return Account::query()
+        $query = Account::query()
             ->whereIn('user_id', $users->pluck('id')->values())
             ->with([
                 'favoritedUsers',
                 // We _would_ like to see batchUpdates for index, but only the not-done ones
                 'batchUpdates' => fn($query) => $query->notDone()
-            ])
-            ->get()
-            ->keyBy('id');
+            ]);
+
+        if ($request->query('ids')) $query->whereIn('id', json_decode($request->query('ids')));
+        
+        return $query->get()->keyBy('id');
     }
 
     /**

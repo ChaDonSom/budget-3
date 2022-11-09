@@ -6,8 +6,8 @@
     <div v-if="auth.authenticated" class="text-center m-3">
       <h1 class="text-xl mt-5">
         History
-        <span v-if="$route.query.account_id">
-          for account {{ accounts.data[Number($route.query.account_id)]?.name }}
+        <span v-if="filteredAccountIds">
+          for account{{ filteredAccountIds.length == 1 ? '' : 's' }} {{ filteredAccountNames.join(', ') }}
         </span>
       </h1>
       <div v-if="initiallyLoaded">
@@ -89,8 +89,17 @@
                 </div>
               </DataTableCell>
               <DataTableCell>{{ toDateTime(batchUpdate.date).toFormat('M/dd') }}</DataTableCell>
-              <DataTableCell numeric>
-								{{ dollars(batchUpdate.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}
+              <DataTableCell
+                  numeric
+                  v-tooltip="{
+                    content: `Transaction total<br>${filteredAccountNames.join(', ')} total`,
+                    html: true
+                  }"
+              >
+								{{ dollars(batchUpdate.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}<br>
+                <span class="text-gray-600 italic">
+                  {{ dollars(batchUpdate.accounts.filter(a => filteredAccountIds.includes(a.id)).reduce((a, c) => a + (c.pivot.amount / 100), 0) ) }}
+                </span>
 							</DataTableCell>
               <DataTableCell>
                 {{ batchUpdate.note.length > 35 ? batchUpdate.note.substring(0, 35) + '...' : batchUpdate.note }}
@@ -190,8 +199,8 @@ watch(
         ? JSON.stringify(dateRangeArray.value.map(i => DateTime.fromJSDate(i).toFormat('yyyy-MM-dd')))
         : '[]',
     })
-    if (route.query.account_id && !accounts.data[Number(route.query.account_id)]) {
-      accounts.fetchAccount(Number(route.query.account_id))
+    if (filteredAccountIds.value.length && filteredAccountNames.value.length < filteredAccountIds.value.length) {
+      accounts.fetchAccounts(filteredAccountIds.value)
     }
     initiallyLoadedBatchUpdates.value = true
     loading.value = false
@@ -199,10 +208,18 @@ watch(
   { deep: true, immediate: true }
 )
 
-function notFilteredForAccounts(accounts: Account[]) {
-  let ids = route.query.account_id
+const filteredAccountIds = computed(() => {
+  return route.query.account_id
     ? [Number(route.query.account_id)]
     : (JSON.parse(String(route.query.account_ids ?? "[]")) as string[])?.map(i => Number(i))
+})
+
+const filteredAccountNames = computed(() => {
+  return filteredAccountIds.value.map(i => accounts.data[i]?.name).filter(i => i)
+})
+
+function notFilteredForAccounts(accounts: Account[]) {
+  let ids = filteredAccountIds.value
   let aIds = accounts.map(a => a.id)
   return !ids.every(i => aIds.includes(i)) || !aIds.every(i => ids.includes(i))
 }

@@ -49,9 +49,7 @@ class AccountBatchUpdateController extends Controller
                                 'accounts',
                                 fn($query) => $query->whereIn('accounts.id', $accountIds)
                             )
-                            ->with([
-                                'accounts' => fn($query) => $query->whereIn('accounts.id', $accountIds)
-                            ]),
+                            ->with(['accounts']),
                         fn($query) => $query->with('accounts')   
                     )
             )

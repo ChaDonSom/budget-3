@@ -42,8 +42,9 @@ export const values: ComputedRef<Account[]> = computed(() => {
     return Object.values(v)
 });
 
-export async function fetchData() {
-    let response: AxiosResponse<AccountsData> = await axios.get("/api/accounts");
+export async function fetchData(query?: { [key: string]: any }) {
+    let urlQuery = query ? `?${Object.keys(query).map(k => `${k}=${query[k]}`).join('&')}` : ''
+    let response: AxiosResponse<AccountsData> = await axios.get(`/api/accounts${urlQuery}`);
     data.value = response.data
     const echo = useEcho()
     const auth = useAuth()
@@ -69,6 +70,10 @@ export async function fetchAccount(id: number) {
     return data.value[id]
 }
 
+export async function fetchAccounts(ids: number[]) {
+    return fetchData({ ids: JSON.stringify(ids) })
+}
+
 export async function receive(account: Account) {
     data.value = {
         ...data.value,
@@ -88,6 +93,7 @@ export function useAccounts(props?: ComponentPropsOptions, context?: SetupContex
         values,
         fetchData,
         fetchAccount,
+        fetchAccounts,
         receive,
         remove,
     })
@@ -100,6 +106,7 @@ export const useAccountsStore = defineStore('accounts', () => {
         values,
         fetchData,
         fetchAccount,
+        fetchAccounts,
         receive,
         remove,
     };

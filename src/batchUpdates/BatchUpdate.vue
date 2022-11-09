@@ -133,7 +133,7 @@
 
 				<transition name="opacity-0-scale-097-150ms" mode="out-in">
 					<div class="my-7" v-if="areAnyBatchDifferences">
-						<Button v-if="batchForm.isDirty" @click="saveBatchUpdate(true)">
+						<Button v-if="batchForm.isDirty && route.params.id != 'new'" @click="saveBatchUpdate(true)">
 							<template #leading-icon>save</template>
 							Save as new
 						</Button>

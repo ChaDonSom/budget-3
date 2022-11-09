@@ -149,13 +149,13 @@
 											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
-												'text-gray-500': account.overMinimum >= 0,
-												'text-red-500': account.overMinimum < 0,
+												'text-gray-500': Math.floor(Math.abs(account.overMinimum * 100)) >= 0,
+												'text-red-500': Math.floor(Math.abs(account.overMinimum * 100)) < 0,
 												'italic text-orange-500': (account.amount / 100) < account.overMinimum,
 											}"
 											class="whitespace-nowrap"
 									>
-										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
+										{{ accountIsOffMinimum(account.overMinimum) ? dollars(account.overMinimum) : '' }}
 										<!-- Over / under if difference will be saved -->
 										<br v-if="batchDifferences[account.id]">
 										<span v-if="batchDifferences[account.id]" class="text-gray-400"
@@ -183,7 +183,13 @@
 									</div>
 								</DataTableCell>
 								<!-- Current amount -->
-								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.amount }">
+								<DataTableCell
+										numeric
+										:class="{
+											'hidden': !columnsToShow.amount,
+											'text-red-600': ((account.amount / 100) + batchDifferences[account.id]?.resolved) < 0
+										}"
+								>
 									{{ dollars(account.amount / 100) }}
 									<!-- New amount if difference will be saved -->
 									<br v-if="batchDifferences[account.id]">
@@ -229,7 +235,7 @@
 									{{ dollars(overMinimumTotal) }}
 									<br v-if="areAnyBatchDifferences">
 									<span v-if="areAnyBatchDifferences" class="text-gray-500" :class="{ 'text-red-500': overMinimumTotal + batchTotal < 0 }">
-										{{ dollars(overMinimumTotal + batchTotal) }}
+										{{ dollars(overMinimumTotal + batchTotalOfOffMinimumAccounts) }}
 									</span>
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" />
@@ -336,6 +342,7 @@ import {
 	BatchDifference,
 	columnsToShow,
 	homeSettings,
+	accountIsOffMinimum,
 } from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
@@ -495,6 +502,16 @@ watch(
 	},
 	{ deep: true, immediate: true }
 )
+const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferences.value)
+	.filter(i => {
+		let account = sortedAccounts.value.find(j => j.id == Number(i))
+		if (account && isAccountWithBatchUpdatesAndDisplayFields(account)) {
+			return accountIsOffMinimum(account.overMinimum)
+		}
+	})
+	.map(i => batchDifferences.value[Number(i)])
+	.map(i => i.resolved)
+	.reduce((a, c) => a + c, 0))
 
 function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
 	let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
