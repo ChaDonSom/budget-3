@@ -64,7 +64,8 @@ class AccountBatchUpdateController extends Controller
             ->whereIn('user_id', $users->pluck('id')->values())
             ->orderBy('date', 'desc')
             ->orderBy('updated_at', 'desc')
-            ->paginate(50);
+            ->paginate(50)
+            ->withQueryString();
     }
 
     /**

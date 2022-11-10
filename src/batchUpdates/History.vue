@@ -109,10 +109,10 @@
           <template #paginator>
             <DataTablePaginator
                 :paginator="batchUpdates.paginator"
-                @first-page="batchUpdates.fetchData({ page: 1 })"
-                @prev-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.current_page ?? 0) - 1 })"
-                @next-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.current_page ?? 0) + 1 })"
-                @last-page="batchUpdates.fetchData({ page: (batchUpdates.paginator?.last_page ?? 0) })"
+                @first-page="fetchBatchUpdatesPaginated(1)"
+                @prev-page="fetchBatchUpdatesPaginated((batchUpdates.paginator?.current_page ?? 0) - 1)"
+                @next-page="fetchBatchUpdatesPaginated((batchUpdates.paginator?.current_page ?? 0) + 1)"
+                @last-page="fetchBatchUpdatesPaginated((batchUpdates.paginator?.last_page ?? 0))"
             />
           </template>
         </DataTable>
@@ -192,13 +192,7 @@ watch(
       return
     }
     loading.value = true
-    await batchUpdates.fetchData({
-      ...route.query,
-      include_future: includeFuture.value,
-      date_range: enableDateRange.value
-        ? JSON.stringify(dateRangeArray.value.map(i => DateTime.fromJSDate(i).toFormat('yyyy-MM-dd')))
-        : '[]',
-    })
+    await fetchBatchUpdatesPaginated()
     if (filteredAccountIds.value.length && filteredAccountNames.value.length < filteredAccountIds.value.length) {
       accounts.fetchAccounts(filteredAccountIds.value)
     }
@@ -207,6 +201,18 @@ watch(
   },
   { deep: true, immediate: true }
 )
+
+async function fetchBatchUpdatesPaginated(page?: number) {
+  page ??= 1
+  return await batchUpdates.fetchData({
+    ...route.query,
+    page,
+    include_future: includeFuture.value,
+    date_range: enableDateRange.value
+      ? JSON.stringify(dateRangeArray.value.map(i => DateTime.fromJSDate(i).toFormat('yyyy-MM-dd')))
+      : '[]',
+  })
+}
 
 const filteredAccountIds = computed(() => {
   return route.query.account_id
