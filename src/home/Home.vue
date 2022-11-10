@@ -305,7 +305,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, type Ref, markRaw } from 'vue';
+import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, type Ref, markRaw, type PropType } from 'vue';
 import Button from '@/core/buttons/Button.vue'
 import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
@@ -350,6 +350,7 @@ minimumToMakeAllExistingScheduledPayments,
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
 import { accountsTotal, areAnyBatchDifferences, batchDate, batchDifferences, batchForm, batchTotal, clearBatchDifferences, currentlyEditingDifference } from '@/batchUpdates';
+import { templateToApply } from '@/templates';
 
 const auth = useAuth()
 const route = useRoute()
@@ -596,21 +597,21 @@ function edit(account: Account) {
 	} })
 }
 onMounted(() => {
-	if (route.params.template) {
-		let template: TemplateWithAccounts = JSON.parse(route.params.template as string)
+	if (templateToApply.value) {
+		let template: TemplateWithAccounts = templateToApply.value
     batchForm.reset({
       ...batchForm.internalForm,
       ...template,
       accounts: template.accounts.reduce((a, c) => {
-        a[c.id] = {
+        a[c.id] = new BatchDifference({
           amount: Math.abs(c.pivot.amount / 100),
           modifier: c.pivot.amount >= 0 ? 1 : -1
-        }
+        })
         return a
-      }, {} as { [key: number]: { amount: number, modifier: 1|-1 } })
+      }, {} as { [key: number]: BatchDifference })
     })
     batchDifferences.value = batchForm.accounts
-		router.replace({ params: {} })
+		templateToApply.value = null
 	}
 })
 

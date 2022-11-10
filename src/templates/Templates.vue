@@ -63,6 +63,7 @@ import DataTableRow from '@/core/tables/DataTableRow.vue';
 import DataTableCell from '@/core/tables/DataTableCell.vue';
 import Fab from '@/core/buttons/Fab.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
+import { templateToApply } from '@/templates';
 
 const router = useRouter()
 const auth = useAuth()
@@ -133,7 +134,8 @@ function editTemplate(id: number) {
   router.push({ name: 'templates-show', params: { id } })
 }
 function applyTemplate(template: TemplateWithAccounts) {
-	router.push({ name: 'index', params: { template: JSON.stringify(template) } })
+	templateToApply.value = template
+	router.push({ name: 'index' })
 }
 </script>
 
