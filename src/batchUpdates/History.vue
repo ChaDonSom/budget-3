@@ -6,7 +6,7 @@
     <div v-if="auth.authenticated" class="text-center m-3">
       <h1 class="text-xl mt-5">
         History
-        <span v-if="filteredAccountIds">
+        <span v-if="filteredAccountIds.length">
           for account{{ filteredAccountIds.length == 1 ? '' : 's' }} {{ filteredAccountNames.join(', ') }}
         </span>
       </h1>
@@ -97,7 +97,7 @@
                   }"
               >
 								{{ dollars(batchUpdate.accounts.reduce((a, c) => a + (c.pivot.amount / 100), 0)) }}<br>
-                <span class="text-gray-600 italic">
+                <span class="text-gray-600 italic" v-if="filteredAccountIds.length">
                   {{ dollars(batchUpdate.accounts.filter(a => filteredAccountIds.includes(a.id)).reduce((a, c) => a + (c.pivot.amount / 100), 0) ) }}
                 </span>
 							</DataTableCell>
