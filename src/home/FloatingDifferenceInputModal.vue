@@ -4,7 +4,7 @@
       @close="modals.close(id)"
   >
     <Button
-        v-if="latestBatchDifference && latestBatchDifference.amount"
+        v-if="latestBatchDifference && latestBatchDifference.amount && !isNaN(latestBatchDifference.resolved * -1)"
         @click="useLatestBatchDifference"
     >
       {{ latestBatchDifference.resolved * -1 }}
