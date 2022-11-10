@@ -46,7 +46,13 @@ class UpdateAccountBatchUpdateRequest extends FormRequest
             'date' => 'date',
             'notify_me' => 'present|boolean',
             'weeks' => 'nullable|numeric|min:0',
-            'note' => 'string|max:1000',
+            'note' => 'present|string|min:0|max:1000',
         ];
+    }
+
+    public function prepareForValidation() {
+        $this->merge([
+            'note' => (string) $this->input('note')
+        ]);
     }
 }

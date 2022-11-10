@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Account;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class BatchUpdateAccountRequest extends FormRequest
 {
@@ -45,7 +46,13 @@ class BatchUpdateAccountRequest extends FormRequest
             'date' => 'date',
             'notify_me' => 'present|boolean',
             'weeks' => 'nullable|numeric|min:0',
-            'note' => 'string|max:1000',
+            'note' => 'present|string|min:0|max:1000',
         ];
+    }
+
+    public function prepareForValidation() {
+        $this->merge([
+            'note' => (string) $this->input('note')
+        ]);
     }
 }

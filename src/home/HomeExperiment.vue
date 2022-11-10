@@ -578,7 +578,7 @@ onMounted(() => {
 	if (route.params.template) {
 		let template: TemplateWithAccounts = JSON.parse(route.params.template as string)
     batchForm.reset({
-      ...batchForm,
+      ...batchForm.internalForm,
       ...template,
       accounts: template.accounts.reduce((a, c) => {
         a[c.id] = {

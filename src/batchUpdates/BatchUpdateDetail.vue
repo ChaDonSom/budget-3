@@ -53,6 +53,12 @@
       </div>
     </transition>
 
+    <transition name="error-message">
+      <p v-if="batchForm.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-10 break-word max-w-fit text-red-700">
+        {{ batchForm.errors.message }}
+      </p>
+    </transition>
+
     <Teleport to="body">
       <Fab
           @click="saveBatch"
