@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'timezone',
+        'beta_opt_in',
     ];
 
     /**

@@ -20,7 +20,6 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     {
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
-
             'email' => [
                 'required',
                 'string',
@@ -28,7 +27,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-
+            'beta_opt_in' => 'required|boolean',
             'timezone' => 'required|string',
         ])->validateWithBag('updateProfileInformation');
 
@@ -40,6 +39,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'timezone' => $input['timezone'],
+                'beta_opt_in' => $input['beta_opt_in'],
             ])->save();
         }
     }
@@ -57,7 +57,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => $input['name'],
             'email' => $input['email'],
             'email_verified_at' => null,
-            'timezone' => $input['timezone']
+            'timezone' => $input['timezone'],
+            'beta_opt_in' => $input['beta_opt_in'],
         ])->save();
 
         $user->sendEmailVerificationNotification();

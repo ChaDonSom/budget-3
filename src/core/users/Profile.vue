@@ -3,6 +3,7 @@
     <h1 class="my-6 text-2xl">{{ form.name ? form.name : '??' }}'s Profile</h1>
     <Textfield v-model="form.name" :error="form.errors.name" autoselect>Name</Textfield>
     <Textfield v-model="form.email" :error="form.errors.email" autoselect>Email</Textfield>
+    <MdcSwitch v-model="form.beta_opt_in">Opt in for beta features</MdcSwitch>
     <SaveButton @click="submit" :disabled="form.processing" :loading="form.processing" />
 
     <Button @click="changePassword">Change password</Button>
@@ -52,6 +53,7 @@ import SearchForUserTextfield from '@/budget/users/SearchForUserTextfield.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
 import { useModals } from '@/store/modals';
 import PasswordModalVue from '@/core/users/auth/PasswordModal.vue';
+import MdcSwitch from '../switches/MdcSwitch.vue';
 
 const auth = useAuth()
 
