@@ -23,6 +23,7 @@ export type User = {
         }
     }[];
     account_holders?: { id: number; users: User[] }[];
+    beta_opt_in: boolean|0|1;
 };
 
 export const useAuth = defineStore("auth", {

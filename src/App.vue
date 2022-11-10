@@ -29,12 +29,6 @@
                             Home
                         </Button>
                     </RouterLink>
-                    <RouterLink :to="{ name: 'home-experiment' }">
-                        <Button :disabled="$route.name == 'home-experiment'" :raised="$route.name == 'home-experiment'">
-                            <template #leading-icon>home</template>
-                            Home (experimental)
-                        </Button>
-                    </RouterLink>
                     <RouterLink :to="{ name: 'profile' }">
                         <Button :disabled="!auth.authenticated || $route.name == 'profile'"
                             :raised="$route.name == 'profile'">

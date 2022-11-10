@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="text-center my-3 mx-0 md:mx-3">
+		<div class="text-center mx-0 md:mx-3 max-h-screen relative">
       <!--
         Welcome sign :)
       -->
@@ -14,13 +14,18 @@
       <!--
         Dashboard
       -->
-      <div v-if="auth.authenticated">
-        <h1 class="text-xl mt-4 mb-2">Budget</h1>
-				<div v-if="initiallyLoaded" class="mb-5">
+      <div v-if="auth.authenticated" class="max-h-screen">
+        <h1 class="text-xl pb-2 pt-3">Budget</h1>
+				<div v-if="initiallyLoaded">
 					<p v-if="!sortedAccounts.length" class="m-5">
 						✨ No accounts ✨
 					</p>
-					<DataTable @sort="updateSort" v-if="sortedAccounts.length" style="max-height: 83vh;" class="max-w-full md:max-w-[95vw]">
+					<DataTable
+							v-if="sortedAccounts.length"
+							style="max-height: calc(100vh - 3rem)"
+							class="max-w-full md:max-w-[95vw]"
+							@sort="updateSort"
+					>
 						<template #header>
 							<DataTableHeaderCell sortable column-id="name" :sort="sort.name"
 									:class="{ 'hidden': !columnsToShow.name }"
@@ -89,7 +94,20 @@
 										:class="{ 'hidden': !columnsToShow.name }"
 								>
 									<div class="flex items-center gap-1">
-										<IconButton v-if="account.favorited_users?.some(i => i.id == auth.user?.id)" :density="-5" primary
+										<RouterLink :to="{ name: 'history', query: { account_id: account.id } }">
+											<IconButton
+													v-if="homeSettings.historyButtons"
+													v-tooltip="`Transaction history`"
+													:density="-5"
+													@click.stop="() => {}"
+											>
+												history
+											</IconButton>
+										</RouterLink>
+										<IconButton
+												v-if="account.favorited_users?.some(i => i.id == auth.user?.id)"
+												:density="-5"
+												primary
 												v-tooltip="`Favorite`"
 										>
 											push_pin
@@ -131,13 +149,13 @@
 											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
-												'text-gray-500': account.overMinimum >= 0,
-												'text-red-500': account.overMinimum < 0,
+												'text-gray-500': Math.floor(account.overMinimum * 100) >= 0,
+												'text-red-500': Math.floor(account.overMinimum * 100) < 0,
 												'italic text-orange-500': (account.amount / 100) < account.overMinimum,
 											}"
 											class="whitespace-nowrap"
 									>
-										{{ account.overMinimum ? dollars(account.overMinimum) : '' }}
+										{{ accountIsOffMinimum(account.overMinimum) ? dollars(account.overMinimum) : '' }}
 										<!-- Over / under if difference will be saved -->
 										<br v-if="batchDifferences[account.id]">
 										<span v-if="batchDifferences[account.id]" class="text-gray-400"
@@ -165,8 +183,16 @@
 									</div>
 								</DataTableCell>
 								<!-- Current amount -->
-								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.amount }">
-									{{ dollars(account.amount / 100) }}
+								<DataTableCell
+										numeric
+										:class="{
+											'hidden': !columnsToShow.amount,
+											'text-red-600': ((account.amount / 100) + batchDifferences[account.id]?.resolved) < 0
+										}"
+								>
+									<span class="whitespace-nowrap">
+										{{ dollars(account.amount / 100) }}
+									</span>
 									<!-- New amount if difference will be saved -->
 									<br v-if="batchDifferences[account.id]">
 									<span v-if="batchDifferences[account.id]" class="text-gray-400"
@@ -186,12 +212,12 @@
 									<div
 											v-else-if="batchDifferences[account.id]"
 											@click.stop="edit(account)"
-											class="w-full h-full flex items-center gap-2"
+											class="w-full h-full flex flex-wrap items-center gap-2"
 											style="white-space: nowrap;"
 									>
 										<IconButton
 												:density="-5"
-												class="mr-2"
+												class="sm:mr-2"
 												@click.stop="clearBatchDifferenceFor(account)"
 										>close</IconButton>
 										{{ batchDifferences[account.id].modifier == 1 ? '+ ' : '' }}
@@ -211,7 +237,7 @@
 									{{ dollars(overMinimumTotal) }}
 									<br v-if="areAnyBatchDifferences">
 									<span v-if="areAnyBatchDifferences" class="text-gray-500" :class="{ 'text-red-500': overMinimumTotal + batchTotal < 0 }">
-										{{ dollars(overMinimumTotal + batchTotal) }}
+										{{ dollars(overMinimumTotal + batchTotalOfOffMinimumAccounts) }}
 									</span>
 								</DataTableCell>
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" />
@@ -244,25 +270,17 @@
 								v-if="!areAnyBatchDifferences"
 								@click="newAccount"
 								:icon="'add'"
-								class="fixed right-4 bottom-6"
+								small
+								class="fixed right-4 bottom-4"
 								style="z-index: 2;"
 						/>
-						<Fab
-								v-else
-								@click="saveBatch"
-								icon="save"
-								class="fixed right-4 bottom-6"
-								style="z-index: 2;"
-						/>
-						<OutlinedTextfield
-								type="date"
-								v-if="areAnyBatchDifferences"
-								v-model="batchForm.date"
-								class="fixed bottom-0 right-20 opaque"
-								style="z-index: 2;"
-						>
-							Date
-						</OutlinedTextfield>
+						<RouterLink v-if="areAnyBatchDifferences" :to="{ name: 'batch-updates-detail', params: { 'id': 'new' } }">
+							<Fab
+									icon="check"
+									class="fixed left-3 bottom-3"
+									style="z-index: 2;"
+							/>
+						</RouterLink>
 						<IconButton v-if="areAnyBatchDifferences" @click="clearBatchDifferences"
 								class="bottom-8 left-4"
 								style="position: fixed;"
@@ -278,40 +296,10 @@
 					</p>
 				</transition>
 
-				<transition name="opacity-0-scale-097-150ms">
-					<div v-if="areAnyBatchDifferences" class="my-7">
-						<MdcSwitch v-model="batchForm.notify_me" id="notify_me">
-							Notify me when this change is made
-						</MdcSwitch>
-					</div>
-				</transition>
-
-				<transition name="opacity-0-scale-097-150ms" mode="out-in">
-					<div class="my-7" v-if="areAnyBatchDifferences">
-						<OutlinedTextfield
-								v-model="batchForm.weeks"
-								type="number"
-								step="1"
-								autoselect
-								autofocus
-								v-if="batchForm.weeks != null"
-						>
-							Preferred # of weeks to pay by
-						</OutlinedTextfield>
-						<Button @click="batchForm.weeks = batchForm.weeks == null ? 4 : null">
-							{{ batchForm.weeks == null ? 'Set preferred payment schedule' : 'Remove payment schedule' }}
-						</Button>
-					</div>
-				</transition>
-
-				<!-- Spacer block to allow scroll to get to buttons/messages behind the save button & date field -->
-				<div class="my-32" v-if="areAnyBatchDifferences"></div>
+				<div class="my-7" v-if="messages.length">
+					<p v-for="message of messages" :key="message">{{ message }}</p>
+				</div>
       </div>
-
-
-			<div class="my-7">
-				<p v-for="message of messages" :key="message">{{ message }}</p>
-			</div>
 		</div>
 	</div>
 </template>
@@ -353,11 +341,14 @@ import {
 	isAccountWithBatchUpdates,
 	emergencySaving,
 	minimumToMakeNextPayment,
-BatchDifference
+	BatchDifference,
+	columnsToShow,
+	homeSettings,
+	accountIsOffMinimum,
 } from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
-import { columnsToShow } from '@/home';
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
+import { accountsTotal, areAnyBatchDifferences, batchDate, batchDifferences, batchForm, batchTotal, clearBatchDifferences, currentlyEditingDifference } from '@/batchUpdates';
 
 const auth = useAuth()
 const route = useRoute()
@@ -406,7 +397,6 @@ const initiallyLoaded = computed(() => {
 
 const accounts = useAccountsStore()
 accounts.fetchData().then(() => initiallyLoadedAccounts.value = true)
-const accountsTotal = computed(() => accounts.values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
 const overMinimumTotal = computed(() => {
 	return sortedAccounts.value.reduce((total, account) => {
 		if (account && isAccountWithBatchUpdatesAndDisplayFields(account) && account.batch_updates?.[0]?.pivot?.amount) {
@@ -514,6 +504,16 @@ watch(
 	},
 	{ deep: true, immediate: true }
 )
+const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferences.value)
+	.filter(i => {
+		let account = sortedAccounts.value.find(j => j.id == Number(i))
+		if (account && isAccountWithBatchUpdatesAndDisplayFields(account)) {
+			return accountIsOffMinimum(account.overMinimum)
+		}
+	})
+	.map(i => batchDifferences.value[Number(i)])
+	.map(i => i.resolved)
+	.reduce((a, c) => a + c, 0))
 
 function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
 	let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
@@ -546,11 +546,6 @@ function idealProgressTowardNextBatchUpdate(account: AccountWithBatchUpdates) {
 	| Setting up withdraw/deposit batches
 	---------------------------------------------------
  */
-const currentlyEditingDifference = ref<number|null>(null)
-const batchDifferences = ref({} as { [key: number]: BatchDifference })
-const batchDate = ref<DateTime>(DateTime.now())
-const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
-const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.amount * i.modifier).reduce((a, c) => a + c, 0))
 function startWithdrawing(account: Account) {
 	currentlyEditingDifference.value = account.id
 	batchDifferences.value[account.id] = new BatchDifference({
@@ -575,27 +570,17 @@ function clearBatchDifferenceFor(account: Account) {
 	delete batchDifferences.value[account.id]
 	if (currentlyEditingDifference.value == account.id) currentlyEditingDifference.value = null
 }
-function clearBatchDifferences() {
-	batchDifferences.value = {}
-	currentlyEditingDifference.value = null
-}
 function edit(account: Account) {
 	currentlyEditingDifference.value = account.id
 	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
 		difference: batchDifferences.value[account.id],
 	} })
 }
-const batchForm = useForm('/api/batch-updates', {
-	accounts: batchDifferences.value,
-	date: batchDate.value.toFormat('yyyy-MM-dd'),
-	notify_me: false,
-	weeks: null as number|null
-})
 onMounted(() => {
 	if (route.params.template) {
 		let template: TemplateWithAccounts = JSON.parse(route.params.template as string)
     batchForm.reset({
-      ...batchForm,
+      ...batchForm.internalForm,
       ...template,
       accounts: template.accounts.reduce((a, c) => {
         a[c.id] = {
@@ -609,21 +594,12 @@ onMounted(() => {
 		router.replace({ params: {} })
 	}
 })
-async function saveBatch() {
-	batchForm.reset({ accounts: batchDifferences.value, date: batchForm.date })
-	// @ts-ignore (forms assume the response looks like their data, this one's doesn't)
-	let data = await batchForm.post() as { accounts: [] } // Will be an AccountBatchUpdate, either done, or to be done later
-	// has accounts, which have pivots describing the change
-	// has audits, but are not returned here (I imagine they won't be useful here)
-	for (let account of data.accounts) accounts.receive(account)
-	clearBatchDifferences()
-	currentlyEditingDifference.value = null
-	batchDate.value	= DateTime.now()
-	batchForm.date = batchDate.value.toFormat('yyyy-MM-dd')
-}
-onBeforeRouteLeave(async () => {
+
+onBeforeRouteLeave(async (to) => {
 	try {
-		if (areAnyBatchDifferences.value) await modals.confirm("Do you really want to leave unsaved changes?")
+		if (areAnyBatchDifferences.value && !(to.name == 'batch-updates-detail' && to.params.id == 'new')) {
+			await useModals().confirm("Do you really want to leave unsaved changes?")
+		}
 	} catch (e) {
 		return false
 	}
@@ -695,15 +671,6 @@ code {
 		input.mdc-text-field__input {
 			z-index: 2;
 		}
-	}
-}
-
-:deep(.mdc-data-table) {
-	.mdc-data-table__cell, .mdc-data-table__header-cell {
-		white-space: normal;
-		padding-inline: 8px;
-		&:first-child { padding-left: 16px; }
-		&:last-child { padding-right: 16px; }
 	}
 }
 </style>
