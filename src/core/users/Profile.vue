@@ -3,7 +3,7 @@
     <h1 class="my-6 text-2xl">{{ form.name ? form.name : '??' }}'s Profile</h1>
     <Textfield v-model="form.name" :error="form.errors.name" autoselect>Name</Textfield>
     <Textfield v-model="form.email" :error="form.errors.email" autoselect>Email</Textfield>
-    <MdcSwitch v-model="form.beta_opt_in">Opt in for beta features</MdcSwitch>
+    <MdcSwitch v-model="betaOptIn">Opt in for beta features</MdcSwitch>
     <SaveButton @click="submit" :disabled="form.processing" :loading="form.processing" />
 
     <Button @click="changePassword">Change password</Button>
@@ -48,7 +48,7 @@ import { useAuth, type User } from '@/core/users/auth';
 import { useForm } from '@/store/forms';
 import Textfield from '@/core/fields/OutlinedTextfield.vue';
 import Button from '@/core/buttons/Button.vue';
-import { markRaw, ref } from 'vue';
+import { computed, markRaw, ref } from 'vue';
 import SearchForUserTextfield from '@/budget/users/SearchForUserTextfield.vue';
 import IconButton from '@/core/buttons/IconButton.vue';
 import { useModals } from '@/store/modals';
@@ -58,6 +58,10 @@ import MdcSwitch from '../switches/MdcSwitch.vue';
 const auth = useAuth()
 
 const form = useForm('/user/profile-information', JSON.parse(JSON.stringify(auth.user)) as User)
+const betaOptIn = computed({
+  get: () => Boolean(form.beta_opt_in),
+  set: v  => form.beta_opt_in = Boolean(v)
+})
 
 const addUserForm = useForm('/user/share-by-search', { search: '' })
 async function addUser() {
