@@ -56,6 +56,20 @@ export function minimumToMakeNextPayment(account: AccountWithBatchUpdates) {
         - (idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
 }
 
+export function minimumToMakeAllExistingScheduledPayments(account: AccountWithBatchUpdates) {
+    let batchUpdates = account.batch_updates.filter(update => {
+        return toDateTime(update.date) > DateTime.now() && !update.done_at
+    })
+    let result = batchUpdates.reduce((total, update) => {
+        total += (
+            Math.abs(update.pivot?.amount / 100)
+                - (idealPayment(update) * fridaysUntil(toDateTime(update?.date)))
+        )
+        return total
+    }, 0)
+    return result
+}
+
 export class BatchDifference {
 	public amount: number = 0
 	public modifier: 1|-1 = 1

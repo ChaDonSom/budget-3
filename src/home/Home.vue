@@ -140,7 +140,7 @@
 												html: true
 											}"
 									>
-										{{ dollars(account.minimum) }}
+										{{ account.minimum ? dollars(account.minimum) : '' }}
 									</div>
 								</DataTableCell>
 								<!-- Over / under minimum -->
@@ -345,6 +345,7 @@ import {
 	columnsToShow,
 	homeSettings,
 	accountIsOffMinimum,
+minimumToMakeAllExistingScheduledPayments,
 } from '@/home';
 import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
@@ -412,7 +413,8 @@ const overMinimumTotal = computed(() => {
 type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 	nextDate: string,
 	nextAmount: number,
-	minimum: number,
+	minimum: number|null,
+	minimumAllPayments: number|null,
 	overMinimum: number,
 	percentCovered: number,
 }
@@ -474,6 +476,7 @@ watch(
 				nextDate: account.batch_updates?.[0]?.date ?? '',
 				nextAmount: account.batch_updates?.[0]?.pivot?.amount ?? 0,
 				minimum: isAccountWithBatchUpdates(account) ? minimumToMakeNextPayment(account) : null,
+				minimumAllPayments: isAccountWithBatchUpdates(account) ? minimumToMakeAllExistingScheduledPayments(account) : null,
 				overMinimum: isAccountWithBatchUpdates(account)
 					? (account.amount / 100) - minimumToMakeNextPayment(account)
 					: null,
@@ -493,6 +496,7 @@ watch(
 					nextDate?: string,
 					nextAmount?: number,
 					minimum?: number,
+					minimumAllPayments?: number,
 					overMinimum?: number,
 					percentCovered?: number,
 				}))[]
@@ -516,14 +520,29 @@ const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferenc
 	.reduce((a, c) => a + c, 0))
 
 function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
-	let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
-	let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
-	return `
-		Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
-		${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
-		Emergency ${emergencySaving(account)} / week for
-		${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
-	`
+	if (!auth.user?.beta_opt_in) {
+		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
+		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+		return `
+			Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
+			${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
+			Emergency ${emergencySaving(account)} / week for
+			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
+		`
+	} else {
+		let batchUpdates = account.batch_updates.filter(update => {
+			return toDateTime(update.date) > DateTime.now() && !update.done_at
+		})
+		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
+		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+		return `
+			Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
+			${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
+			Emergency ${emergencySaving(account)} / week for
+			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}<br>
+			${isAccountWithBatchUpdatesAndDisplayFields(account) && account.minimumAllPayments ? dollars(account.minimumAllPayments) : ''}
+		`
+	}
 }
 
 function progressedTimeTowardNextBatchUpdatePercent(account: AccountWithBatchUpdates) {
