@@ -33,4 +33,5 @@ export async function saveBatch() {
 	currentlyEditingDifference.value = null
 	batchDate.value	= DateTime.now()
 	batchForm.date = batchDate.value.toFormat('yyyy-MM-dd')
+	batchForm.note = ''
 }
