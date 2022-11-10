@@ -149,8 +149,8 @@
 											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
-												'text-gray-500': Math.floor(Math.abs(account.overMinimum * 100)) >= 0,
-												'text-red-500': Math.floor(Math.abs(account.overMinimum * 100)) < 0,
+												'text-gray-500': Math.floor(account.overMinimum * 100) >= 0,
+												'text-red-500': Math.floor(account.overMinimum * 100) < 0,
 												'italic text-orange-500': (account.amount / 100) < account.overMinimum,
 											}"
 											class="whitespace-nowrap"

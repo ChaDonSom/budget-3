@@ -84,5 +84,5 @@ export const homeSettings = useLocalStorage('budget-home-settings', {
 })
 
 export function accountIsOffMinimum(overMinimum: number) {
-    return Math.floor(Math.abs(overMinimum * 100)) == 0
+    return Math.floor(Math.abs(overMinimum * 100)) != 0
 }
