@@ -34,4 +34,10 @@ class StoreAccountRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
         ];
     }
+
+    public function prepareForValidation() {
+        $this->merge([
+            'note' => (string) $this->input('note')
+        ]);
+    }
 }

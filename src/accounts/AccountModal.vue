@@ -62,6 +62,10 @@
       >Favorite</MdcSwitch>
     </div>
     <Button v-if="accountId" @click="goToAccountHistory"><template #leading-icon>history</template>History</Button>
+    <Button v-if="accountId && auth.user?.beta_opt_in" @click="goToAccountPaymentPlanning">
+      <template #leading-icon>query_stats</template>
+      Saving planning
+    </Button>
     <transition name="error-message">
       <p v-if="form.errors.message" class="bg-red-200 rounded-3xl py-3 px-4 mb-2 break-word max-w-fit text-red-800">
         {{ form.errors.message }}
@@ -186,6 +190,10 @@ const router = useRouter()
 async function goToAccountHistory() {
   await attemptClose()
   router.push({ name: 'history', query: { account_id: form.id } })
+}
+async function goToAccountPaymentPlanning() {
+  await attemptClose()
+  router.push({ name: 'saving-planning', params: { accountId: form.id } })
 }
 
 function openBatchUpdate(batchUpdate?: BatchUpdate) {

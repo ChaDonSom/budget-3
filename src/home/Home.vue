@@ -531,17 +531,13 @@ function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
 			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
 		`
 	} else {
-		let batchUpdates = account.batch_updates.filter(update => {
-			return toDateTime(update.date) > DateTime.now() && !update.done_at
-		})
 		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
 		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
 		return `
 			Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
 			${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
 			Emergency ${emergencySaving(account)} / week for
-			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}<br>
-			${isAccountWithBatchUpdatesAndDisplayFields(account) && account.minimumAllPayments ? dollars(account.minimumAllPayments) : ''}
+			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
 		`
 	}
 }

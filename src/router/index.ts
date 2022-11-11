@@ -4,6 +4,7 @@ import Home from '@/home/Home.vue'
 import authRoutes from '@/router/auth'
 import templatesRoutes from '@/router/templates'
 import batchUpdatesRoutes from '@/router/batchUpdates'
+import accountsRoutes from '@/router/accounts'
 
 let routes: RouteRecordRaw[] = [
     {
@@ -13,7 +14,7 @@ let routes: RouteRecordRaw[] = [
         props: true,
     },
 ];
-routes = routes.concat(authRoutes).concat(templatesRoutes).concat(batchUpdatesRoutes)
+routes = routes.concat(authRoutes).concat(templatesRoutes).concat(batchUpdatesRoutes).concat(accountsRoutes)
 
 export const router = createRouter({
     history: createWebHashHistory(),
