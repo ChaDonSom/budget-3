@@ -30,7 +30,7 @@
             <DataTableCell></DataTableCell>
             <DataTableCell></DataTableCell>
             <DataTableCell numeric>
-              {{ new Dollars(rows?.reduce((total, row) => total + Number(row.idealMin), 0) ?? 0) }}
+              {{ minTotal }}
             </DataTableCell>
           </DataTableRow>
         </template>
@@ -158,4 +158,6 @@ const blurb = computed(() => {
     return a
   }, <{ weeksTill: number, weeks: number, idealToThisWeek: number }[]>[])
 })
+
+const minTotal = computed(() => new Dollars(rows.value?.reduce((total, row) => total + Number(row.idealMin), 0) ?? 0))
 </script>
