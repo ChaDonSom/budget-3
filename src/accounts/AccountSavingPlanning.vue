@@ -4,25 +4,56 @@
       <h1 class="mx-2">
         Saving planning for {{ account.name }} ({{ DateTime.now().toFormat('M/dd') }}: {{ dollars(account.amount / 100) }})
       </h1>
+      <h2 class="text-xl mx-2 mt-4">Basic numbers</h2>
       <DataTable class="my-5">
         <template #header>
           <DataTableHeaderCell>Date</DataTableHeaderCell>
           <DataTableHeaderCell numeric>Amount</DataTableHeaderCell>
           <DataTableHeaderCell numeric>Ideal weeks</DataTableHeaderCell>
-          <DataTableHeaderCell numeric>Ideal save</DataTableHeaderCell>
-          <DataTableHeaderCell numeric>Emergency weeks</DataTableHeaderCell>
-          <DataTableHeaderCell numeric>Emergency save</DataTableHeaderCell>
-          <DataTableHeaderCell numeric>Emergency take 😁</DataTableHeaderCell>
+          <DataTableHeaderCell numeric>Ideal rate ($/w)</DataTableHeaderCell>
+          <DataTableHeaderCell numeric>Weeks left</DataTableHeaderCell>
+          <DataTableHeaderCell numeric>Min</DataTableHeaderCell>
         </template>
         <template #body>
           <DataTableRow v-for="row of rows">
             <DataTableCell>{{ row.date }}</DataTableCell>
             <DataTableCell numeric>{{ row.amount }}</DataTableCell>
-            <DataTableCell numeric>{{ row.ideal.weeks }}</DataTableCell>
-            <DataTableCell numeric>{{ row.ideal.payment }}</DataTableCell>
-            <DataTableCell numeric>{{ row.emergency.weeks }}</DataTableCell>
-            <DataTableCell numeric>{{ row.emergency.payment >= 0 ? row.emergency.payment : '' }}</DataTableCell>
-            <DataTableCell numeric>{{ row.emergency.payment < 0 ? row.emergency.payment : '' }}</DataTableCell>
+            <DataTableCell numeric>{{ row.weeks }}</DataTableCell>
+            <DataTableCell numeric>{{ row.idealRate }}</DataTableCell>
+            <DataTableCell numeric>{{ row.weeksLeft }}</DataTableCell>
+            <DataTableCell numeric>{{ row.idealMin }}</DataTableCell>
+          </DataTableRow>
+          <DataTableRow>
+            <DataTableCell></DataTableCell>
+            <DataTableCell></DataTableCell>
+            <DataTableCell></DataTableCell>
+            <DataTableCell></DataTableCell>
+            <DataTableCell></DataTableCell>
+            <DataTableCell numeric>
+              {{ new Dollars(rows?.reduce((total, row) => total + Number(row.idealMin), 0) ?? 0) }}
+            </DataTableCell>
+          </DataTableRow>
+        </template>
+      </DataTable>
+      <h2 class="text-xl mx-2 mt-4">Weekly payment plan</h2>
+      <DataTable class="my-5">
+        <template #header>
+          <DataTableHeaderCell numeric>Week</DataTableHeaderCell>
+          <DataTableHeaderCell numeric>Rate ($/w)</DataTableHeaderCell>
+        </template>
+        <template #body>
+          <DataTableRow v-for="row of rows?.reduce((weeks, row) => row.weeksLeft > weeks ? row?.weeksLeft : weeks, 0)">
+            <DataTableCell numeric>{{ row }}</DataTableCell>
+            <DataTableCell numeric>
+              {{
+                new Dollars(
+                  rows
+                    ?.filter(r => r.weeksLeft >= row && (!r.weeksUntilIdealStart || r.weeksUntilIdealStart < row))
+                    .reduce((total, r) => total + Number(r.idealRate), 0)
+                  ?? 0
+                )
+              }}
+            </DataTableCell>
           </DataTableRow>
         </template>
       </DataTable>
@@ -41,7 +72,7 @@ import DataTableCell from '../core/tables/DataTableCell.vue'
 import { toDateTime } from '@/core/utilities/datetime';
 import { DateTime } from 'luxon';
 import { emergencySaving, idealPayment, idealWeeks, weeksUntil } from '@/home';
-import { dollars } from '@/core/utilities/currency';
+import { Dollars, dollars } from '@/core/utilities/currency';
 import type { BatchUpdate } from '@/store/batchUpdates';
 
 const accountId = computed(() => Number(useRoute().params.accountId))
@@ -69,30 +100,26 @@ class UpdateInTable {
     return me
   })(this.b.date) }
 
-  get ideal() {
-    return {
-      weeks: this.b.weeks ?? 4,
-      payment: (function (payment) {
-        let me = {
-          toString: () => dollars(payment),
-          valueOf: () => payment
-        }
-        return me
-      })(Math.abs(Number(this.amount)) / (this.b.weeks ?? 4))
-    }
+  get weeks() {
+    return this.b.weeks ?? 4
+  }
+  get weeksLeft() {
+    return weeksUntil(this.date)
+  }
+  get weeksUntilIdealStart() {
+    return this.weeksLeft > this.weeks ? this.weeksLeft - this.weeks : 0
+  }
+  get ideallyCoveredWeeks() {
+    return this.weeks - this.weeksLeft
   }
 
-  get emergency() {
-    return {
-      weeks: weeksUntil(this.date),
-      payment: (function (payment) {
-        let me = {
-          toString: () => dollars(payment),
-          valueOf: () => payment
-        }
-        return me
-      })((Math.abs(Number(this.amount)) - (account.value.amount / 100)) / weeksUntil(this.date))
-    }
+  get idealRate() {
+    return new Dollars(Math.abs(Number(this.amount)) / (this.b.weeks ?? 4))
+  }
+  get idealMin() {
+    let n = Number(this.idealRate) * this.ideallyCoveredWeeks
+    if (n < 0) n = 0
+    return new Dollars(n)
   }
 }
 
