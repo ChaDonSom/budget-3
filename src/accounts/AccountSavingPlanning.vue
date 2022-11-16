@@ -154,7 +154,7 @@ const blurb = computed(() => {
 
 const minTotal = computed(() => new Dollars(rows.value?.reduce((total, row) => total + Number(row.idealMin), 0) ?? 0))
 function rateForWeek(row: number) {
-  new Dollars(
+  return new Dollars(
     rows.value
       ?.filter(r => r.weeksLeft >= row && (!r.weeksUntilIdealStart || r.weeksUntilIdealStart < row))
       .reduce((total, r) => total + Number(r.idealRate), 0)
