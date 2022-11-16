@@ -45,14 +45,7 @@
           <DataTableRow v-for="row of rows?.reduce((weeks, row) => row.weeksLeft > weeks ? row?.weeksLeft : weeks, 0)">
             <DataTableCell numeric>{{ row }}</DataTableCell>
             <DataTableCell numeric>
-              {{
-                new Dollars(
-                  rows
-                    ?.filter(r => r.weeksLeft >= row && (!r.weeksUntilIdealStart || r.weeksUntilIdealStart < row))
-                    .reduce((total, r) => total + Number(r.idealRate), 0)
-                  ?? 0
-                )
-              }}
+              {{ rateForWeek(row) }}
             </DataTableCell>
           </DataTableRow>
         </template>
@@ -160,4 +153,12 @@ const blurb = computed(() => {
 })
 
 const minTotal = computed(() => new Dollars(rows.value?.reduce((total, row) => total + Number(row.idealMin), 0) ?? 0))
+function rateForWeek(row) {
+  new Dollars(
+    rows.value
+      ?.filter(r => r.weeksLeft >= row && (!r.weeksUntilIdealStart || r.weeksUntilIdealStart < row))
+      .reduce((total, r) => total + Number(r.idealRate), 0)
+    ?? 0
+  )
+}
 </script>
