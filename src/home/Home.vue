@@ -140,7 +140,7 @@
 												html: true
 											}"
 									>
-										{{ account.minimum ? dollars(account.minimum) : '' }}
+										{{ dollars(account.minimum ?? 0) }}
 									</div>
 								</DataTableCell>
 								<!-- Over / under minimum -->
@@ -311,7 +311,7 @@ import { useAuth } from '../core/users/auth';
 import { useEcho } from '../store/echo';
 import axios from 'axios';
 import { useAccounts, type Account, type AccountWithBatchUpdates, useAccountsStore } from '@/store/accounts';
-import { dollars } from '@/core/utilities/currency'
+import { Dollars, dollars } from '@/core/utilities/currency'
 import DataTable from '@/core/tables/DataTable.vue';
 import DataTableHeaderCell from '@/core/tables/DataTableHeaderCell.vue';
 import DataTableRow from '@/core/tables/DataTableRow.vue';
@@ -351,10 +351,14 @@ import TableSettingsModal from '@/home/TableSettingsModal.vue'
 import MdcSwitch from '../core/switches/MdcSwitch.vue';
 import { accountsTotal, areAnyBatchDifferences, batchDate, batchDifferences, batchForm, batchTotal, clearBatchDifferences, currentlyEditingDifference } from '@/batchUpdates';
 import { templateToApply } from '@/templates';
+import { useModalEditing as useAccountModalEditing } from '@/accounts/modal-editing';
+import { useBatchDifferences } from '@/batchUpdates/batch-differences';
+import { usePlanning } from '@/accounts';
 
 const auth = useAuth()
 const route = useRoute()
 const router = useRouter()
+const modals = useModals()
 const messages = ref<any[]>([])
 const echo = useEcho()
 onMounted(() => {
@@ -415,6 +419,8 @@ type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 	nextDate: string,
 	nextAmount: number,
 	minimum: number|null,
+	currentRate?: Dollars,
+	ratesEachWeek?: Dollars[],
 	minimumAllPayments: number|null,
 	overMinimum: number,
 	percentCovered: number,
@@ -466,6 +472,7 @@ function updateSort(event: { columnId: keyof typeof sort.value, sortValue: "asce
 	else sort.value[event.columnId].value = event.sortValue
 	sort.value[event.columnId].at = (new Date()).valueOf()
 }
+// TODO #47
 watch(
 	() => [accounts.values, sort.value],
 	() => {
@@ -492,11 +499,19 @@ watch(
 			if (event.data?.type == 'SORT_ACCOUNTS') {
 				sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
 					let result = a
+					if (isAccountWithBatchUpdates(a)) {
+						const { currentRate, minTotal, ratesEachWeek } = usePlanning(a)
+						result.currentRate = currentRate.value
+						result.ratesEachWeek = ratesEachWeek.value
+						if (auth.user?.beta_opt_in) result.minimum = minTotal.value.valueOf()
+					}
 					return result
 				}) as (Account|(AccountWithBatchUpdates & {
 					nextDate?: string,
 					nextAmount?: number,
 					minimum?: number,
+					currentRate?: Dollars,
+					ratesEachWeek?: Dollars[],
 					minimumAllPayments?: number,
 					overMinimum?: number,
 					percentCovered?: number,
@@ -520,7 +535,8 @@ const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferenc
 	.map(i => i.resolved)
 	.reduce((a, c) => a + c, 0))
 
-function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
+function tooltipToCompareIdealVsEmergency(account: typeof sortedAccounts.value[0]) {
+	if (!isAccountWithBatchUpdatesAndDisplayFields(account)) return ''
 	if (!auth.user?.beta_opt_in) {
 		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
 		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
@@ -531,11 +547,27 @@ function tooltipToCompareIdealVsEmergency(account: AccountWithBatchUpdates) {
 			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
 		`
 	} else {
-		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
+		let paymentPlan = ''
+		let ratesEachWeek = account.ratesEachWeek ?? []
+		let weeksOfSameRate = 0
+		for (let i = 0; i < ratesEachWeek.length; i++) {
+			weeksOfSameRate = 1
+			let jReachedEnd = false
+			for (let j = i + 1; j < ratesEachWeek.length; j++) {
+				i = j - 1
+				if (ratesEachWeek[j].valueOf() == ratesEachWeek[i].valueOf()) {
+					weeksOfSameRate++
+				} else {
+					break
+				}
+				if (j >= ratesEachWeek.length - 1) jReachedEnd = true
+			}
+			if (weeksOfSameRate) paymentPlan += `${weeksOfSameRate} weeks at ${ratesEachWeek[i]} / week<br>`
+			if (jReachedEnd) break
+		}
 		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
 		return `
-			Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
-			${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
+			${paymentPlan} <br>
 			Emergency ${emergencySaving(account)} / week for
 			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
 		`
@@ -557,41 +589,8 @@ function idealProgressTowardNextBatchUpdate(account: AccountWithBatchUpdates) {
 		- (idealPayment(account.batch_updates?.[0]) * weeksUntil(toDateTime(account.batch_updates?.[0]?.date)))
 }
 
-/**
-	---------------------------------------------------
-	| Setting up withdraw/deposit batches
-	---------------------------------------------------
- */
-function startWithdrawing(account: Account) {
-	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = new BatchDifference({
-		amount: 0,
-		modifier: -1
-	})
-	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-		difference: batchDifferences.value[account.id],
-	} })
-}
-function startDepositing(account: Account) {
-	currentlyEditingDifference.value = account.id
-	batchDifferences.value[account.id] = new BatchDifference({
-		amount: 0,
-		modifier: 1
-	})
-	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-		difference: batchDifferences.value[account.id],
-	} })
-}
-function clearBatchDifferenceFor(account: Account) {
-	delete batchDifferences.value[account.id]
-	if (currentlyEditingDifference.value == account.id) currentlyEditingDifference.value = null
-}
-function edit(account: Account) {
-	currentlyEditingDifference.value = account.id
-	modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-		difference: batchDifferences.value[account.id],
-	} })
-}
+const { clearBatchDifferenceFor, edit, startDepositing, startWithdrawing } = useBatchDifferences()
+
 onMounted(() => {
 	if (templateToApply.value) {
 		let template: TemplateWithAccounts = templateToApply.value
@@ -621,27 +620,7 @@ onBeforeRouteLeave(async (to) => {
 	}
 })
 
-/**
-	---------------------------------------------------
-	| Directly editing accounts
-	---------------------------------------------------
- */
-const modals = useModals()
-function newAccount() {
-	modals.open({
-		modal: markRaw(AccountModalVue), props: {}
-	})
-}
-const loading = ref(false)
-async function editAccount(id: number) {
-	loading.value = true
-	await accounts.fetchAccount(id)
-	modals.open({
-		modal: markRaw(AccountModalVue),
-		props: { accountId: id }
-	})
-	loading.value = false
-}
+const { editAccount, loading, newAccount } = useAccountModalEditing()
 </script>
 
 <style scoped lang="scss">

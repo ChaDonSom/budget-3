@@ -1,5 +1,8 @@
-import type { BatchDifference } from "@/home";
+import { Dollars } from "@/core/utilities/currency";
+import { toDateTime } from "@/core/utilities/datetime";
+import { weeksUntil, type BatchDifference } from "@/home";
 import { useAccountsStore } from "@/store/accounts";
+import type { BatchUpdate } from "@/store/batchUpdates";
 import { useForm } from "@/store/forms";
 import { DateTime } from "luxon";
 import { computed, ref } from "vue";
@@ -34,4 +37,43 @@ export async function saveBatch() {
 	batchDate.value	= DateTime.now()
 	batchForm.date = batchDate.value.toFormat('yyyy-MM-dd')
 	batchForm.note = ''
+}
+
+export class UpdateInTable {
+  b: BatchUpdate & { pivot: { amount: number } }
+  constructor(b: BatchUpdate & { pivot: { amount: number } }) {
+    this.b = b
+  }
+
+  get amount() { return new Dollars(this.b.pivot.amount / 100) }
+  get date() { return (function(date) {
+    let me = toDateTime(date)
+    me.toString = () => me.toFormat('M/dd')
+    return me
+  })(this.b.date) }
+
+  get weeks() {
+    return this.b.weeks ?? 4
+  }
+  get weeksLeft() {
+    return weeksUntil(this.date)
+  }
+  get weeksUntilIdealStart() {
+    return this.weeksLeft > this.weeks ? this.weeksLeft - this.weeks : 0
+  }
+  appliesToWeeksFromNow(week: number) {
+    return this.weeksLeft >= week && this.weeksUntilIdealStart < week
+  }
+  get ideallyCoveredWeeks() {
+    return this.weeks - this.weeksLeft
+  }
+
+  get idealRate() {
+    return new Dollars(Math.abs(Number(this.amount)) / (this.b.weeks ?? 4))
+  }
+  get idealMin() {
+    let n = Number(this.idealRate) * this.ideallyCoveredWeeks
+    if (n < 0) n = 0
+    return new Dollars(n)
+  }
 }
