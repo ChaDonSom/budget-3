@@ -3,6 +3,7 @@ import LogRocket from "logrocket";
 import { useBeams } from "@/store/beams";
 import { useModals } from "@/store/modals";
 import apiAxios, { type AxiosResponse } from "@/core/utilities/axios";
+import { ref } from "vue";
 
 const VITE_SESSION_LIFETIME = import.meta.env.VITE_SESSION_LIFETIME;
 console.log("VITE_SESSION_LIFETIME: ", VITE_SESSION_LIFETIME);
@@ -26,9 +27,11 @@ export type User = {
     beta_opt_in: boolean|0|1;
 };
 
+export const user = ref<User | null>(null)
+
 export const useAuth = defineStore("auth", {
     state: () => ({
-        user: <User | null>null,
+        user,
         sanctumCookie: null as string | null,
         authenticated: false,
         axiosResponseInterceptor: <number | null>null,
@@ -101,10 +104,14 @@ export const useAuth = defineStore("auth", {
                         }
                     });
                 }
-            } catch (e: any) {
+            }
+            catch (e: any) {
                 let hadUser = Boolean(this.user);
                 this.unauthenticate();
-                if (!this.guestRoutes.includes(this.router.currentRoute.value.path)) {
+                if (!this.guestRoutes.some(route => {
+                    return (route === "/" && this.router.currentRoute.value.path === route)
+                        || (route !== "/" && this.router.currentRoute.value.path.startsWith(route))
+                })) {
                     this.router.push({
                         name: 'index',
                         params: {
