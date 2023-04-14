@@ -68,12 +68,17 @@ export class UpdateInTable {
     return this.weeks - this.weeksLeft
   }
 
+  // Really, both of these reference another idea we could extract. Amount left to cover. Either the whole thing
+  // (to figure out the ideal), or whatever's currently left, to figure out the real / practical.
   get idealRate() {
     return new Dollars(Math.abs(Number(this.amount)) / (this.b.weeks ?? 4))
   }
+  // minRate() { (this.amount - this.accounts.reduce(() => amount (less any non-ideally-covered updates))) / this.weeksLeft }
   get idealMin() {
     let n = Number(this.idealRate) * this.ideallyCoveredWeeks
     if (n < 0) n = 0
     return new Dollars(n)
   }
+  // idealMin doesn't have a 'min' analogue?
+  // realMin() { minRate * weeksLeft }
 }
