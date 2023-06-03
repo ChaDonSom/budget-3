@@ -38,7 +38,7 @@
               <DataTableCell>
 								<div
 										v-if="isAccountWithBatchUpdates(account)"
-										v-tooltip="`Emergency ${emergencySaving(account)} / week over ${fridaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`"
+										v-tooltip="`Emergency ${emergencySaving(account)} / week over ${paydaysUntil(toDateTime(account.batch_updates?.[0]?.date))} weeks`"
 										class="select-none"
 								>
 									{{ dollars(idealPayment(account.batch_updates?.[0])) }}
@@ -161,7 +161,7 @@ import { type Template, type TemplateWithAccounts, useTemplates } from '@/store/
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import DeleteButton from '@/core/buttons/DeleteButton.vue';
 import CircularScrim from '../core/loaders/CircularScrim.vue';
-import { BatchDifference, emergencySaving, fridaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home';
+import { BatchDifference, emergencySaving, paydaysUntil, idealPayment, idealWeeks, isAccountWithBatchUpdates } from '@/home';
 import { toDateTime } from '@/core/utilities/datetime';
 
 const props = defineProps({

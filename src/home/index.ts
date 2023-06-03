@@ -16,25 +16,26 @@ export function idealPayment(
     return Math.abs(batchUpdate?.pivot?.amount / 100) / idealWeeks(batchUpdate);
 }
 
-export function fridaysUntil(date: DateTime, now: DateTime = DateTime.now()): number {
+export function paydaysUntil(date: DateTime, now: DateTime = DateTime.now()): number {
+    const PAYDAY = 4; // TODO: Make this configurable
     return Math.round(
-        // That date's previous friday
+        // That date's previous PAYDAY
         (
-            date.startOf("day").weekday >= 5
-                ? date.startOf("day").set({ weekday: 5 })
-                : date.startOf("day").minus({ weeks: 1 }).set({ weekday: 5 })
+            date.startOf("day").weekday >= PAYDAY
+                ? date.startOf("day").set({ weekday: PAYDAY })
+                : date.startOf("day").minus({ weeks: 1 }).set({ weekday: PAYDAY })
         )
             .diff(
-                // Now's previous friday
-                now.startOf("day").weekday >= 5
-                    ? now.startOf("day").set({ weekday: 5 })
-                    : now.startOf("day").minus({ weeks: 1 }).set({ weekday: 5 })
+                // Now's previous PAYDAY
+                now.startOf("day").weekday >= PAYDAY
+                    ? now.startOf("day").set({ weekday: PAYDAY })
+                    : now.startOf("day").minus({ weeks: 1 }).set({ weekday: PAYDAY })
             )
             .as("weeks")
     );
 }
 
-export const weeksUntil = fridaysUntil
+export const weeksUntil = paydaysUntil
 
 export function isAccountWithBatchUpdates(
     account: Account | AccountWithBatchUpdates
@@ -46,14 +47,14 @@ export function emergencySaving(account: AccountWithBatchUpdates) {
     let batchUpdate = account.batch_updates[0];
     let currentBalance = account.amount / 100;
     let paymentToCover = Math.abs(batchUpdate.pivot.amount / 100);
-    let weeks = fridaysUntil(toDateTime(batchUpdate.date)) || 1;
+    let weeks = paydaysUntil(toDateTime(batchUpdate.date)) || 1;
     let perWeek = (paymentToCover - currentBalance) / weeks;
     return dollars(perWeek);
 }
 
 export function minimumToMakeNextPayment(account: AccountWithBatchUpdates) {
     return Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-        - (idealPayment(account.batch_updates?.[0]) * fridaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
+        - (idealPayment(account.batch_updates?.[0]) * paydaysUntil(toDateTime(account.batch_updates?.[0]?.date)))
 }
 
 export function minimumToMakeAllExistingScheduledPayments(account: AccountWithBatchUpdates) {
@@ -63,7 +64,7 @@ export function minimumToMakeAllExistingScheduledPayments(account: AccountWithBa
     let result = batchUpdates.reduce((total, update) => {
         total += (
             Math.abs(update.pivot?.amount / 100)
-                - (idealPayment(update) * fridaysUntil(toDateTime(update?.date)))
+                - (idealPayment(update) * paydaysUntil(toDateTime(update?.date)))
         )
         return total
     }, 0)

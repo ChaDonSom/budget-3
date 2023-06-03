@@ -97,7 +97,7 @@ import { dollars } from '@/core/utilities/currency';
 import {
   idealPayment,
   idealWeeks,
-  fridaysUntil,
+  paydaysUntil,
   isAccountWithBatchUpdates,
   emergencySaving,
   minimumToMakeNextPayment,
