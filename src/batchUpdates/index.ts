@@ -5,10 +5,13 @@ import { useAccountsStore } from "@/store/accounts";
 import type { BatchUpdate } from "@/store/batchUpdates";
 import { useForm } from "@/store/forms";
 import { DateTime } from "luxon";
-import { computed, ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 
 export const batchDifferences = ref({} as { [key: number]: BatchDifference })
-export const areAnyBatchDifferences = computed(() => Boolean(Object.keys(batchDifferences.value).length))
+export function useAreAnyBatchDifferences(batchDifferences: Ref<{ [key: number]: BatchDifference }>) {
+  return computed(() => Boolean(Object.keys(batchDifferences.value).length))
+}
+export const areAnyBatchDifferences = useAreAnyBatchDifferences(batchDifferences)
 export const batchDate = ref<DateTime>(DateTime.now())
 export const batchForm = useForm('/api/batch-updates', {
 	accounts: batchDifferences.value,
@@ -18,7 +21,10 @@ export const batchForm = useForm('/api/batch-updates', {
 	note: '',
 })
 export const accountsTotal = computed(() => useAccountsStore().values.map(i => i.amount / 100).reduce((a, c) => a + c, 0))
-export const batchTotal = computed(() => Object.values(batchDifferences.value).map(i => i.resolved).reduce((a, c) => a + c, 0))
+export function useBatchTotal(batchDifferences: Ref<{ [key: number]: BatchDifference }>) {
+  return computed(() => Object.values(batchDifferences.value).map(i => i.resolved).reduce((a, c) => a + c, 0))
+}
+export const batchTotal = useBatchTotal(batchDifferences)
 
 export const currentlyEditingDifference = ref<number|null>(null)
 export function clearBatchDifferences() {

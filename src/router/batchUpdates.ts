@@ -1,4 +1,4 @@
-import BatchUpdateVue from "@/batchUpdates/BatchUpdate.vue";
+import BatchUpdateVue from "@/batchUpdates/BatchUpdateShow.vue";
 import BatchUpdateDetailVue from "@/batchUpdates/BatchUpdateDetail.vue";
 import HistoryVue from "@/batchUpdates/History.vue";
 import type { RouteRecordRaw } from "vue-router";
