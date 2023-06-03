@@ -28,6 +28,7 @@ class AccountBatchUpdate extends Model
         'notify_me',
         'weeks',
         'note',
+        'next_recurrence_id',
     ];
 
     public $casts = [
@@ -89,7 +90,42 @@ class AccountBatchUpdate extends Model
 
         AccountBatchUpdateSaved::dispatch($this);
 
+        // If this update has a `weeks` value defined, we can recur it by creating a new one x months out
+        if ($forward && $this->weeks) {
+            if ($this->nextRecurrence && !$this->nextRecurrence->done_at) {
+                // We need to update the next recurrence to match
+                Log::debug("Updating next recurrence {$this->nextRecurrence->id} to match {$this->id}");
+                $this->nextRecurrence->fill([
+                    'date' => Carbon::parse($this->date)->addMonths($this->weeks / 4)->format('Y-m-d'),
+                    'done_at' => null,
+                ])->save();
+                $this->nextRecurrence->accounts()->sync(
+                    $this->accounts->mapWithKeys(fn($a) => [$a->id => ['amount' => $a->pivot->amount]])
+                );
+            } else {
+                // We need to create a new one
+                Log::debug("Creating new next recurrence for {$this->id}");
+                $newUpdate = $this->replicate();
+                $newUpdate->fill([
+                    'date' => Carbon::parse($this->date)->addMonths($this->weeks / 4)->format('Y-m-d'),
+                    'done_at' => null,
+                ])->save();
+                $newUpdate->accounts()->sync(
+                    $this->accounts->mapWithKeys(fn($a) => [$a->id => ['amount' => $a->pivot->amount]])
+                );
+                $this->fill(['next_recurrence_id' => $newUpdate->id])->save();
+            }
+        }
+
         return $accounts;
+    }
+
+    public function nextRecurrence() {
+        return $this->belongsTo(AccountBatchUpdate::class, 'next_recurrence_id');
+    }
+
+    public function previousRecurrence() {
+        return $this->hasOne(AccountBatchUpdate::class, 'next_recurrence_id');
     }
 
     // TODO: a 'reverse' function, that way we can use it to posthumously edit the batchupdate to undo and have it go in later
