@@ -91,7 +91,7 @@ class AccountBatchUpdate extends Model
         AccountBatchUpdateSaved::dispatch($this);
 
         // If this update has a `weeks` value defined, we can recur it by creating a new one x months out
-        if ($forward && $this->weeks) {
+        if ($forward && $this->weeks && $this->weeks >= 4) {
             if ($this->nextRecurrence && !$this->nextRecurrence->done_at) {
                 // We need to update the next recurrence to match
                 Log::debug("Updating next recurrence {$this->nextRecurrence->id} to match {$this->id}");
