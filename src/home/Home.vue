@@ -87,14 +87,14 @@
 						<template #body>
 							<DataTableRow
 									v-for="account of sortedAccounts"
-									:key="account.id"
+									:key="account.id ?? 1"
 									:style="{
 										'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset',
 										'height': ('totalsRow' in account) ? 'unset' : '3rem'
 									}"
 							>
 								<!-- Name -->
-								<DataTableCell @click="editAccount(account.id)" style="white-space: normal;"
+								<DataTableCell @click="!('totalsRow' in account) && editAccount(account.id)" style="white-space: normal;"
 										:class="{ 'hidden': !columnsToShow.name }"
 								>
 									<div class="flex items-center gap-1">
@@ -109,14 +109,14 @@
 											</IconButton>
 										</RouterLink>
 										<IconButton
-												v-if="account.favorited_users?.some(i => i.id == auth.user?.id)"
+												v-if="!('totalsRow' in account) && account?.favorited_users?.some(i => i.id == auth.user?.id)"
 												:density="-5"
 												primary
 												v-tooltip="`Favorite`"
 										>
 											push_pin
 										</IconButton>
-										{{ account.name || (('totalsRow' in account) ? 'Total' : '') }}
+										{{ ('name' in account) ? account.name : (('totalsRow' in account) ? 'Total' : '') }}
 									</div>
 								</DataTableCell>
 								<!-- Next withdrawal date -->
@@ -211,7 +211,7 @@
 									</span>
 								</DataTableCell>
 								<!-- Add / subtract actions -->
-								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
+								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] && !('totalsRow' in account) ? edit(account) : null">
 									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id] && !('totalsRow' in account)"
 											style="white-space: nowrap;"
 									>
@@ -220,14 +220,14 @@
 									</div>
 									<div
 											v-else-if="batchDifferences[account.id]"
-											@click.stop="edit(account)"
+											@click.stop="!('totalsRow' in account) && edit(account)"
 											class="w-full h-full flex flex-wrap items-center gap-2"
 											style="white-space: nowrap;"
 									>
 										<IconButton
 												:density="-5"
 												class="sm:mr-2"
-												@click.stop="clearBatchDifferenceFor(account)"
+												@click.stop="!('totalsRow' in account) && clearBatchDifferenceFor(account)"
 										>close</IconButton>
 										{{ batchDifferences[account.id].modifier == 1 ? '+ ' : '' }}
 										{{ dollars(batchDifferences[account.id].resolved) }}
@@ -436,13 +436,13 @@ type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 	percentCovered: number,
 }
 function isAccountWithBatchUpdatesAndDisplayFields(
-	account: Account | AccountWithBatchUpdates | AccountWithBatchUpdatesAndSortedFields
+	account: Account | AccountWithBatchUpdates | AccountWithBatchUpdatesAndSortedFields | TotalsRow
 ): account is AccountWithBatchUpdatesAndSortedFields {
-	return !!account.batch_updates?.[0];
+	return !('batch_updates' in account) || !!account.batch_updates?.[0];
 }
 type TotalsRow = {
 	totalsRow: true,
-	id: string|number|null,
+	id: number,
 	amount: number,
 	nextAmount: number,
 	minimum: number,
@@ -519,9 +519,9 @@ watch(
 				const parsedAccounts = JSON.parse(event.data?.accounts)
 				const sortedAccountsValue = []
 				let currentWeek: number|null = null
-				let currentWeekTotals: TotalsRow = {
+				let currentWeekTotals = {
 					totalsRow: true,
-					id: currentWeek,
+					id: currentWeek as number|null,
 					amount: 0,
 					nextAmount: 0,
 					minimum: 0,
@@ -548,7 +548,7 @@ watch(
 							console.log('currentWeek :', currentWeek);
 							if (currentWeekTotals.id === null) currentWeekTotals.id = currentWeek
 							if (currentWeekTotals.id !== null && currentWeekTotals.id !== currentWeek) {
-								sortedAccountsValue.push(currentWeekTotals)
+								sortedAccountsValue.push(currentWeekTotals as TotalsRow)
 								i++
 								currentWeekTotals = {
 									totalsRow: true,
