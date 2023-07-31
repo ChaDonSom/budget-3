@@ -89,7 +89,7 @@
 									v-for="account of sortedAccounts"
 									:key="account.id ?? 1"
 									:style="{
-										'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset',
+										'background-color': (sort.nextDate.value != 'none' && !('totalsRow' in account) && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset',
 										'height': ('totalsRow' in account) ? 'unset' : '3rem'
 									}"
 							>
@@ -122,7 +122,7 @@
 								<!-- Next withdrawal date -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextDate }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) && !('totalsRow' in account)"
 											@click="$router.push({ name: 'batch-updates-show', params: { id: account.batch_updates?.[0]?.id } })"
 									>
 										{{ toDateTime(account.nextDate).toFormat('M/dd') }}
@@ -140,7 +140,7 @@
 											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)"
 											class="text-gray-400 select-none whitespace-nowrap"
 											v-tooltip="{
-												content: tooltipToCompareIdealVsEmergency(account),
+												content: !('totalsRow' in account) && tooltipToCompareIdealVsEmergency(account),
 												html: true
 											}"
 									>
@@ -172,7 +172,7 @@
 								<!-- Percent covered of next payment -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.percentCovered }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) && !('totalsRow' in account)"
 											v-tooltip="`Required: ${progressedTimeTowardNextBatchUpdatePercent(account)}% (${
 													dollars(idealProgressTowardNextBatchUpdate(account))
 												})
@@ -438,7 +438,7 @@ type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
 function isAccountWithBatchUpdatesAndDisplayFields(
 	account: Account | AccountWithBatchUpdates | AccountWithBatchUpdatesAndSortedFields | TotalsRow
 ): account is AccountWithBatchUpdatesAndSortedFields {
-	return !('batch_updates' in account) || !!account.batch_updates?.[0];
+	return !('totalsRow' in account) && (!('batch_updates' in account) || !!account.batch_updates?.[0]);
 }
 type TotalsRow = {
 	totalsRow: true,
@@ -544,7 +544,9 @@ watch(
 								: null) !== null) currentWeek = weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
 						}
 						if (currentWeek !== null) {
-							currentWeek = weeksUntil(toDateTime(a.batch_updates?.[0]?.date)) ?? currentWeek
+							currentWeek = (isAccountWithBatchUpdatesAndDisplayFields(a)
+								? weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
+								: null) ?? currentWeek
 							console.log('currentWeek :', currentWeek);
 							if (currentWeekTotals.id === null) currentWeekTotals.id = currentWeek
 							if (currentWeekTotals.id !== null && currentWeekTotals.id !== currentWeek) {
