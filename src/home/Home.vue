@@ -1,3 +1,4 @@
+<!-- eslint-disable prettier/prettier -->
 <template>
 	<div>
 		<div class="text-center mx-0 md:mx-3 max-h-screen relative">
@@ -87,7 +88,10 @@
 							<DataTableRow
 									v-for="account of sortedAccounts"
 									:key="account.id"
-									:style="{ 'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset' }"
+									:style="{
+										'background-color': (sort.nextDate.value != 'none' && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset',
+										'height': ('totalsRow' in account) ? 'unset' : '3rem'
+									}"
 							>
 								<!-- Name -->
 								<DataTableCell @click="editAccount(account.id)" style="white-space: normal;"
@@ -96,7 +100,7 @@
 									<div class="flex items-center gap-1">
 										<RouterLink :to="{ name: 'history', query: { account_id: account.id } }">
 											<IconButton
-													v-if="homeSettings.historyButtons"
+													v-if="homeSettings.historyButtons && !('totalsRow' in account)"
 													v-tooltip="`Transaction history`"
 													:density="-5"
 													@click.stop="() => {}"
@@ -112,7 +116,7 @@
 										>
 											push_pin
 										</IconButton>
-										{{ account.name }}
+										{{ account.name || (('totalsRow' in account) ? 'Total' : '') }}
 									</div>
 								</DataTableCell>
 								<!-- Next withdrawal date -->
@@ -126,14 +130,14 @@
 								</DataTableCell>
 								<!-- Next withdrawal amount -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" numeric>
-									<div v-if="isAccountWithBatchUpdatesAndDisplayFields(account)">
+									<div v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)">
 										{{ dollars(account.nextAmount / 100) }}
 									</div>
 								</DataTableCell>
 								<!-- Minimum preferred amount -->
 								<DataTableCell numeric :class="{ 'hidden': !columnsToShow.minimum }">
 									<div
-											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)"
 											class="text-gray-400 select-none whitespace-nowrap"
 											v-tooltip="{
 												content: tooltipToCompareIdealVsEmergency(account),
@@ -146,7 +150,7 @@
 								<!-- Over / under minimum -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.overMinimum }" numeric>
 									<div
-											v-if="isAccountWithBatchUpdatesAndDisplayFields(account)"
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)"
 											v-tooltip="(account.amount / 100) < account.overMinimum ? `True amount is only ${dollars((account.amount / 100))}` : ''"
 											:class="{
 												'text-gray-500': Math.floor(account.overMinimum * 100) >= 0,
@@ -181,6 +185,11 @@
 									>
 										{{ account.percentCovered }} %
 									</div>
+									<div v-else-if="'totalsRow' in account"
+											class="select-none"
+									>
+										{{ account.percentCovered }} %
+									</div>
 								</DataTableCell>
 								<!-- Current amount -->
 								<DataTableCell
@@ -203,7 +212,7 @@
 								</DataTableCell>
 								<!-- Add / subtract actions -->
 								<DataTableCell numeric style="cursor: pointer;" @click="batchDifferences[account.id] ? edit(account) : null">
-									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id]"
+									<div v-if="currentlyEditingDifference != account.id && !batchDifferences[account.id] && !('totalsRow' in account)"
 											style="white-space: nowrap;"
 									>
 										<IconButton :density="-3" @click.stop="startWithdrawing(account)">remove</IconButton>
@@ -305,6 +314,7 @@
 </template>
 
 <script setup lang="ts">
+/* eslint-disable prettier/prettier */
 import { ref, defineComponent, reactive, onMounted, computed, toRefs, watch, type Ref, markRaw, type PropType } from 'vue';
 import Button from '@/core/buttons/Button.vue'
 import { useAuth } from '../core/users/auth';
@@ -430,7 +440,16 @@ function isAccountWithBatchUpdatesAndDisplayFields(
 ): account is AccountWithBatchUpdatesAndSortedFields {
 	return !!account.batch_updates?.[0];
 }
-const sortedAccounts: Ref<(Account|AccountWithBatchUpdatesAndSortedFields)[]> = ref([])
+type TotalsRow = {
+	totalsRow: true,
+	id: string|number|null,
+	amount: number,
+	nextAmount: number,
+	minimum: number,
+	overMinimum: number,
+	percentCovered: number,
+}
+const sortedAccounts: Ref<(Account|AccountWithBatchUpdatesAndSortedFields|TotalsRow)[]> = ref([])
 const sort = useLocalStorage('budget-accounts-index-sort-v5', {
 	isFavorite: {
 		value: 'descending',
@@ -497,16 +516,68 @@ watch(
 		})
 		worker.addEventListener('message', event => {
 			if (event.data?.type == 'SORT_ACCOUNTS') {
-				sortedAccounts.value = JSON.parse(event.data?.accounts).map((a: Account & { [key: string]: any }) => {
-					let result = a
+				const parsedAccounts = JSON.parse(event.data?.accounts)
+				const sortedAccountsValue = []
+				let currentWeek: number|null = null
+				let currentWeekTotals: TotalsRow = {
+					totalsRow: true,
+					id: currentWeek,
+					amount: 0,
+					nextAmount: 0,
+					minimum: 0,
+					overMinimum: 0,
+					percentCovered: 100,
+				}
+				for (let i = 0; i < parsedAccounts.length; i++) {
+					const a = parsedAccounts[i]
+					const result = a
 					if (isAccountWithBatchUpdates(a)) {
 						const { currentRate, minTotal, ratesEachWeek } = usePlanning(a)
 						result.currentRate = currentRate.value
 						result.ratesEachWeek = ratesEachWeek.value
 						if (auth.user?.beta_opt_in) result.minimum = minTotal.value.valueOf()
 					}
-					return result
-				}) as (Account|(AccountWithBatchUpdates & {
+					if (sort.value.nextDate.value != 'none') {
+						if (currentWeek === null) {
+							if ((isAccountWithBatchUpdatesAndDisplayFields(a)
+								? weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
+								: null) !== null) currentWeek = weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
+						}
+						if (currentWeek !== null) {
+							currentWeek = weeksUntil(toDateTime(a.batch_updates?.[0]?.date)) ?? currentWeek
+							console.log('currentWeek :', currentWeek);
+							if (currentWeekTotals.id === null) currentWeekTotals.id = currentWeek
+							if (currentWeekTotals.id !== null && currentWeekTotals.id !== currentWeek) {
+								sortedAccountsValue.push(currentWeekTotals)
+								i++
+								currentWeekTotals = {
+									totalsRow: true,
+									id: currentWeek,
+									amount: 0,
+									nextAmount: 0,
+									minimum: 0,
+									overMinimum: 0,
+									percentCovered: 100,
+								}
+							}
+
+							if ((
+									(isAccountWithBatchUpdatesAndDisplayFields(a)
+										? weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
+										: 1) == currentWeek)
+							) {
+								currentWeekTotals.amount += a.amount
+								currentWeekTotals.nextAmount += a.nextAmount
+								currentWeekTotals.minimum += a.minimum ?? 0
+								currentWeekTotals.overMinimum += a.overMinimum
+								currentWeekTotals.percentCovered = Math.round(currentWeekTotals.amount / currentWeekTotals.minimum)
+							}
+						}
+					}
+
+					sortedAccountsValue.push(result)
+				}
+				sortedAccounts.value = sortedAccountsValue as (Account|(AccountWithBatchUpdates & {
 					nextDate?: string,
 					nextAmount?: number,
 					minimum?: number,
@@ -526,7 +597,7 @@ watch(
 )
 const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferences.value)
 	.filter(i => {
-		let account = sortedAccounts.value.find(j => j.id == Number(i))
+		const account = sortedAccounts.value.find(j => j.id == Number(i))
 		if (account && isAccountWithBatchUpdatesAndDisplayFields(account)) {
 			return accountIsOffMinimum(account.overMinimum)
 		}
