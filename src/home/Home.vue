@@ -89,8 +89,18 @@
 									v-for="account of sortedAccounts"
 									:key="account.id ?? 1"
 									:style="{
-										'background-color': (sort.nextDate.value != 'none' && !('totalsRow' in account) && ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0)) ? 'rgba(0,0,0,0.09)' : 'unset',
+										'background-color': (
+											sort.nextDate.value != 'none'
+											&& !('totalsRow' in account)
+											&& ((isAccountWithBatchUpdatesAndDisplayFields(account) ? weeksUntil(toDateTime(account.batch_updates?.[0]?.date)) : 1) % 2 == 0))
+												? 'rgba(0,0,0,0.09)'
+												: 'totalsRow' in account
+													? 'rgba(0,0,0,0.045)'
+													: undefined,
 										'height': ('totalsRow' in account) ? 'unset' : '3rem'
+									}"
+									:class="{
+										'text-xl italic text-slate-600 border-t-2 border-slate-400': 'totalsRow' in account,
 									}"
 							>
 								<!-- Name -->
@@ -130,7 +140,10 @@
 								</DataTableCell>
 								<!-- Next withdrawal amount -->
 								<DataTableCell :class="{ 'hidden': !columnsToShow.nextAmount }" numeric>
-									<div v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)">
+									<div
+											v-if="isAccountWithBatchUpdatesAndDisplayFields(account) || ('totalsRow' in account)"
+											class="whitespace-nowrap"
+									>
 										{{ dollars(account.nextAmount / 100) }}
 									</div>
 								</DataTableCell>
@@ -547,11 +560,9 @@ watch(
 							currentWeek = (isAccountWithBatchUpdatesAndDisplayFields(a)
 								? weeksUntil(toDateTime(a.batch_updates?.[0]?.date))
 								: null) ?? currentWeek
-							console.log('currentWeek :', currentWeek);
 							if (currentWeekTotals.id === null) currentWeekTotals.id = currentWeek
 							if (currentWeekTotals.id !== null && currentWeekTotals.id !== currentWeek) {
 								sortedAccountsValue.push(currentWeekTotals as TotalsRow)
-								i++
 								currentWeekTotals = {
 									totalsRow: true,
 									id: currentWeek,
