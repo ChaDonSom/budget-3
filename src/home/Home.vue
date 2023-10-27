@@ -621,18 +621,18 @@ const batchTotalOfOffMinimumAccounts = computed(() => Object.keys(batchDifferenc
 
 function tooltipToCompareIdealVsEmergency(account: typeof sortedAccounts.value[0]) {
 	if (!isAccountWithBatchUpdatesAndDisplayFields(account)) return ''
-	if (!auth.user?.beta_opt_in) {
-		let idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
-		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+	if (!auth.user?.beta_opt_in && account.batch_updates?.[0]?.date) {
+		const idealWeeksForAccount = idealWeeks(account.batch_updates?.[0])
+		const weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
 		return `
 			Ideally ${dollars(idealPayment(account.batch_updates?.[0]))} / week for
 			${idealWeeksForAccount} week${idealWeeksForAccount == 1 ? '' : 's'}<br>
 			Emergency ${emergencySaving(account)} / week for
 			${weeksUntilForAccount} week${weeksUntilForAccount == 1 ? '' : 's'}
 		`
-	} else {
+	} else if (account.batch_updates?.[0]?.date) {
 		let paymentPlan = ''
-		let ratesEachWeek = account.ratesEachWeek ?? []
+		const ratesEachWeek = account.ratesEachWeek ?? []
 		let weeksOfSameRate = 0
 		for (let i = 0; i < ratesEachWeek.length; i++) {
 			weeksOfSameRate = 1
@@ -649,7 +649,7 @@ function tooltipToCompareIdealVsEmergency(account: typeof sortedAccounts.value[0
 			if (weeksOfSameRate) paymentPlan += `${weeksOfSameRate} weeks at ${ratesEachWeek[i]} / week<br>`
 			if (jReachedEnd) break
 		}
-		let weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+		const weeksUntilForAccount = weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
 		return `
 			${paymentPlan} <br>
 			Emergency ${emergencySaving(account)} / week for
@@ -662,7 +662,7 @@ function progressedTimeTowardNextBatchUpdatePercent(account: AccountWithBatchUpd
 	return Math.round((
 		(
 			idealWeeks(account.batch_updates?.[0])
-			- weeksUntil(toDateTime(account.batch_updates?.[0]?.date))
+			- weeksUntil(toDateTime(account.batch_updates?.[0]?.date ?? DateTime.now().toISODate()))
 		)
 		/ idealWeeks(account.batch_updates?.[0])
 	) * 100)
@@ -670,7 +670,9 @@ function progressedTimeTowardNextBatchUpdatePercent(account: AccountWithBatchUpd
 
 function idealProgressTowardNextBatchUpdate(account: AccountWithBatchUpdates) {
 	return Math.abs(account.batch_updates?.[0]?.pivot?.amount / 100)
-		- (idealPayment(account.batch_updates?.[0]) * weeksUntil(toDateTime(account.batch_updates?.[0]?.date)))
+		- (idealPayment(account.batch_updates?.[0]) * weeksUntil(toDateTime(
+			account.batch_updates?.[0]?.date ?? DateTime.now().toISODate()
+		)))
 }
 
 const { clearBatchDifferenceFor, edit, startDepositing, startWithdrawing } = useBatchDifferences()

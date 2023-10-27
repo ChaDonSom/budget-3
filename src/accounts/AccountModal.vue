@@ -183,7 +183,9 @@ async function attemptClose() {
   try {
     if (form.isDirty) await modals.confirm(`Do you really want to leave unsaved changes?`)
     modals.close(props.id)
-  } catch (e) {}
+  } catch (e) {
+    throw e
+  }
 }
 
 const router = useRouter()
