@@ -13,16 +13,20 @@ export function useModalEditing() {
     const accounts = useAccounts()
     function newAccount() {
         modals.open({
-            modal: markRaw(AccountModalVue), props: {}
+            modal: markRaw(AccountModalVue),
+            props: {},
         })
     }
     const loading = ref(false)
-    async function editAccount(id: number) {
+    async function editAccount(id: number | string) {
+        // batch_update_x_x
+        if (typeof id === "string")
+            id = Number(id.split("_")[id.split("_").length - 1])
         loading.value = true
         await accounts.fetchAccount(id)
         modals.open({
             modal: markRaw(AccountModalVue),
-            props: { accountId: id }
+            props: { accountId: id },
         })
         loading.value = false
     }
