@@ -30,10 +30,9 @@
             >Confirm password</Textfield
         >
         <div>
-            <MdcSwitch
-                    v-model="form.remember"
-                    id="remember"
-            >Remember me</MdcSwitch>
+            <MdcSwitch v-model="form.remember" id="remember"
+                >Remember me</MdcSwitch
+            >
         </div>
         <Button @click="auth.register(form)" raised class="mt-5"
             >Register</Button
@@ -54,19 +53,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
-import Button from "../../buttons/Button.vue";
-import Textfield from "../../fields/OutlinedTextfield.vue";
-import { useRouter } from "vue-router";
-import { useAuth } from ".";
-import { useForm } from "@/store/forms";
-import MdcSwitch from '../../switches/MdcSwitch.vue'
-import { DateTime } from 'luxon'
+import { onMounted } from "vue"
+import Button from "../../buttons/Button.vue"
+import Textfield from "../../fields/OutlinedTextfield.vue"
+import { useRouter } from "vue-router"
+import { useAuth } from "."
+import { useForm } from "@/store/forms"
+import MdcSwitch from "../../switches/MdcSwitch.vue"
+import { DateTime } from "luxon"
 
-const router = useRouter();
-const auth = useAuth();
+const router = useRouter()
+const auth = useAuth()
 
-onMounted(auth.getSanctumCookie);
+onMounted(auth.getSanctumCookie)
 
 const form = useForm("/register", {
     id: "registration-form",
@@ -75,8 +74,8 @@ const form = useForm("/register", {
     password: "",
     password_confirmation: "",
     remember: false,
-    timezone: DateTime.now().zoneName
-});
+    timezone: DateTime.now().zoneName,
+})
 </script>
 
 <style scoped lang="scss">

@@ -11,9 +11,9 @@
 </template>
 
 <script setup lang="ts">
-import Modal from "@/core/modals/Modal.vue";
-import Button from "@/core/buttons/Button.vue";
-import { useModals } from "@/store/modals";
+import Modal from "@/core/modals/Modal.vue"
+import Button from "@/core/buttons/Button.vue"
+import { useModals } from "@/store/modals"
 
 const props = defineProps({
     id: {
@@ -33,18 +33,18 @@ const props = defineProps({
         required: false,
         default: () => "Are you sure?",
     },
-});
+})
 
-const modals = useModals();
+const modals = useModals()
 
 function internalResolve() {
-    modals.close(props.id);
-    props.resolve();
+    modals.close(props.id)
+    props.resolve()
 }
 
 function internalReject() {
-    modals.close(props.id);
-    props.reject();
+    modals.close(props.id)
+    props.reject()
 }
 </script>
 

@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { MDCTextField } from "@material/textfield";
-import { computed, onMounted, ref } from "vue";
+import { MDCTextField } from "@material/textfield"
+import { computed, onMounted, ref } from "vue"
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -64,18 +64,18 @@ const props = defineProps({
 })
 
 const bindableAttributes = computed(() => {
-    let result: { [key: string]: any } = {}
+    const result: { [key: string]: any } = {}
     if (props.step) result.step = props.step
     return result
-});
+})
 
-const id = ref(Math.floor(Math.random() * 10000000));
-const mainRef = ref<Element | null>(null);
-const mdcTextfield = ref<MDCTextField | null>(null);
+const id = ref(Math.floor(Math.random() * 10000000))
+const mainRef = ref<Element | null>(null)
+const mdcTextfield = ref<MDCTextField | null>(null)
 onMounted(() => {
-    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value);
-    if (props.autofocus) mainRef.value?.querySelector("input")?.focus();
-});
+    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value)
+    if (props.autofocus) mainRef.value?.querySelector("input")?.focus()
+})
 </script>
 
 <style scoped lang="scss">

@@ -1,31 +1,31 @@
-import { defineStore } from "pinia";
-import LogRocket from "logrocket";
-import { useBeams } from "@/store/beams";
-import { useModals } from "@/store/modals";
-import apiAxios, { type AxiosResponse } from "@/core/utilities/axios";
-import { ref } from "vue";
+import { defineStore } from "pinia"
+import LogRocket from "logrocket"
+import { useBeams } from "@/store/beams"
+import { useModals } from "@/store/modals"
+import apiAxios, { type AxiosResponse } from "@/core/utilities/axios"
+import { ref } from "vue"
 
-const VITE_SESSION_LIFETIME = import.meta.env.VITE_SESSION_LIFETIME;
-console.log("VITE_SESSION_LIFETIME: ", VITE_SESSION_LIFETIME);
+const VITE_SESSION_LIFETIME = import.meta.env.VITE_SESSION_LIFETIME
+console.log("VITE_SESSION_LIFETIME: ", VITE_SESSION_LIFETIME)
 
 export type User = {
-    id: number;
-    [key: string]: any;
-    shared_users?: User[];
-    users_who_shared_to_me?: User[];
+    id: number
+    [key: string]: any
+    shared_users?: User[]
+    users_who_shared_to_me?: User[]
     notifications: {
-        id: string,
-        read_at: string|null,
+        id: string
+        read_at: string | null
         data: {
-            uuid: string,
-            title: string,
-            message: string,
-            action: string,
+            uuid: string
+            title: string
+            message: string
+            action: string
         }
-    }[];
-    account_holders?: { id: number; users: User[] }[];
-    beta_opt_in: boolean|0|1;
-};
+    }[]
+    account_holders?: { id: number; users: User[] }[]
+    beta_opt_in: boolean | 0 | 1
+}
 
 export const user = ref<User | null>(null)
 
@@ -35,49 +35,55 @@ export const useAuth = defineStore("auth", {
         sanctumCookie: null as string | null,
         authenticated: false,
         axiosResponseInterceptor: <number | null>null,
-        checkSessionTimeoutStopNumber: <ReturnType<typeof setTimeout> | null>null,
+        checkSessionTimeoutStopNumber: <ReturnType<typeof setTimeout> | null>(
+            null
+        ),
         guestRoutes: <string[]>["/", "/login", "/register"],
     }),
     actions: {
         axiosResponseInterceptorSuccess(response: AxiosResponse) {
             if (this.checkSessionTimeoutStopNumber) {
-                clearTimeout(this.checkSessionTimeoutStopNumber);
+                clearTimeout(this.checkSessionTimeoutStopNumber)
             }
             this.checkSessionTimeoutStopNumber = setTimeout(() => {
-                this.getUser(false);
-            }, 1000 * 60 * VITE_SESSION_LIFETIME);
+                this.getUser(false)
+            }, 1000 * 60 * VITE_SESSION_LIFETIME)
             return response
         },
         axiosResponseInterceptorError(error: any) {
-            if (error.response?.status == 419 || error.response?.status == 401) {
+            if (
+                error.response?.status == 419 ||
+                error.response?.status == 401
+            ) {
                 this.unauthenticate()
-                this.router.push({ name: 'index' })
+                this.router.push({ name: "index" })
             }
             return Promise.reject(error)
         },
         async getSanctumCookie() {
             // We don't necessarily need to keep this in store, axios does.
-            this.sanctumCookie = await apiAxios.get("/sanctum/csrf-cookie");
+            this.sanctumCookie = await apiAxios.get("/sanctum/csrf-cookie")
         },
         async getUser(registerAPIs = true) {
             try {
-                const response = await apiAxios.get("/api/user");
-                this.user = response.data;
-                this.authenticated = true;
+                const response = await apiAxios.get("/api/user")
+                this.user = response.data
+                this.authenticated = true
 
                 if (this.user?.id && registerAPIs) {
                     // Set up response interceptors if they haven't been (e.g. refresh)
                     if (!this.axiosResponseInterceptor) {
-                        this.axiosResponseInterceptor = apiAxios.interceptors.response.use(
-                            this.axiosResponseInterceptorSuccess,
-                            this.axiosResponseInterceptorError
-                        )
+                        this.axiosResponseInterceptor =
+                            apiAxios.interceptors.response.use(
+                                this.axiosResponseInterceptorSuccess,
+                                this.axiosResponseInterceptorError
+                            )
                     }
                     // Identify the authenticated user to LogRocket
-                    LogRocket.identify(String(this.user.id), this.user);
+                    LogRocket.identify(String(this.user.id), this.user)
 
                     // Subscribe to Push Notifications aimed at the user
-                    const beams = useBeams();
+                    const beams = useBeams()
                     beams.newTokenProvider({
                         url: "/api/beams/token",
                         queryParams: {
@@ -88,89 +94,101 @@ export const useAuth = defineStore("auth", {
                                   "X-XSRF-TOKEN": this.sanctumCookie,
                               }
                             : undefined,
-                    });
-                    console.log("beams.beams: ", beams.beams);
-                    if (!beams.started) beams.start();
+                    })
+                    console.log("beams.beams: ", beams.beams)
+                    if (!beams.started) beams.start()
                     beams.waitTillStarted().then(() => {
                         if (this.user && beams.tokenProvider) {
                             beams.beams?.setUserId(
                                 `App.Models.User.${this.user.id}`,
                                 beams.tokenProvider
-                            );
+                            )
                             console.log(
                                 "set user id to ",
                                 `App.Models.User.${this.user.id}`
-                            );
+                            )
                         }
-                    });
+                    })
                 }
-            }
-            catch (e: any) {
-                let hadUser = Boolean(this.user);
-                this.unauthenticate();
-                if (!this.guestRoutes.some(route => {
-                    return (route === "/" && this.router.currentRoute.value.path === route)
-                        || (route !== "/" && this.router.currentRoute.value.path.startsWith(route))
-                })) {
+            } catch (e: any) {
+                const hadUser = Boolean(this.user)
+                this.unauthenticate()
+                if (
+                    !this.guestRoutes.some((route) => {
+                        return (
+                            (route === "/" &&
+                                this.router.currentRoute.value.path ===
+                                    route) ||
+                            (route !== "/" &&
+                                this.router.currentRoute.value.path.startsWith(
+                                    route
+                                ))
+                        )
+                    })
+                ) {
                     this.router.push({
-                        name: 'index',
+                        name: "index",
                         params: {
-                            securityLoggedOut: hadUser ? "We've logged you out for your security." : null
-                        }
+                            securityLoggedOut: hadUser
+                                ? "We've logged you out for your security."
+                                : null,
+                        },
                     })
                 }
             }
         },
         async register(form: { post: () => Promise<any> }) {
             try {
-                const data = await form.post();
-                this.authenticated = true;
-                this.axiosResponseInterceptor = apiAxios.interceptors.response.use(
-                    this.axiosResponseInterceptorSuccess,
-                    this.axiosResponseInterceptorError
-                );
-                this.getUser();
-                this.router.push({ name: "index" });
+                const data = await form.post()
+                this.authenticated = true
+                this.axiosResponseInterceptor =
+                    apiAxios.interceptors.response.use(
+                        this.axiosResponseInterceptorSuccess,
+                        this.axiosResponseInterceptorError
+                    )
+                this.getUser()
+                this.router.push({ name: "index" })
             } catch (e: any) {
-                this.unauthenticate();
+                this.unauthenticate()
             }
         },
         async login(form: { post: () => Promise<any> }) {
             try {
-                const data = await form.post();
-                this.authenticated = true;
-                this.axiosResponseInterceptor = apiAxios.interceptors.response.use(
-                    this.axiosResponseInterceptorSuccess,
-                    this.axiosResponseInterceptorError
-                );
-                this.getUser();
-                this.router.push({ name: "index" });
+                const data = await form.post()
+                this.authenticated = true
+                this.axiosResponseInterceptor =
+                    apiAxios.interceptors.response.use(
+                        this.axiosResponseInterceptorSuccess,
+                        this.axiosResponseInterceptorError
+                    )
+                this.getUser()
+                this.router.push({ name: "index" })
             } catch (e: any) {
-                this.unauthenticate();
+                this.unauthenticate()
             }
         },
         async logout() {
             try {
-                await useModals().confirm("Do you really want to log out?");
-                const response = await apiAxios.post("/logout");
-                this.unauthenticate();
-                this.router.push({ name: "index" });
+                await useModals().confirm("Do you really want to log out?")
+                const response = await apiAxios.post("/logout")
+                this.unauthenticate()
+                this.router.push({ name: "index" })
             } catch (e: any) {
-                console.error(e);
+                console.error(e)
             }
         },
         unauthenticate() {
-            this.user = null;
-            this.authenticated = false;
+            this.user = null
+            this.authenticated = false
             if (this.axiosResponseInterceptor) {
                 apiAxios.interceptors.response.eject(
                     this.axiosResponseInterceptor
-                );
+                )
             }
-            const beams = useBeams();
+            const beams = useBeams()
             if (beams.beams) {
-                beams.stop().catch((error) => console.error(error));
+                beams.stop().catch((error) => console.error(error))
             }
         },
     },
-});
+})

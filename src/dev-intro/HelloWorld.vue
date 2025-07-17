@@ -11,20 +11,22 @@
 
         <div class="text-center m-3">
             <div class="flex justify-center">
-                <img
-                    src="/android-chrome-512x512.png"
-                    class="m-5 w-3/12"
-                />
+                <img src="/android-chrome-512x512.png" class="m-5 w-3/12" />
             </div>
             <h1 class="text-3xl sm:text-5xl md:text-7xl font-thin">
                 {{ msg }}
             </h1>
-			<h2 class="text-xl italic mt-3" v-if="$route.params.securityLoggedOut">
-				({{ $route.params.securityLoggedOut }})
-			</h2>
-			<h2 class="text-lg italic mt-3">
-                <a href="https://github.com/ChaDonSom/laravel-vite-template">View the project on Github</a>
-			</h2>
+            <h2
+                class="text-xl italic mt-3"
+                v-if="$route.params.securityLoggedOut"
+            >
+                ({{ $route.params.securityLoggedOut }})
+            </h2>
+            <h2 class="text-lg italic mt-3">
+                <a href="https://github.com/ChaDonSom/laravel-vite-template"
+                    >View the project on Github</a
+                >
+            </h2>
 
             <h2 class="mt-5">Material Components:</h2>
             <div class="flex justify-center gap-5">
@@ -77,20 +79,24 @@
                         :href="`https://${site.name}`"
                         class="flex items-center text-blue-600 visited:text-purple-600"
                     >
-						<img
-								:src="`https://${site.name}/android-chrome-512x512.png`"
-								class="h-14 w-14"
-						>
-						<span class="ml-2">
-							{{
-								// Transform the site name from kebab-case in the URL to Title Case for presentation
-								site.name
-									.split('.somero.dev')[0]
-									.split('-')
-									.map(word => (word.charAt(0).toUpperCase() + word.slice(1)))
-									.join(' ')
-							}}
-						</span>
+                        <img
+                            :src="`https://${site.name}/android-chrome-512x512.png`"
+                            class="h-14 w-14"
+                        />
+                        <span class="ml-2">
+                            {{
+                                // Transform the site name from kebab-case in the URL to Title Case for presentation
+                                site.name
+                                    .split(".somero.dev")[0]
+                                    .split("-")
+                                    .map(
+                                        (word) =>
+                                            word.charAt(0).toUpperCase() +
+                                            word.slice(1)
+                                    )
+                                    .join(" ")
+                            }}
+                        </span>
                     </a>
                 </p>
             </div>
@@ -99,31 +105,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import Button from "@/core/buttons/Button.vue";
-import {
-    breakpointsTailwind,
-    useBreakpoints,
-} from "@vueuse/core";
-import { useAuth } from "../core/users/auth";
-import { useEcho } from "../store/echo";
-import apiAxios from "@/core/utilities/axios";
+import { ref, onMounted } from "vue"
+import Button from "@/core/buttons/Button.vue"
+import { breakpointsTailwind, useBreakpoints } from "@vueuse/core"
+import { useAuth } from "../core/users/auth"
+import { useEcho } from "../store/echo"
+import apiAxios from "@/core/utilities/axios"
 
 const props = defineProps({
     msg: {
         type: String,
         required: true,
     },
-});
+})
 
-const count = ref(0);
-const breakpoints = useBreakpoints(breakpointsTailwind);
-const smAndLarger = breakpoints.greater("sm");
+const count = ref(0)
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const smAndLarger = breakpoints.greater("sm")
 
-const prod = import.meta.env.PROD;
-const baseUrl = import.meta.env.VITE_DEV_SERVER_URL;
+const prod = import.meta.env.PROD
+const baseUrl = import.meta.env.VITE_DEV_SERVER_URL
 
-const auth = useAuth();
+const auth = useAuth()
 
 const stack = ref([
     {
@@ -176,37 +179,37 @@ const stack = ref([
         link: "https://pusher.com",
         image: "/images/pusher-1.png",
     },
-]);
+])
 
-const messages = ref<any[]>([]);
-const echo = useEcho();
+const messages = ref<any[]>([])
+const echo = useEcho()
 onMounted(() => {
     // The '.' in '.my-event' means we'll listen on 'my-channel' instead of 'App\Events.my-channel'
     // That way, we can mess around with this from the Pusher event creator
     echo.echo.channel("my-channel").listen(".my-event", (data: any) => {
-        console.log("data: ", data);
-        messages.value.push(data);
-    });
-});
+        console.log("data: ", data)
+        messages.value.push(data)
+    })
+})
 
 function sendPushNotification() {
     apiAxios.post("/api/beams/self-notification", {
         title: "Hello World!",
         message: "Hi there, a notification from Laravel Vite Template!",
-    });
+    })
 }
 
 const forgeResponse = ref<Array<{
-    id: string;
-    status: string;
-    name: string;
-}> | null>(null);
+    id: string
+    status: string
+    name: string
+}> | null>(null)
 onMounted(async () => {
-    const response = await apiAxios.get("/api/sites");
+    const response = await apiAxios.get("/api/sites")
     forgeResponse.value = response.data.sites.filter((site: any) => {
-        return site.status == "installed" && site.name != "default";
-    });
-});
+        return site.status == "installed" && site.name != "default"
+    })
+})
 </script>
 
 <style scoped lang="scss">

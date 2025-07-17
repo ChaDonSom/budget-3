@@ -1,6 +1,6 @@
-import LaravelEcho from "laravel-echo";
-import { defineStore } from "pinia";
-import Pusher from "pusher-js";
+import LaravelEcho from "laravel-echo"
+import { defineStore } from "pinia"
+import Pusher from "pusher-js"
 
 export const useEcho = defineStore("echo", {
     state: () => ({
@@ -16,4 +16,4 @@ export const useEcho = defineStore("echo", {
         echo: (state) => state.echoState,
         pusher: (state) => state.pusherState,
     },
-});
+})
