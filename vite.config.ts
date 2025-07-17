@@ -1,13 +1,13 @@
-import { fileURLToPath, URL } from "node:url";
-import { defineConfig, loadEnv } from "vite";
-import vue from "@vitejs/plugin-vue";
-import { VitePWA } from "vite-plugin-pwa";
-import process from "node:process";
+import { fileURLToPath, URL } from "node:url"
+import { defineConfig, loadEnv } from "vite"
+import vue from "@vitejs/plugin-vue"
+import { VitePWA } from "vite-plugin-pwa"
+import process from "node:process"
 
 // https://vitejs.dev/config/
 export default ({ mode }: { mode: string }) => {
-    process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
-    const enableSW = process.env.VITE_ENABLE_SERVICE_WORKER;
+    process.env = { ...process.env, ...loadEnv(mode, process.cwd()) }
+    const enableSW = process.env.VITE_ENABLE_SERVICE_WORKER
     return defineConfig({
         publicDir: "./src/static",
         plugins: [
@@ -75,5 +75,5 @@ export default ({ mode }: { mode: string }) => {
                     process.env.VITE_API_URL ?? "http://localhost",
             },
         },
-    });
-};
+    })
+}

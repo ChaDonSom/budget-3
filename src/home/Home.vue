@@ -1217,7 +1217,7 @@ const { clearBatchDifferenceFor, edit, startDepositing, startWithdrawing } =
 
 onMounted(() => {
     if (templateToApply.value) {
-        let template: TemplateWithAccounts = templateToApply.value
+        const template: TemplateWithAccounts = templateToApply.value
         batchForm.reset({
             ...batchForm.internalForm,
             ...template,

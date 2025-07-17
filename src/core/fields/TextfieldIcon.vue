@@ -16,8 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { MDCTextFieldIcon } from "@material/textfield/icon";
-import { onMounted, ref } from "vue";
+import { MDCTextFieldIcon } from "@material/textfield/icon"
+import { onMounted, ref } from "vue"
 
 const props = defineProps({
     leading: {
@@ -25,20 +25,20 @@ const props = defineProps({
         default: () => true,
     },
     trailing: Boolean,
-});
+})
 
 const randomId = ref(`textfield-icon-random-${Math.random()}`)
-const mainRef = ref<HTMLElement | null>(null);
-const mdcIcon = ref<MDCTextFieldIcon | null>(null);
+const mainRef = ref<HTMLElement | null>(null)
+const mdcIcon = ref<MDCTextFieldIcon | null>(null)
 onMounted(() => {
-    if (mainRef.value) mdcIcon.value = new MDCTextFieldIcon(mainRef.value);
-});
+    if (mainRef.value) mdcIcon.value = new MDCTextFieldIcon(mainRef.value)
+})
 
 function redirectFocusBackToInput(event: MouseEvent) {
     const input: HTMLInputElement | null | undefined = (
         event.target as HTMLElement
-    )?.parentElement?.querySelector("input.mdc-text-field__input");
-    if (input) input.focus();
+    )?.parentElement?.querySelector("input.mdc-text-field__input")
+    if (input) input.focus()
 }
 </script>
 

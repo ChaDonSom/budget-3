@@ -16,31 +16,41 @@ export function useBatchDifferences() {
         currentlyEditingDifference.value = account.id
         batchDifferences.value[account.id] = new BatchDifference({
             amount: 0,
-            modifier: -1
+            modifier: -1,
         })
-        modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-            difference: batchDifferences.value[account.id],
-        } })
+        modals.open({
+            modal: markRaw(FloatingDifferenceInputModalVue),
+            props: {
+                difference: batchDifferences.value[account.id],
+            },
+        })
     }
     function startDepositing(account: Account) {
         currentlyEditingDifference.value = account.id
         batchDifferences.value[account.id] = new BatchDifference({
             amount: 0,
-            modifier: 1
+            modifier: 1,
         })
-        modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-            difference: batchDifferences.value[account.id],
-        } })
+        modals.open({
+            modal: markRaw(FloatingDifferenceInputModalVue),
+            props: {
+                difference: batchDifferences.value[account.id],
+            },
+        })
     }
     function clearBatchDifferenceFor(account: Account) {
         delete batchDifferences.value[account.id]
-        if (currentlyEditingDifference.value == account.id) currentlyEditingDifference.value = null
+        if (currentlyEditingDifference.value == account.id)
+            currentlyEditingDifference.value = null
     }
     function edit(account: Account) {
         currentlyEditingDifference.value = account.id
-        modals.open({ modal: markRaw(FloatingDifferenceInputModalVue), props: {
-            difference: batchDifferences.value[account.id],
-        } })
+        modals.open({
+            modal: markRaw(FloatingDifferenceInputModalVue),
+            props: {
+                difference: batchDifferences.value[account.id],
+            },
+        })
     }
 
     return {

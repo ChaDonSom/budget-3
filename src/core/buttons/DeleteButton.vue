@@ -9,13 +9,13 @@
 </template>
 
 <script setup lang="ts">
-import Button from "@/core/buttons/Button.vue";
-import Circular from "@/core/loaders/Circular.vue";
+import Button from "@/core/buttons/Button.vue"
+import Circular from "@/core/loaders/Circular.vue"
 
 defineProps({
     disabled: Boolean,
     loading: Boolean,
-});
+})
 </script>
 
 <style lang="scss" scoped>

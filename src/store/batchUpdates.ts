@@ -1,69 +1,68 @@
-import type { Account } from "@/store/accounts";
-import axios, { type AxiosResponse } from "axios";
-import {
-    computed,
-    reactive,
-    ref,
-    toRefs,
-    watch,
-} from "vue";
-import type {
-    ComponentPropsOptions,
-    ComputedRef,
-    SetupContext,
-} from "vue"
+import type { Account } from "@/store/accounts"
+import axios, { type AxiosResponse } from "axios"
+import { computed, reactive, ref, toRefs, watch } from "vue"
+import type { ComponentPropsOptions, ComputedRef, SetupContext } from "vue"
 
 export type BatchUpdate = {
-    id: number;
-    user_id: number;
-    batch: number;
-    date: string;
-    done_at: string|null;
-    notify_me: boolean;
-    weeks: number|null;
-    note: string;
-};
+    id: number
+    user_id: number
+    batch: number
+    date: string
+    done_at: string | null
+    notify_me: boolean
+    weeks: number | null
+    note: string
+}
 export type BatchUpdateWithAccounts = BatchUpdate & {
-    accounts: (Account & { pivot: { amount: number } })[];
-};
-export type BatchUpdatesData = { [key: string | number]: BatchUpdateWithAccounts };
+    accounts: (Account & { pivot: { amount: number } })[]
+}
+export type BatchUpdatesData = {
+    [key: string | number]: BatchUpdateWithAccounts
+}
 export type BatchUpdatesPaginator = {
-    data: BatchUpdateWithAccounts[];
-    current_page: number,
-    last_page: number,
+    data: BatchUpdateWithAccounts[]
+    current_page: number
+    last_page: number
 }
 
-export const paginator = ref<BatchUpdatesPaginator|null>(null)
-export const data = ref<BatchUpdatesData>({});
+export const paginator = ref<BatchUpdatesPaginator | null>(null)
+export const data = ref<BatchUpdatesData>({})
 export const order = ref<{ [key: number]: number }>({})
 
 export const keys = computed(() => {
-    let v = data.value;
-    return Object.keys(v);
-});
+    const v = data.value
+    return Object.keys(v)
+})
 export const values: ComputedRef<BatchUpdate[]> = computed(() => {
-    let v = data.value;
-    return Object.values(v);
-});
+    const v = data.value
+    return Object.values(v)
+})
 export const ordered: ComputedRef<BatchUpdateWithAccounts[]> = computed(() => {
-    let v = data.value
-    return Object.keys(order.value).map(key => v[order.value[Number(key)]])
+    const v = data.value
+    return Object.keys(order.value).map((key) => v[order.value[Number(key)]])
 })
 
-export async function fetchData(params?: { page?: number, [key: string]: any }) {
-    let p = {
+export async function fetchData(params?: {
+    page?: number
+    [key: string]: any
+}) {
+    const p = {
         page: 1,
         ...params,
     } as { [key: string]: string | number }
-    let queryString = Object.keys(p).map(key => `${key}=${p[key]}`).join('&')
-    let response: AxiosResponse<BatchUpdatesPaginator> = await axios.get(`/api/batch-updates?${queryString}`);
+    const queryString = Object.keys(p)
+        .map((key) => `${key}=${p[key]}`)
+        .join("&")
+    const response: AxiosResponse<BatchUpdatesPaginator> = await axios.get(
+        `/api/batch-updates?${queryString}`
+    )
 
     paginator.value = response.data
 
-    let result: { [key: number]: BatchUpdateWithAccounts } = {};
-    let ord: { [key: number]: number } = {};
+    const result: { [key: number]: BatchUpdateWithAccounts } = {}
+    const ord: { [key: number]: number } = {}
     for (let i = 0; i < response.data.data.length; i++) {
-        let batchUpdate: BatchUpdateWithAccounts = response.data.data[i]
+        const batchUpdate: BatchUpdateWithAccounts = response.data.data[i]
         result[batchUpdate.id] = batchUpdate
         ord[i] = batchUpdate.id
     }
@@ -72,26 +71,26 @@ export async function fetchData(params?: { page?: number, [key: string]: any }) 
 }
 
 export async function fetchBatchUpdate(id: number) {
-    let response: AxiosResponse<BatchUpdateWithAccounts> = await axios.get(
+    const response: AxiosResponse<BatchUpdateWithAccounts> = await axios.get(
         `/api/batch-updates/${id}`
-    );
+    )
     data.value = {
         ...data.value,
         [id]: response.data,
-    };
-    return data.value[id];
+    }
+    return data.value[id]
 }
 
 export async function receive(account: BatchUpdateWithAccounts) {
     data.value = {
         ...data.value,
         [account.id]: account,
-    };
-    return data.value[account.id];
+    }
+    return data.value[account.id]
 }
 
 export async function remove(id: number) {
-    delete data.value[id];
+    delete data.value[id]
 }
 
 export function useBatchUpdates(
@@ -108,5 +107,5 @@ export function useBatchUpdates(
         fetchBatchUpdate,
         receive,
         remove,
-    });
+    })
 }

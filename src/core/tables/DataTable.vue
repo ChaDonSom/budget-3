@@ -1,6 +1,8 @@
 <template>
-    <div class="mdc-data-table mdc-data-table--sticky-header" ref="rootRef"
-            :class="{ 'with-paginator': $slots.paginator }"
+    <div
+        class="mdc-data-table mdc-data-table--sticky-header"
+        ref="rootRef"
+        :class="{ 'with-paginator': $slots.paginator }"
     >
         <div class="mdc-data-table__table-container">
             <table class="mdc-data-table__table">
@@ -43,18 +45,18 @@
 </template>
 
 <script lang="ts" setup>
-import { MDCDataTable } from "./fake-data-table";
-import { onMounted, ref } from "vue";
+import { MDCDataTable } from "./fake-data-table"
+import { onMounted, ref } from "vue"
 
-const emit = defineEmits(["sort"]);
+const emit = defineEmits(["sort"])
 
-const rootRef = ref(null);
-const dataTable = ref<MDCDataTable | null>(null);
+const rootRef = ref(null)
+const dataTable = ref<MDCDataTable | null>(null)
 
 onMounted(() => {
     setTimeout(() => {
         if (rootRef.value) {
-            dataTable.value = new MDCDataTable(rootRef.value);
+            dataTable.value = new MDCDataTable(rootRef.value)
 
             dataTable.value.listen(
                 "MDCDataTable:sorted",
@@ -64,13 +66,13 @@ onMounted(() => {
                         hideProgress: dataTable.value?.hideProgress?.bind(
                             dataTable.value
                         ),
-                    });
-                    dataTable.value?.showProgress();
+                    })
+                    dataTable.value?.showProgress()
                 }
-            );
+            )
         }
-    });
-});
+    })
+})
 </script>
 
 <style scoped lang="scss">
@@ -80,33 +82,47 @@ onMounted(() => {
 :deep() {
     @include tables.apply;
 
-    .mdc-data-table__table-container { border-radius: mdc-theme.$table-shape-radius; }
+    .mdc-data-table__table-container {
+        border-radius: mdc-theme.$table-shape-radius;
+    }
 
     // Fix rounded corners in header row
     .mdc-data-table__header-row .mdc-data-table__header-cell {
-        &:first-child { border-top-left-radius: mdc-theme.$table-shape-radius; }
-        &:last-child { border-top-right-radius: mdc-theme.$table-shape-radius; }
+        &:first-child {
+            border-top-left-radius: mdc-theme.$table-shape-radius;
+        }
+        &:last-child {
+            border-top-right-radius: mdc-theme.$table-shape-radius;
+        }
     }
 
     .mdc-data-table__row {
         // The hovering:
-        .mdc-data-table__cell { transition: background-color 100ms ease-in; }
+        .mdc-data-table__cell {
+            transition: background-color 100ms ease-in;
+        }
         &:not(.mdc-data-table__row--selected):hover {
             background-color: unset;
-            .mdc-data-table__cell { background-color: rgba(0, 0, 0, 0.04); }
+            .mdc-data-table__cell {
+                background-color: rgba(0, 0, 0, 0.04);
+            }
         }
     }
 }
 .mdc-data-table.with-paginator .mdc-data-table__table-container {
-  border-bottom-right-radius: 0px;
-  border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
 }
 .mdc-data-table:not(.with-paginator):deep(.mdc-data-table__row) {
-  // Fix rounded corners in last row during hover
-  // The corners:
-  &:last-child .mdc-data-table__cell {
-    &:first-child { border-bottom-left-radius: mdc-theme.$table-shape-radius; }
-    &:last-child  { border-bottom-right-radius: mdc-theme.$table-shape-radius; }
-  }
+    // Fix rounded corners in last row during hover
+    // The corners:
+    &:last-child .mdc-data-table__cell {
+        &:first-child {
+            border-bottom-left-radius: mdc-theme.$table-shape-radius;
+        }
+        &:last-child {
+            border-bottom-right-radius: mdc-theme.$table-shape-radius;
+        }
+    }
 }
 </style>

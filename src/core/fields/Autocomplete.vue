@@ -72,8 +72,8 @@
 </template>
 
 <script setup lang="ts">
-import { MDCTextField } from "@material/textfield";
-import { computed, onMounted, ref, watch } from "vue";
+import { MDCTextField } from "@material/textfield"
+import { computed, onMounted, ref, watch } from "vue"
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -83,49 +83,49 @@ const props = defineProps({
     helper: String,
     autoselect: Boolean,
     autofocus: Boolean,
-});
+})
 
 const emit = defineEmits([
     "update:modelValue",
     "update:textValue",
     "clickLeadingIcon",
     "clickTrailingIcon",
-]);
+])
 
-const id = ref(Math.floor(Math.random() * 10000000));
-const mainRef = ref<Element | null>(null);
-const mdcTextfield = ref<MDCTextField | null>(null);
+const id = ref(Math.floor(Math.random() * 10000000))
+const mainRef = ref<Element | null>(null)
+const mdcTextfield = ref<MDCTextField | null>(null)
 onMounted(() => {
-    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value);
-    if (props.autofocus) mainRef.value?.querySelector("input")?.focus();
-});
+    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value)
+    if (props.autofocus) mainRef.value?.querySelector("input")?.focus()
+})
 
 const autocompleteOptions = computed(
     () =>
         (props.options ?? []) as {
-            id: number;
-            label: string;
+            id: number
+            label: string
         }[]
-);
+)
 const optionsIdsByLabels = computed(() =>
     autocompleteOptions.value.reduce((acc: { [key: string]: number }, curr) => {
-        acc[curr.label] = curr.id;
-        return acc;
+        acc[curr.label] = curr.id
+        return acc
     }, {})
-);
+)
 const optionsLabelsByIds = computed(() =>
     autocompleteOptions.value.reduce((acc: { [key: number]: string }, curr) => {
-        acc[curr.id] = curr.label;
-        return acc;
+        acc[curr.id] = curr.label
+        return acc
     }, {})
-);
+)
 
-const inputRef = ref<HTMLInputElement | null>(null);
+const inputRef = ref<HTMLInputElement | null>(null)
 function input(event: Event) {
-    const value = (event?.target as HTMLInputElement)?.value;
-    const potentialValue = optionsIdsByLabels.value[value] ?? null;
-    emit("update:modelValue", potentialValue);
-    emit("update:textValue", value);
+    const value = (event?.target as HTMLInputElement)?.value
+    const potentialValue = optionsIdsByLabels.value[value] ?? null
+    emit("update:modelValue", potentialValue)
+    emit("update:textValue", value)
 }
 onMounted(() => {
     watch(
@@ -134,13 +134,13 @@ onMounted(() => {
             setTimeout(() => {
                 if (typeof to == "number" && mdcTextfield.value) {
                     mdcTextfield.value.value =
-                        optionsLabelsByIds.value[Number(to)];
+                        optionsLabelsByIds.value[Number(to)]
                 }
-            });
+            })
         },
         { immediate: true }
-    );
-});
+    )
+})
 </script>
 
 <style scoped lang="scss">
