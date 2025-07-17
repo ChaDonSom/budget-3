@@ -11,23 +11,16 @@
             <span class="mdc-notched-outline">
                 <span class="mdc-notched-outline__leading"></span>
                 <span class="mdc-notched-outline__notch">
-                    <span
-                        class="mdc-floating-label"
-                        :id="`textfield-label-${id}`"
-                        ><slot
-                    /></span>
+                    <span class="mdc-floating-label" :id="`textfield-label-${id}`">
+                        <slot />
+                    </span>
                 </span>
                 <span class="mdc-notched-outline__trailing"></span>
             </span>
-            <TextfieldIcon
-                v-if="icon"
-                @click="$emit('icon-click', $event)"
-                leading
-                >{{ icon }}</TextfieldIcon
-            >
-            <span class="mdc-text-field__affix mdc-text-field__affix--prefix"
-                >$</span
-            >
+            <TextfieldIcon v-if="icon" @click="$emit('icon-click', $event)" leading>
+                {{ icon }}
+            </TextfieldIcon>
+            <span class="mdc-text-field__affix mdc-text-field__affix--prefix">$</span>
             <input
                 :id="`textfield-input-${id}`"
                 type="number"
@@ -38,18 +31,9 @@
                 :aria-labelledby="`textfield-label-${id}`"
                 :value="modelValue"
                 :autofocus="autofocus"
-                @focus="
-                    autoselect
-                        ? ($event.target as HTMLInputElement).select()
-                        : null
-                "
-                @input="
-                    $emit(
-                        'update:modelValue',
-                        ($event?.target as HTMLInputElement)?.value
-                    )
-                "
-                @change="change"
+                @focus="handleFocus"
+                @input="handleInput"
+                @change="handleChange"
                 @keydown.enter="$emit('keydown-enter', $event)"
                 @blur="$emit('blur', $event)"
             />
@@ -59,12 +43,9 @@
                 id="my-helper-id"
                 class="mdc-text-field-helper-text"
                 aria-hidden="true"
-                :style="{
-                    opacity: 1,
-                    color: error ? 'rgb(181 30 30)' : undefined,
-                }"
+                :style="{ opacity: 1, color: helperTextColor }"
             >
-                {{ error ? error : helper ? helper : "" }}
+                {{ helperText }}
             </div>
         </div>
     </div>
@@ -72,8 +53,9 @@
 
 <script setup lang="ts">
 import { MDCTextField } from "@material/textfield";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import TextfieldIcon from "@/core/fields/TextfieldIcon.vue";
+import { useCurrencyFormatter } from "@/core/composables/useCurrencyFormatter";
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -81,56 +63,42 @@ const props = defineProps({
     helper: String,
     autoselect: Boolean,
     autofocus: Boolean,
-    density: {
-        type: Number,
-        default: () => 0,
-    },
+    density: { type: Number, default: () => 0 },
     icon: String,
 });
 
 const emit = defineEmits([
-    "update:modelValue",
-    "blur",
-    "icon-click",
-    "change",
-    "keydown-enter",
+    "update:modelValue", "blur", "icon-click", "change", "keydown-enter",
 ]);
+
+const { formatCurrencyInput } = useCurrencyFormatter();
 
 const id = ref(Math.floor(Math.random() * 10000000));
 const mainRef = ref<Element | null>(null);
 const mdcTextfield = ref<MDCTextField | null>(null);
+
+const helperText = computed(() => props.error || props.helper || "");
+const helperTextColor = computed(() => props.error ? 'rgb(181 30 30)' : undefined);
+
+function handleInput(event: Event) {
+    emit("update:modelValue", (event.target as HTMLInputElement)?.value);
+}
+
+function handleFocus(event: Event) {
+    if (props.autoselect) (event.target as HTMLInputElement).select();
+}
+
+function handleChange(event: Event) {
+    const value = (event.target as HTMLInputElement)?.value;
+    const formattedValue = formatCurrencyInput(value);
+    emit("change", formattedValue);
+    emit("update:modelValue", formattedValue);
+}
+
 onMounted(() => {
     if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value);
     if (props.autofocus) mainRef.value?.querySelector("input")?.focus();
 });
-
-function change(event: Event) {
-    const value = (event.target as HTMLInputElement)?.value;
-    const split = value?.split(".");
-    const afterDecimal = split[1];
-    if (!afterDecimal || afterDecimal.length != 2) {
-        const beforeDecimal = split[0] ?? "0";
-        let replacementDecimal = afterDecimal ?? "00";
-        if (afterDecimal?.length) {
-            if (afterDecimal.length == 1)
-                replacementDecimal = `${afterDecimal}0`;
-            else
-                replacementDecimal = String(
-                    Math.round(
-                        Number(
-                            afterDecimal.slice(0, 2) +
-                                "." +
-                                afterDecimal.slice(2)
-                        )
-                    )
-                );
-        }
-        emit("change", `${beforeDecimal}.${replacementDecimal}`);
-        emit("update:modelValue", `${beforeDecimal}.${replacementDecimal}`);
-    } else {
-        emit("change", Number(value).toFixed(2));
-    }
-}
 </script>
 
 <style scoped lang="scss">
