@@ -1,30 +1,30 @@
 <!-- eslint-disable prettier/prettier -->
 <template>
     <div>
-        <div class="text-center mx-0 md:mx-3 max-h-screen relative">
+        <div class="relative max-h-screen mx-0 text-center md:mx-3">
             <!--
         Welcome sign :)
       -->
             <div class="flex justify-center" v-if="!auth.authenticated">
-                <img src="/android-chrome-512x512.png" class="m-5 w-3/12" />
+                <img src="/android-chrome-512x512.png" class="w-3/12 m-5" />
             </div>
             <h1
-                class="text-3xl sm:text-5xl md:text-7xl font-thin"
+                class="text-3xl font-thin sm:text-5xl md:text-7xl"
                 v-if="!auth.authenticated"
             >
                 Welcome to Somero Budget
             </h1>
             <h2
-                class="text-xl italic mt-3"
-                v-if="$route.params.securityLoggedOut"
+                class="mt-3 text-xl italic"
+                v-if="route.params.securityLoggedOut"
             >
-                ({{ $route.params.securityLoggedOut }})
+                ({{ route.params.securityLoggedOut }})
             </h2>
             <!--
         Dashboard
       -->
             <div v-if="auth.authenticated" class="max-h-screen">
-                <h1 class="text-xl pb-2 pt-3">Budget</h1>
+                <h1 class="pt-3 pb-2 text-xl">Budget</h1>
                 <div v-if="initiallyLoaded">
                     <p v-if="!sortedAccounts.length" class="m-5">
                         ✨ No accounts ✨
@@ -109,29 +109,16 @@
                             </DataTableHeaderCell>
                         </template>
                         <template #body>
-                            <DataTableRow
+                            <Component
+                                :is="
+                                    'totalsRow' in account
+                                        ? HomeDataTableTotalsRow
+                                        : HomeDataTableRow
+                                "
                                 v-for="account of sortedAccounts"
                                 :key="account.id ?? 1"
+                                :account="account"
                                 :style="{
-                                    'background-color':
-                                        sort.nextDate.value != 'none' &&
-                                        !('totalsRow' in account) &&
-                                        (isAccountWithBatchUpdatesAndDisplayFields(
-                                            account
-                                        )
-                                            ? weeksUntil(
-                                                  toDateTime(
-                                                      account.batch_updates?.[0]
-                                                          ?.date
-                                                  )
-                                              )
-                                            : 1) %
-                                            2 ==
-                                            0
-                                            ? 'rgba(0,0,0,0.09)'
-                                            : 'totalsRow' in account
-                                            ? 'rgba(0,0,0,0.045)'
-                                            : undefined,
                                     height:
                                         'totalsRow' in account
                                             ? 'unset'
@@ -209,7 +196,7 @@
                                         "
                                         @click="
                                             !account.isBatchUpdate &&
-                                                $router.push({
+                                                router.push({
                                                     name: 'batch-updates-show',
                                                     params: {
                                                         id: account
@@ -463,7 +450,7 @@
                                             !('totalsRow' in account) &&
                                                 edit(account)
                                         "
-                                        class="w-full h-full flex flex-wrap items-center gap-2"
+                                        class="flex flex-wrap items-center w-full h-full gap-2"
                                         style="white-space: nowrap"
                                     >
                                         <IconButton
@@ -491,7 +478,7 @@
                                         }}
                                     </div>
                                 </DataTableCell>
-                            </DataTableRow>
+                            </Component>
                             <!-- Bottom sticky row (totals) -->
                             <DataTableRow class="sticky-bottom-row">
                                 <DataTableCell
@@ -617,7 +604,7 @@
                 <transition name="error-message">
                     <p
                         v-if="batchForm.errors.message"
-                        class="bg-red-200 rounded-3xl py-3 px-4 mb-10 break-word max-w-fit"
+                        class="px-4 py-3 mb-10 bg-red-200 rounded-3xl break-word max-w-fit"
                     >
                         {{ batchForm.errors.message }}
                     </p>
@@ -656,6 +643,7 @@ import {
     type Account,
     type AccountWithBatchUpdates,
     useAccountsStore,
+    AccountWithBatchUpdatesAndSortedFields,
 } from "@/store/accounts"
 import { Dollars, dollars } from "@/core/utilities/currency"
 import DataTable from "@/core/tables/DataTable.vue"
@@ -695,6 +683,8 @@ import {
     homeSettings,
     accountIsOffMinimum,
     minimumToMakeAllExistingScheduledPayments,
+    sort,
+    TotalsRow,
 } from "@/home"
 import TableSettingsModal from "@/home/TableSettingsModal.vue"
 import MdcSwitch from "../core/switches/MdcSwitch.vue"
@@ -712,6 +702,10 @@ import { templateToApply } from "@/templates"
 import { useModalEditing as useAccountModalEditing } from "@/accounts/modal-editing"
 import { useBatchDifferences } from "@/batchUpdates/batch-differences"
 import { usePlanning } from "@/accounts"
+import HomeDataTableTotalsRow from "./HomeDataTableTotalsRow.vue"
+import HomeDataTableRow from "./HomeDataTableRow.vue"
+import { provide } from "vue"
+import { InjectionKey } from "vue"
 
 const auth = useAuth()
 const route = useRoute()
@@ -779,16 +773,6 @@ const overMinimumTotal = computed(() => {
     }, 0)
 })
 
-type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
-    nextDate: string
-    nextAmount: number
-    minimum: number | null
-    currentRate?: Dollars
-    ratesEachWeek?: Dollars[]
-    minimumAllPayments: number | null
-    overMinimum: number
-    percentCovered: number
-}
 function isAccountWithBatchUpdatesAndDisplayFields(
     account:
         | Account
@@ -801,52 +785,9 @@ function isAccountWithBatchUpdatesAndDisplayFields(
         (!("batch_updates" in account) || !!account.batch_updates?.[0])
     )
 }
-type TotalsRow = {
-    totalsRow: true
-    id: number
-    amount: number
-    nextAmount: number
-    minimum: number
-    overMinimum: number
-    percentCovered: number
-}
 const sortedAccounts: Ref<
     (Account | AccountWithBatchUpdatesAndSortedFields | TotalsRow)[]
 > = ref([])
-const sort = useLocalStorage("budget-accounts-index-sort-v5", {
-    isFavorite: {
-        value: "descending",
-        at: DateTime.now().valueOf(),
-    },
-    name: {
-        value: "none",
-        at: null as number | null,
-    },
-    amount: {
-        value: "none",
-        at: null as number | null,
-    },
-    nextDate: {
-        value: "none",
-        at: null as number | null,
-    },
-    nextAmount: {
-        value: "none",
-        at: null as number | null,
-    },
-    minimum: {
-        value: "none",
-        at: null as number | null,
-    },
-    overMinimum: {
-        value: "none",
-        at: null as number | null,
-    },
-    percentCovered: {
-        value: "none",
-        at: null as number | null,
-    },
-})
 const hideProgress = ref<Function | null>(null)
 function updateSort(event: {
     columnId: keyof typeof sort.value
@@ -1138,7 +1079,7 @@ const batchTotalOfOffMinimumAccounts = computed(() =>
 )
 
 function tooltipToCompareIdealVsEmergency(
-    account: typeof sortedAccounts.value[0]
+    account: (typeof sortedAccounts.value)[0]
 ) {
     if (!isAccountWithBatchUpdatesAndDisplayFields(account)) return ""
     if (!auth.user?.beta_opt_in && account.batch_updates?.[0]?.date) {
@@ -1286,8 +1227,12 @@ code {
     }
 }
 
-:deep(.mdc-data-table__row.sticky-bottom-row:not(.mdc-data-table__row--selected):hover
-        .mdc-data-table__cell) {
+:deep(
+        .mdc-data-table__row.sticky-bottom-row:not(
+                .mdc-data-table__row--selected
+            ):hover
+            .mdc-data-table__cell
+    ) {
     background-color: white;
 }
 
