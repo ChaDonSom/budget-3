@@ -1,4 +1,6 @@
 import { useAuth, type User } from "@/core/users/auth"
+import { Dollars } from "@/core/utilities/currency"
+import { type TotalsRow } from "@/home"
 import type { BatchUpdate, BatchUpdateWithAccounts } from "@/store/batchUpdates"
 import { useBatchUpdates } from "@/store/batchUpdates"
 import { useEcho } from "@/store/echo"
@@ -21,6 +23,30 @@ export type AccountWithBatchUpdates = Account & {
     batch_updates: (BatchUpdate & { pivot: { amount: number } })[]
 }
 export type AccountsData = { [key: string | number]: Account }
+
+export type AccountWithBatchUpdatesAndSortedFields = AccountWithBatchUpdates & {
+    nextDate: string
+    nextAmount: number
+    minimum: number | null
+    currentRate?: Dollars
+    ratesEachWeek?: Dollars[]
+    minimumAllPayments: number | null
+    overMinimum: number
+    percentCovered: number
+}
+
+export function isAccountWithBatchUpdatesAndDisplayFields(
+    account:
+        | Account
+        | AccountWithBatchUpdates
+        | AccountWithBatchUpdatesAndSortedFields
+        | TotalsRow
+): account is AccountWithBatchUpdatesAndSortedFields {
+    return (
+        !("totalsRow" in account) &&
+        (!("batch_updates" in account) || !!account.batch_updates?.[0])
+    )
+}
 
 export const data = ref<AccountsData>({})
 
