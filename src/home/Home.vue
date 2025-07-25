@@ -704,8 +704,6 @@ import { useBatchDifferences } from "@/batchUpdates/batch-differences"
 import { usePlanning } from "@/accounts"
 import HomeDataTableTotalsRow from "./HomeDataTableTotalsRow.vue"
 import HomeDataTableRow from "./HomeDataTableRow.vue"
-import { InjectionKey } from "vue"
-
 const auth = useAuth()
 const route = useRoute()
 const router = useRouter()
