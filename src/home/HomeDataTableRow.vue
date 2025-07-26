@@ -22,7 +22,6 @@ function weeksUntilNextBatchUpdate(account: Account): number {
 
 <template>
     <DataTableRow
-        style="height: 3rem"
         :style="{
             'background-color':
                 nextDate.value != 'none' &&
