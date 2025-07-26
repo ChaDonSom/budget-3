@@ -118,16 +118,6 @@
                                 v-for="account of sortedAccounts"
                                 :key="account.id ?? 1"
                                 :account="account"
-                                :style="{
-                                    height:
-                                        'totalsRow' in account
-                                            ? 'unset'
-                                            : '3rem',
-                                }"
-                                :class="{
-                                    'text-xl italic text-slate-600 border-t-2 border-slate-400':
-                                        'totalsRow' in account,
-                                }"
                             >
                                 <!-- Name -->
                                 <DataTableCell
