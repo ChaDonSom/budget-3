@@ -27,7 +27,7 @@ function weeksUntilNextBatchUpdate(account: Account): number {
                 nextDate.value != 'none' &&
                 weeksUntilNextBatchUpdate(account) % 2 == 0
                     ? 'rgba(0,0,0,0.09)' // Light gray
-                    : 'rgba(0,0,0,0.045)', // Darker gray
+                    : '',
         }"
     >
         <slot />
