@@ -1,3 +1,8 @@
 {
-    "semi": false
+    "semi": false,
+    "arrowParens": "avoid",
+    "bracketSameLine": false,
+    "printWidth": 120,
+    "quoteProps": "as-needed",
+    "tabWidth": 2
 }
