@@ -36,72 +36,35 @@
                         @sort="updateSort"
                     >
                         <template #header>
-                            <DataTableHeaderCell
-                                sortable
+                            <HomeDataTableHeaderCell
                                 column-id="name"
-                                :sort="sort.name"
-                                :class="{ hidden: !columnsToShow.name }"
+                                :numeric="false"
                             >
                                 Name
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                sortable
-                                column-id="nextDate"
-                                :sort="sort.nextDate"
-                                :class="{ hidden: !columnsToShow.nextDate }"
-                            >
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell column-id="nextDate">
                                 Next date
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                sortable
-                                numeric
-                                column-id="nextAmount"
-                                :sort="sort.nextAmount"
-                                :class="{ hidden: !columnsToShow.nextAmount }"
-                            >
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell column-id="nextAmount">
                                 Next amount
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                sortable
-                                numeric
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell
                                 column-id="minimum"
-                                :sort="sort.minimum"
-                                :class="{ hidden: !columnsToShow.minimum }"
                                 v-tooltip="
                                     'Minimum current balance needed to make the payment on time with ideal weekly saving'
                                 "
                             >
                                 Minimum
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                :class="{ hidden: !columnsToShow.overMinimum }"
-                                sortable
-                                numeric
-                                column-id="overMinimum"
-                                :sort="sort.overMinimum"
-                            >
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell column-id="overMinimum">
                                 Over / under min.
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                :class="{
-                                    hidden: !columnsToShow.percentCovered,
-                                }"
-                                sortable
-                                numeric
-                                column-id="percentCovered"
-                                :sort="sort.percentCovered"
-                            >
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell column-id="percentCovered">
                                 % covered
-                            </DataTableHeaderCell>
-                            <DataTableHeaderCell
-                                sortable
-                                numeric
-                                column-id="amount"
-                                :sort="sort.amount"
-                                :class="{ hidden: !columnsToShow.amount }"
-                            >
+                            </HomeDataTableHeaderCell>
+                            <HomeDataTableHeaderCell column-id="amount">
                                 Amount
-                            </DataTableHeaderCell>
+                            </HomeDataTableHeaderCell>
                             <DataTableHeaderCell numeric>
                                 <IconButton @click="editTableSettings"
                                     >more_vert</IconButton
@@ -694,6 +657,7 @@ import { useBatchDifferences } from "@/batchUpdates/batch-differences"
 import { usePlanning } from "@/accounts"
 import HomeDataTableTotalsRow from "./HomeDataTableTotalsRow.vue"
 import HomeDataTableRow from "./HomeDataTableRow.vue"
+import HomeDataTableHeaderCell from "./HomeDataTableHeaderCell.vue"
 const auth = useAuth()
 const route = useRoute()
 const router = useRouter()
