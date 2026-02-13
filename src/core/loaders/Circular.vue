@@ -278,22 +278,22 @@
 </template>
 
 <script setup lang="ts">
-import { MDCCircularProgress } from "@material/circular-progress";
-import { onMounted, ref } from "vue";
+import { MDCCircularProgress } from "@material/circular-progress"
+import { onMounted, ref } from "vue"
 
 defineProps({
     large: Boolean,
     medium: Boolean,
     small: Boolean,
     secondary: Boolean,
-});
+})
 
-const mainRef = ref(null);
-const mdcCircularProgress = ref<MDCCircularProgress | null>(null);
+const mainRef = ref(null)
+const mdcCircularProgress = ref<MDCCircularProgress | null>(null)
 onMounted(() => {
     if (mainRef.value)
-        mdcCircularProgress.value = new MDCCircularProgress(mainRef.value);
-});
+        mdcCircularProgress.value = new MDCCircularProgress(mainRef.value)
+})
 </script>
 
 <style scoped lang="scss">

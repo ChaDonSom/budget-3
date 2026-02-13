@@ -278,79 +278,79 @@ import {
     watch,
     type Ref,
     markRaw,
-} from "vue";
-import Button from "@/core/buttons/Button.vue";
-import { useAuth } from "../core/users/auth";
-import { useEcho } from "../store/echo";
-import axios from "axios";
-import { useAccounts, type Account } from "@/store/accounts";
-import { dollars } from "@/core/utilities/currency";
-import DataTable from "@/core/tables/DataTable.vue";
-import DataTableHeaderCell from "@/core/tables/DataTableHeaderCell.vue";
-import DataTableRow from "@/core/tables/DataTableRow.vue";
-import DataTableCell from "@/core/tables/DataTableCell.vue";
-import { useLocalStorage } from "@vueuse/core";
-import IconButton from "@/core/buttons/IconButton.vue";
-import Fab from "@/core/buttons/Fab.vue";
-import { useModals } from "@/store/modals";
-import DollarsField from "@/core/fields/DollarsField.vue";
-import FloatingDifferenceInputModalVue from "@/home/FloatingDifferenceInputModal.vue";
-import { useForm } from "@/store/forms";
-import { DateTime } from "luxon";
-import OutlinedTextfield from "@/core/fields/OutlinedTextfield.vue";
-import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
-import CircularScrim from "@/core/loaders/CircularScrim.vue";
+} from "vue"
+import Button from "@/core/buttons/Button.vue"
+import { useAuth } from "../core/users/auth"
+import { useEcho } from "../store/echo"
+import axios from "axios"
+import { useAccounts, type Account } from "@/store/accounts"
+import { dollars } from "@/core/utilities/currency"
+import DataTable from "@/core/tables/DataTable.vue"
+import DataTableHeaderCell from "@/core/tables/DataTableHeaderCell.vue"
+import DataTableRow from "@/core/tables/DataTableRow.vue"
+import DataTableCell from "@/core/tables/DataTableCell.vue"
+import { useLocalStorage } from "@vueuse/core"
+import IconButton from "@/core/buttons/IconButton.vue"
+import Fab from "@/core/buttons/Fab.vue"
+import { useModals } from "@/store/modals"
+import DollarsField from "@/core/fields/DollarsField.vue"
+import FloatingDifferenceInputModalVue from "@/home/FloatingDifferenceInputModal.vue"
+import { useForm } from "@/store/forms"
+import { DateTime } from "luxon"
+import OutlinedTextfield from "@/core/fields/OutlinedTextfield.vue"
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router"
+import CircularScrim from "@/core/loaders/CircularScrim.vue"
 import {
     type BatchUpdateWithAccounts,
     useBatchUpdates,
-} from "@/store/batchUpdates";
-import DeleteButton from "@/core/buttons/DeleteButton.vue";
-import { toDateTime } from "@/core/utilities/datetime";
-import { BatchDifference } from "@/home";
-import MdcSwitch from "../core/switches/MdcSwitch.vue";
-import OutlinedTextarea from "../core/fields/OutlinedTextarea.vue";
+} from "@/store/batchUpdates"
+import DeleteButton from "@/core/buttons/DeleteButton.vue"
+import { toDateTime } from "@/core/utilities/datetime"
+import { BatchDifference } from "@/home"
+import MdcSwitch from "../core/switches/MdcSwitch.vue"
+import OutlinedTextarea from "../core/fields/OutlinedTextarea.vue"
 
-const auth = useAuth();
-const route = useRoute();
-const router = useRouter();
-const messages = ref<any[]>([]);
-const echo = useEcho();
+const auth = useAuth()
+const route = useRoute()
+const router = useRouter()
+const messages = ref<any[]>([])
+const echo = useEcho()
 onMounted(() => {
     // The '.' in '.my-event' means we'll listen on 'my-channel' instead of 'App\Events.my-channel'
     // That way, we can mess around with this from the Pusher event creator
     echo.echo.channel("my-channel").listen(".my-event", (data: any) => {
-        console.log("data: ", data);
-        messages.value.push(data);
-    });
-});
+        console.log("data: ", data)
+        messages.value.push(data)
+    })
+})
 
 function sendPushNotification() {
     axios.post("/api/beams/self-notification", {
         title: "Hello World!",
         message: "Hi there, a notification from Somero Budget 3!",
-    });
+    })
 }
 
-const showAllAccounts = ref(false);
+const showAllAccounts = ref(false)
 
 /**
 	---------------------------------------------------
 	| Indexing and the table
 	---------------------------------------------------
  */
-const initiallySorted = ref(false);
-const initiallyLoadedAccounts = ref(false);
+const initiallySorted = ref(false)
+const initiallyLoadedAccounts = ref(false)
 const initiallyLoaded = computed(() => {
-    return initiallyLoadedAccounts.value && initiallySorted.value;
-});
+    return initiallyLoadedAccounts.value && initiallySorted.value
+})
 
-const accounts = useAccounts();
-accounts.fetchData().then(() => (initiallyLoadedAccounts.value = true));
+const accounts = useAccounts()
+accounts.fetchData().then(() => (initiallyLoadedAccounts.value = true))
 const accountsTotal = computed(() =>
     accounts.values.map((i) => i.amount / 100).reduce((a, c) => a + c, 0)
-);
+)
 
-const sortedAccounts: Ref<Account[]> = ref([]);
+const sortedAccounts: Ref<Account[]> = ref([])
 const sort = useLocalStorage("budget-batch-update-accounts-sort-v1", {
     name: {
         value: "none",
@@ -368,18 +368,18 @@ const sort = useLocalStorage("budget-batch-update-accounts-sort-v1", {
         value: "none",
         at: null as number | null,
     },
-});
-const hideProgress = ref<Function | null>(null);
+})
+const hideProgress = ref<Function | null>(null)
 function updateSort(event: {
-    columnId: keyof typeof sort.value;
-    sortValue: "ascending" | "descending";
-    hideProgress: Function;
+    columnId: keyof typeof sort.value
+    sortValue: "ascending" | "descending"
+    hideProgress: Function
 }) {
-    hideProgress.value = event.hideProgress;
+    hideProgress.value = event.hideProgress
     if (sort.value[event.columnId].value == "descending")
-        sort.value[event.columnId].value = "none";
-    else sort.value[event.columnId].value = event.sortValue;
-    sort.value[event.columnId].at = new Date().valueOf();
+        sort.value[event.columnId].value = "none"
+    else sort.value[event.columnId].value = event.sortValue
+    sort.value[event.columnId].at = new Date().valueOf()
 }
 
 /**
@@ -387,61 +387,61 @@ function updateSort(event: {
 	| Setting up withdraw/deposit batches
 	---------------------------------------------------
  */
-const currentlyEditingDifference = ref<number | null>(null);
-const batchDifferences = ref({} as { [key: number]: BatchDifference });
-const batchDate = ref<DateTime>(DateTime.now());
+const currentlyEditingDifference = ref<number | null>(null)
+const batchDifferences = ref({} as { [key: number]: BatchDifference })
+const batchDate = ref<DateTime>(DateTime.now())
 const areAnyBatchDifferences = computed(() =>
     Boolean(Object.keys(batchDifferences.value).length)
-);
+)
 const batchTotal = computed(() =>
     Object.values(batchDifferences.value)
         .map((i) => i.amount * i.modifier)
         .reduce((a, c) => a + c, 0)
-);
+)
 function startWithdrawing(account: Account) {
-    currentlyEditingDifference.value = account.id;
+    currentlyEditingDifference.value = account.id
     batchDifferences.value[account.id] = new BatchDifference({
         amount: 0,
         modifier: -1,
-    });
+    })
     modals.open({
         modal: markRaw(FloatingDifferenceInputModalVue),
         props: {
             difference: batchDifferences.value[account.id],
         },
-    });
+    })
 }
 function startDepositing(account: Account) {
-    currentlyEditingDifference.value = account.id;
+    currentlyEditingDifference.value = account.id
     batchDifferences.value[account.id] = new BatchDifference({
         amount: 0,
         modifier: 1,
-    });
+    })
     modals.open({
         modal: markRaw(FloatingDifferenceInputModalVue),
         props: {
             difference: batchDifferences.value[account.id],
         },
-    });
+    })
 }
 function clearBatchDifferenceFor(account: Account) {
-    delete batchDifferences.value[account.id];
+    delete batchDifferences.value[account.id]
     if (currentlyEditingDifference.value == account.id)
-        currentlyEditingDifference.value = null;
+        currentlyEditingDifference.value = null
 }
 function clearBatchDifferences() {
-    batchDifferences.value = {};
-    batchForm.accounts = {};
-    currentlyEditingDifference.value = null;
+    batchDifferences.value = {}
+    batchForm.accounts = {}
+    currentlyEditingDifference.value = null
 }
 function edit(account: Account) {
-    currentlyEditingDifference.value = account.id;
+    currentlyEditingDifference.value = account.id
     modals.open({
         modal: markRaw(FloatingDifferenceInputModalVue),
         props: {
             difference: batchDifferences.value[account.id],
         },
-    });
+    })
 }
 const batchForm = useForm("/api/batch-updates", {
     id: null as number | null,
@@ -451,13 +451,13 @@ const batchForm = useForm("/api/batch-updates", {
     accounts: batchDifferences.value,
     notify_me: false,
     weeks: null as number | null,
-});
-const batchUpdates = useBatchUpdates();
+})
+const batchUpdates = useBatchUpdates()
 async function loadBatchUpdate() {
     if (route.params.id && route.params.id != "new") {
-        let result = (await batchUpdates.fetchBatchUpdate(
+        const result = (await batchUpdates.fetchBatchUpdate(
             Number(route.params.id)
-        )) as BatchUpdateWithAccounts;
+        )) as BatchUpdateWithAccounts
         batchForm.reset({
             ...batchForm.internalForm,
             ...result,
@@ -467,11 +467,11 @@ async function loadBatchUpdate() {
                 a[c.id] = {
                     amount: Math.abs(c.pivot.amount / 100),
                     modifier: c.pivot.amount >= 0 ? 1 : -1,
-                };
-                return a;
+                }
+                return a
             }, {} as { [key: number]: { amount: number; modifier: 1 | -1 } }),
-        });
-        batchDifferences.value = batchForm.accounts;
+        })
+        batchDifferences.value = batchForm.accounts
     }
     if (route.params.id == "new" && route.query.account_id) {
         batchDifferences.value = {
@@ -479,12 +479,12 @@ async function loadBatchUpdate() {
                 amount: 0,
                 modifier: 1,
             }),
-        };
-        batchForm.accounts = batchDifferences.value;
+        }
+        batchForm.accounts = batchDifferences.value
     }
 }
 onMounted(async () => {
-    await loadBatchUpdate();
+    await loadBatchUpdate()
 
     watch(
         () => [
@@ -494,7 +494,7 @@ onMounted(async () => {
             batchForm.accounts,
         ],
         () => {
-            const worker = new Worker("worker.js");
+            const worker = new Worker("worker.js")
             worker.postMessage({
                 type: "SORT_ACCOUNTS",
                 accounts: JSON.stringify(
@@ -509,68 +509,66 @@ onMounted(async () => {
                 filter: JSON.stringify({
                     ids: !showAllAccounts.value ? batchForm.accounts : null,
                 }),
-            });
+            })
             worker.addEventListener("message", (event) => {
                 if (event.data?.type == "SORT_ACCOUNTS") {
                     sortedAccounts.value = JSON.parse(event.data?.accounts).map(
                         (a: Account & { [key: string]: any }) => {
-                            let result = a;
-                            delete result.nextDate;
-                            delete result.nextAmount;
-                            return result;
+                            const result = a
+                            delete result.nextDate
+                            delete result.nextAmount
+                            return result
                         }
-                    ) as Account[];
-                    if (hideProgress.value) hideProgress.value();
-                    initiallySorted.value = true;
-                    worker.terminate();
+                    ) as Account[]
+                    if (hideProgress.value) hideProgress.value()
+                    initiallySorted.value = true
+                    worker.terminate()
                 }
-            });
+            })
         },
         { deep: true, immediate: true }
-    );
-});
+    )
+})
 async function saveBatchUpdate(asNew = false) {
     if (asNew) {
         batchForm.reset({
             id: null,
             user_id: batchForm.user_id,
             accounts: batchDifferences.value,
-        });
+        })
     } else {
         batchForm.reset({
             user_id: batchForm.user_id,
             accounts: batchDifferences.value,
-        });
+        })
     }
-    await batchForm.createOrUpdate();
-    setTimeout(() => router.back());
+    await batchForm.createOrUpdate()
+    setTimeout(() => router.back())
 }
-const modals = useModals();
+const modals = useModals()
 async function deleteBatchUpdate() {
     if (batchForm.id && route.params.id && route.params.id != "new") {
         try {
-            await modals.confirm(`Do you really want to delete these changes?`);
+            await modals.confirm(`Do you really want to delete these changes?`)
         } catch (e) {
-            return;
+            return
         }
-        let id = batchForm.id;
-        await batchForm.delete();
-        batchUpdates.remove(id);
-        setTimeout(() => router.back());
+        const id = batchForm.id
+        await batchForm.delete()
+        batchUpdates.remove(id)
+        setTimeout(() => router.back())
     } else {
-        throw Error("Form has no id");
+        throw Error("Form has no id")
     }
 }
 onBeforeRouteLeave(async () => {
     try {
         if (batchForm.isDirty)
-            await modals.confirm(
-                "Do you really want to leave unsaved changes?"
-            );
+            await modals.confirm("Do you really want to leave unsaved changes?")
     } catch (e) {
-        return false;
+        return false
     }
-});
+})
 </script>
 
 <style scoped lang="scss">

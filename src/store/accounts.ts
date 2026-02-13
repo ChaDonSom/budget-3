@@ -25,21 +25,21 @@ export type AccountsData = { [key: string | number]: Account }
 export const data = ref<AccountsData>({})
 
 export const keys = computed(() => {
-    let v = data.value
+    const v = data.value
     return Object.keys(v)
 })
 export const values: ComputedRef<Account[]> = computed(() => {
-    let v = data.value
+    const v = data.value
     return Object.values(v)
 })
 
 export async function fetchData(query?: { [key: string]: any }) {
-    let urlQuery = query
+    const urlQuery = query
         ? `?${Object.keys(query)
               .map((k) => `${k}=${query[k]}`)
               .join("&")}`
         : ""
-    let response: AxiosResponse<AccountsData> = await axios.get(
+    const response: AxiosResponse<AccountsData> = await axios.get(
         `/api/accounts${urlQuery}`
     )
     data.value = response.data
@@ -55,7 +55,7 @@ export async function fetchData(query?: { [key: string]: any }) {
                     `Got broadcast for batchUpdate ${payload.update.id}, updating in store...`
                 )
                 batchUpdates.receive(payload.update)
-                for (let account of payload.update.accounts) {
+                for (const account of payload.update.accounts) {
                     data.value[account.id].amount = account.amount
                 }
             }
@@ -63,7 +63,7 @@ export async function fetchData(query?: { [key: string]: any }) {
 }
 
 export async function fetchAccount(id: number) {
-    let response: AxiosResponse<Account> = await axios.get(
+    const response: AxiosResponse<Account> = await axios.get(
         `/api/accounts/${id}`
     )
     data.value = {

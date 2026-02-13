@@ -1,3 +1,3 @@
-import { ref } from "vue";
+import { ref } from "vue"
 
-export const thUpdateKey = ref(0);
+export const thUpdateKey = ref(0)

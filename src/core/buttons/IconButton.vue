@@ -4,8 +4,8 @@
         class="mdc-icon-button material-icons"
         :class="{
             [`density-${density}`]: density,
-            'primary': primary,
-            'secondary': secondary,
+            primary: primary,
+            secondary: secondary,
         }"
     >
         <div class="mdc-icon-button__ripple"></div>
@@ -15,8 +15,8 @@
 </template>
 
 <script setup lang="ts">
-import { MDCRipple } from "@material/ripple";
-import { onMounted, ref } from "vue";
+import { MDCRipple } from "@material/ripple"
+import { onMounted, ref } from "vue"
 
 const props = defineProps({
     density: {
@@ -28,17 +28,17 @@ const props = defineProps({
     },
     secondary: {
         type: Boolean,
-    }
-});
+    },
+})
 
-const mainRef = ref(null);
-const iconButtonRipple = ref<MDCRipple | null>(null);
+const mainRef = ref(null)
+const iconButtonRipple = ref<MDCRipple | null>(null)
 onMounted(() => {
     if (mainRef.value) {
-        iconButtonRipple.value = new MDCRipple(mainRef.value);
-        iconButtonRipple.value.unbounded = true;
+        iconButtonRipple.value = new MDCRipple(mainRef.value)
+        iconButtonRipple.value.unbounded = true
     }
-});
+})
 </script>
 
 <style scoped lang="scss">

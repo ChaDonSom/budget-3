@@ -14,23 +14,23 @@
 </template>
 
 <script lang="ts" setup>
-import { MDCRipple } from "@material/ripple";
-import { onMounted, ref } from "vue";
+import { MDCRipple } from "@material/ripple"
+import { onMounted, ref } from "vue"
 
 defineProps({
     secondary: Boolean,
     icon: String,
     small: Boolean,
-});
+})
 
-const mainRef = ref<HTMLElement | null>(null);
+const mainRef = ref<HTMLElement | null>(null)
 onMounted(() => {
     const mdcFab: HTMLElement | null | undefined =
-        mainRef.value?.querySelector(".mdc-fab");
+        mainRef.value?.querySelector(".mdc-fab")
     if (mdcFab) {
-        const buttonRipple = new MDCRipple(mdcFab);
+        const buttonRipple = new MDCRipple(mdcFab)
     }
-});
+})
 </script>
 
 <style scoped lang="scss">

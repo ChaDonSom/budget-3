@@ -15,7 +15,7 @@ defineProps({
         required: false,
         default: () => false,
     },
-});
+})
 </script>
 
 <style scope lang="scss"></style>
