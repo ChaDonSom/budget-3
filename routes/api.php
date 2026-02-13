@@ -61,9 +61,20 @@ Route::prefix('beams')->middleware('auth:sanctum')->group(function () {
     });
 });
 
+Route::middleware('auth:sanctum')->get('/notifications', function (Request $request) {
+    return $request->user()->notifications()->orderBy('created_at', 'desc')->get();
+});
+
 Route::get('/dismiss-notification/{id}', function ($uuid) {
     $notification = DatabaseNotification::where('data', 'like', '%"uuid":"' . $uuid . '"%')->firstOrFail();
     $notification->markAsRead();
+    PushNotificationUpdated::dispatch($notification, $notification->notifiable);
+    return $notification;
+});
+
+Route::middleware('auth:sanctum')->get('/undismiss-notification/{id}', function ($uuid) {
+    $notification = DatabaseNotification::where('data', 'like', '%"uuid":"' . $uuid . '"%')->firstOrFail();
+    $notification->markAsUnread();
     PushNotificationUpdated::dispatch($notification, $notification->notifiable);
     return $notification;
 });

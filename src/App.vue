@@ -29,6 +29,13 @@
                             Home
                         </Button>
                     </RouterLink>
+                    <RouterLink :to="{ name: 'notifications' }">
+                        <Button :disabled="!auth.authenticated || $route.name == 'notifications'"
+                            :raised="$route.name == 'notifications'">
+                            <template #leading-icon>notifications</template>
+                            Notifications
+                        </Button>
+                    </RouterLink>
                     <RouterLink :to="{ name: 'profile' }">
                         <Button :disabled="!auth.authenticated || $route.name == 'profile'"
                             :raised="$route.name == 'profile'">
