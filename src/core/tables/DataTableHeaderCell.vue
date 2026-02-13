@@ -42,8 +42,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from "vue";
-import { thUpdateKey } from "@/core/tables/store";
+import { computed, ref } from "vue"
+import { thUpdateKey } from "@/core/tables/store"
 
 const props = defineProps({
     numeric: {
@@ -64,16 +64,16 @@ const props = defineProps({
         type: String,
         default: () => "dessert",
     },
-});
+})
 
-const mainRef = ref<HTMLTableCellElement | null>(null);
-const uid = ref(Math.round(Math.random() * 10000000));
+const mainRef = ref<HTMLTableCellElement | null>(null)
+const uid = ref(Math.round(Math.random() * 10000000))
 
 function thClick() {
-    setTimeout(() => thUpdateKey.value++);
+    setTimeout(() => thUpdateKey.value++)
 }
 const thClasses = computed(() => {
-    const x = thUpdateKey.value;
+    const x = thUpdateKey.value
     return {
         "mdc-data-table__header-cell--numeric": props.numeric,
         "mdc-data-table__header-cell--with-sort": props.sortable,
@@ -81,19 +81,19 @@ const thClasses = computed(() => {
             props.sortable && props.sort?.value != "none",
         "mdc-data-table__header-cell--sorted-descending":
             props.sortable && props.sort?.value == "descending",
-    };
-});
+    }
+})
 const thBindableAttributes = computed(() => {
-    const x = thUpdateKey.value;
-    const result: { [key: string]: string } = {};
+    const x = thUpdateKey.value
+    const result: { [key: string]: string } = {}
 
     if (props.sortable) {
-        result["aria-sort"] = props.sort?.value ?? "none"; // 'ascending' or 'descending' based on sort order
-        result["data-column-id"] = props.columnId;
+        result["aria-sort"] = props.sort?.value ?? "none" // 'ascending' or 'descending' based on sort order
+        result["data-column-id"] = props.columnId
     }
 
-    return result;
-});
+    return result
+})
 </script>
 
 <style scoped lang="scss">

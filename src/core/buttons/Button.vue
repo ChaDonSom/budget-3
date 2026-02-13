@@ -37,25 +37,25 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { MDCRipple } from "@material/ripple";
+import { onMounted, ref } from "vue"
+import { MDCRipple } from "@material/ripple"
 
 defineProps({
     raised: Boolean,
     secondary: Boolean,
     disabled: Boolean,
-});
+})
 
-defineEmits(["click"]);
+defineEmits(["click"])
 
-const mainRef = ref<HTMLElement | null>(null);
+const mainRef = ref<HTMLElement | null>(null)
 onMounted(() => {
     const mdcButton: HTMLElement | null | undefined =
-        mainRef.value?.querySelector(".mdc-button");
+        mainRef.value?.querySelector(".mdc-button")
     if (mdcButton) {
-        const buttonRipple = new MDCRipple(mdcButton);
+        const buttonRipple = new MDCRipple(mdcButton)
     }
-});
+})
 </script>
 
 <style lang="scss" scoped>

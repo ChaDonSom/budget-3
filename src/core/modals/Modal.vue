@@ -3,7 +3,7 @@
         class="modal-mask bg-neutral-500/50 backdrop-blur-2xs"
         @click.self="$emit('close')"
         ref="elRef"
-        style="will-change: backdrop-filter;"
+        style="will-change: backdrop-filter"
     >
         <div class="modal-wrapper" @click.self="$emit('close')">
             <div class="modal-container" ref="containerRef">
@@ -36,27 +36,27 @@
 </template>
 
 <script setup lang="ts">
-import { useElementSize, useScroll, useWindowSize } from "@vueuse/core";
-import { ref, watch } from "vue";
+import { useElementSize, useScroll, useWindowSize } from "@vueuse/core"
+import { ref, watch } from "vue"
 
-const elRef = ref(null);
-const containerRef = ref<HTMLElement | null>(null);
-const scrollable = ref(false);
+const elRef = ref(null)
+const containerRef = ref<HTMLElement | null>(null)
+const scrollable = ref(false)
 const scroll = useScroll(containerRef, {
     offset: {
         bottom: 4, // Allows the bottom sticky that comes up slightly to still register as the bottom of the modal
     },
-});
-const { width, height } = useWindowSize();
-const { width: eWidth, height: eHeight } = useElementSize(containerRef);
+})
+const { width, height } = useWindowSize()
+const { width: eWidth, height: eHeight } = useElementSize(containerRef)
 watch(
     () => width.value + height.value + eWidth.value + eHeight.value,
     () => {
         scrollable.value =
             (containerRef.value?.scrollHeight ?? 0) >
-            (containerRef.value?.clientHeight ?? 0);
+            (containerRef.value?.clientHeight ?? 0)
     }
-);
+)
 </script>
 
 <style scoped lang="scss">
@@ -90,7 +90,8 @@ watch(
     margin: 0px auto;
     padding-left: 30px;
     padding-right: 30px;
-    border-width: 0px;border-style: solid;
+    border-width: 0px;
+    border-style: solid;
     border-top: 20px solid var(--color-background-soft);
     border-bottom: 20px solid var(--color-background-soft);
     background-color: var(--color-background-soft);

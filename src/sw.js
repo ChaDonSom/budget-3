@@ -1,26 +1,26 @@
 /* eslint-env serviceworker */
 importScripts(
     "https://storage.googleapis.com/workbox-cdn/releases/6.2.0/workbox-sw.js"
-);
+)
 
 /* global workbox */
 
-const { precacheAndRoute, cleanupOutdatedCaches } = workbox.precaching;
-const { clientsClaim } = workbox.core;
-const { registerRoute } = workbox.routing;
-const { CacheFirst, NetworkFirst } = workbox.strategies;
-const { ExpirationPlugin } = workbox.expiration;
-const { CacheableResponsePlugin } = workbox.cacheableResponse;
+const { precacheAndRoute, cleanupOutdatedCaches } = workbox.precaching
+const { clientsClaim } = workbox.core
+const { registerRoute } = workbox.routing
+const { CacheFirst, NetworkFirst } = workbox.strategies
+const { ExpirationPlugin } = workbox.expiration
+const { CacheableResponsePlugin } = workbox.cacheableResponse
 // import Pusher from "pusher-js/worker";
 // importScripts("https://js.pusher.com/7.0/pusher.worker.min.js");
-importScripts("https://js.pusher.com/beams/service-worker.js");
+importScripts("https://js.pusher.com/beams/service-worker.js")
 
-self.skipWaiting();
-clientsClaim();
+self.skipWaiting()
+clientsClaim()
 
-cleanupOutdatedCaches();
+cleanupOutdatedCaches()
 
-precacheAndRoute(self.__WB_MANIFEST);
+precacheAndRoute(self.__WB_MANIFEST)
 
 PusherPushNotifications.onNotificationReceived = ({
     payload,
@@ -32,19 +32,21 @@ PusherPushNotifications.onNotificationReceived = ({
     // Copied from the source code: https://github.com/pusher/push-notifications-web/blob/2ee625ebd7d9a179ba83c74f0eeac4e571861fa9/src/service-worker.js#L116
     // Modified to include badge
     const handleNotificationModified = async (payloadFromCallback) => {
-        console.log('handleNotificationModified')
-        const hideNotificationIfSiteHasFocus = payloadFromCallback.notification.hide_notification_if_site_has_focus === true;
+        console.log("handleNotificationModified")
+        const hideNotificationIfSiteHasFocus =
+            payloadFromCallback.notification
+                .hide_notification_if_site_has_focus === true
         if (
             hideNotificationIfSiteHasFocus &&
             (await self.PusherPushNotifications._hasFocusedClient())
         ) {
-            return;
+            return
         }
 
-        const title = payloadFromCallback.notification.title || "";
-        const body = payloadFromCallback.notification.body || "";
-        const icon = payloadFromCallback.notification.icon;
-        const badge = payloadFromCallback.notification.badge || "";
+        const title = payloadFromCallback.notification.title || ""
+        const body = payloadFromCallback.notification.body || ""
+        const icon = payloadFromCallback.notification.icon
+        const badge = payloadFromCallback.notification.badge || ""
 
         const options = {
             body,
@@ -56,13 +58,13 @@ PusherPushNotifications.onNotificationReceived = ({
                     pusherMetadata: payload.data.pusher,
                 },
             },
-        };
+        }
 
-        return self.registration.showNotification(title, options);
-    };
+        return self.registration.showNotification(title, options)
+    }
 
-    pushEvent.waitUntil(handleNotificationModified(payload));
-};
+    pushEvent.waitUntil(handleNotificationModified(payload))
+}
 
 registerRoute(
     /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -77,7 +79,7 @@ registerRoute(
         ],
     }),
     "GET"
-);
+)
 
 registerRoute(
     /\/assets\/.*/i,
@@ -91,7 +93,7 @@ registerRoute(
             new CacheableResponsePlugin({ statuses: [0, 200] }),
         ],
     })
-);
+)
 
 // The external icons
 const iconUrls = [
@@ -101,7 +103,7 @@ const iconUrls = [
     "https://pinia.vuejs.org/logo.svg",
     "https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg",
     "https://d33wubrfki0l68.cloudfront.net/2f6479d73bc25170dc532dd42e059166573bf478/61057/favicon.svg",
-];
+]
 registerRoute(
     ({ url: e }) => iconUrls.includes(e.href),
     new CacheFirst({
@@ -114,7 +116,7 @@ registerRoute(
             new CacheableResponsePlugin({ statuses: [0, 200] }),
         ],
     })
-);
+)
 
 registerRoute(
     ({ url: e }) => "/" == e.pathname || "" == e.pathname,
@@ -129,7 +131,7 @@ registerRoute(
         ],
     }),
     "GET"
-);
+)
 
 registerRoute(
     ({ url: e }) => "/api/user" == e.pathname || "api/user" == e.pathname,
@@ -143,4 +145,4 @@ registerRoute(
             new CacheableResponsePlugin({ statuses: [0, 200] }),
         ],
     })
-);
+)

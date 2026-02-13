@@ -1,5 +1,5 @@
-import AccountSavingPlanningVue from "@/accounts/AccountSavingPlanning.vue";
-import type { RouteRecordRaw } from "vue-router";
+import AccountSavingPlanningVue from "@/accounts/AccountSavingPlanning.vue"
+import type { RouteRecordRaw } from "vue-router"
 
 const routes: RouteRecordRaw[] = [
     {
@@ -7,6 +7,6 @@ const routes: RouteRecordRaw[] = [
         path: "/accounts/:accountId/saving-planning",
         component: AccountSavingPlanningVue,
     },
-];
+]
 
-export default routes;
+export default routes

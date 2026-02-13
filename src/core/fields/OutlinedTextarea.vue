@@ -1,6 +1,9 @@
 <template>
     <div class="m-2 mt-4">
-        <label class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea" ref="mainRef">
+        <label
+            class="mdc-text-field mdc-text-field--outlined mdc-text-field--textarea"
+            ref="mainRef"
+        >
             <!-- mdc-text-field--no-label -->
             <span class="mdc-notched-outline">
                 <span class="mdc-notched-outline__leading"></span>
@@ -35,7 +38,7 @@
                         )
                     "
                 ></textarea>
-                    <!-- aria-label="Label" -->
+                <!-- aria-label="Label" -->
             </span>
         </label>
         <div class="mdc-text-field-helper-line max-w-fit">
@@ -55,8 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import { MDCTextField } from "@material/textfield";
-import { computed, onMounted, ref } from "vue";
+import { MDCTextField } from "@material/textfield"
+import { computed, onMounted, ref } from "vue"
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -68,17 +71,17 @@ const props = defineProps({
 })
 
 const bindableAttributes = computed(() => {
-    let result: { [key: string]: any } = {}
+    const result: { [key: string]: any } = {}
     return result
-});
+})
 
-const id = ref(Math.floor(Math.random() * 10000000));
-const mainRef = ref<Element | null>(null);
-const mdcTextfield = ref<MDCTextField | null>(null);
+const id = ref(Math.floor(Math.random() * 10000000))
+const mainRef = ref<Element | null>(null)
+const mdcTextfield = ref<MDCTextField | null>(null)
 onMounted(() => {
-    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value);
-    if (props.autofocus) mainRef.value?.querySelector("textarea")?.focus();
-});
+    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value)
+    if (props.autofocus) mainRef.value?.querySelector("textarea")?.focus()
+})
 </script>
 
 <style scoped lang="scss">

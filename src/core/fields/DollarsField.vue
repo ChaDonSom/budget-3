@@ -71,9 +71,9 @@
 </template>
 
 <script setup lang="ts">
-import { MDCTextField } from "@material/textfield";
-import { onMounted, ref } from "vue";
-import TextfieldIcon from "@/core/fields/TextfieldIcon.vue";
+import { MDCTextField } from "@material/textfield"
+import { onMounted, ref } from "vue"
+import TextfieldIcon from "@/core/fields/TextfieldIcon.vue"
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -86,7 +86,7 @@ const props = defineProps({
         default: () => 0,
     },
     icon: String,
-});
+})
 
 const emit = defineEmits([
     "update:modelValue",
@@ -94,26 +94,26 @@ const emit = defineEmits([
     "icon-click",
     "change",
     "keydown-enter",
-]);
+])
 
-const id = ref(Math.floor(Math.random() * 10000000));
-const mainRef = ref<Element | null>(null);
-const mdcTextfield = ref<MDCTextField | null>(null);
+const id = ref(Math.floor(Math.random() * 10000000))
+const mainRef = ref<Element | null>(null)
+const mdcTextfield = ref<MDCTextField | null>(null)
 onMounted(() => {
-    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value);
-    if (props.autofocus) mainRef.value?.querySelector("input")?.focus();
-});
+    if (mainRef.value) mdcTextfield.value = new MDCTextField(mainRef.value)
+    if (props.autofocus) mainRef.value?.querySelector("input")?.focus()
+})
 
 function change(event: Event) {
-    const value = (event.target as HTMLInputElement)?.value;
-    const split = value?.split(".");
-    const afterDecimal = split[1];
+    const value = (event.target as HTMLInputElement)?.value
+    const split = value?.split(".")
+    const afterDecimal = split[1]
     if (!afterDecimal || afterDecimal.length != 2) {
-        const beforeDecimal = split[0] ?? "0";
-        let replacementDecimal = afterDecimal ?? "00";
+        const beforeDecimal = split[0] ?? "0"
+        let replacementDecimal = afterDecimal ?? "00"
         if (afterDecimal?.length) {
             if (afterDecimal.length == 1)
-                replacementDecimal = `${afterDecimal}0`;
+                replacementDecimal = `${afterDecimal}0`
             else
                 replacementDecimal = String(
                     Math.round(
@@ -123,12 +123,12 @@ function change(event: Event) {
                                 afterDecimal.slice(2)
                         )
                     )
-                );
+                )
         }
-        emit("change", `${beforeDecimal}.${replacementDecimal}`);
-        emit("update:modelValue", `${beforeDecimal}.${replacementDecimal}`);
+        emit("change", `${beforeDecimal}.${replacementDecimal}`)
+        emit("update:modelValue", `${beforeDecimal}.${replacementDecimal}`)
     } else {
-        emit("change", Number(value).toFixed(2));
+        emit("change", Number(value).toFixed(2))
     }
 }
 </script>

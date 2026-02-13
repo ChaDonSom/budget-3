@@ -1,7 +1,7 @@
-import { Client, TokenProvider } from "@pusher/push-notifications-web";
-import type { TokenProviderOptions } from "@pusher/push-notifications-web";
-import { useEventBus } from "@vueuse/core";
-import { defineStore } from "pinia";
+import { Client, TokenProvider } from "@pusher/push-notifications-web"
+import type { TokenProviderOptions } from "@pusher/push-notifications-web"
+import { useEventBus } from "@vueuse/core"
+import { defineStore } from "pinia"
 
 export const useBeams = defineStore("beams", {
     state: () => ({
@@ -16,32 +16,32 @@ export const useBeams = defineStore("beams", {
     },
     actions: {
         setBeams(payload: Client) {
-            this.beamsClient = payload;
+            this.beamsClient = payload
         },
         newTokenProvider(payload: TokenProviderOptions): TokenProvider | null {
-            this.tokenProviderState = new TokenProvider(payload);
-            return this.tokenProvider;
+            this.tokenProviderState = new TokenProvider(payload)
+            return this.tokenProvider
         },
         async start() {
             return this.beams?.start().then(() => {
-                this.bus.emit("started");
-                this.started = true;
-            });
+                this.bus.emit("started")
+                this.started = true
+            })
         },
         async waitTillStarted() {
             return new Promise<void>((resolve, reject) => {
-                if (this.started) return resolve();
+                if (this.started) return resolve()
                 else
                     this.bus.on((event: string) => {
-                        if (event == "started") resolve();
-                    });
-            });
+                        if (event == "started") resolve()
+                    })
+            })
         },
         async stop() {
             return this.beams?.stop().then(() => {
-                this.bus.emit("stopped");
-                this.started = false;
-            });
+                this.bus.emit("stopped")
+                this.started = false
+            })
         },
     },
-});
+})

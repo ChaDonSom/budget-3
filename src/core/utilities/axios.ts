@@ -1,4 +1,4 @@
-import axios, { type AxiosResponse as AxR } from "axios";
+import axios, { type AxiosResponse as AxR } from "axios"
 
 export const apiAxios = axios.create({
     // baseURL: import.meta.env.VITE_API_URL
