@@ -18,6 +18,7 @@ class AccountFactory extends Factory
             'name' => $this->faker->word(),
             'amount' => $this->faker->randomNumber(8),
             'user_id' => User::factory(),
+            'note' => '',
         ];
     }
 }

@@ -50,6 +50,13 @@
                             History
                         </Button>
                     </RouterLink>
+                    <RouterLink :to="{ name: 'forecast' }">
+                        <Button :disabled="!auth.authenticated || $route.name == 'forecast'"
+                            :raised="$route.name == 'forecast'">
+                            <template #leading-icon>event</template>
+                            Forecast
+                        </Button>
+                    </RouterLink>
                     <Button @click="auth.logout">Log out</Button>
                 </div>
             </template>

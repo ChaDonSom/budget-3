@@ -33,6 +33,18 @@ npm install
 npm start
 ```
 
+## Forecast demo data
+
+In a local environment, seed a demo user and scheduled payments:
+
+```bash
+php8.2 artisan db:seed --class='Database\Seeders\ForecastDemoSeeder'
+```
+
+Log in with `forecast-demo@example.test` and password `password`. This seeder only runs when `APP_ENV=local`.
+
+`npm start` uses PHP 8.2 for the Laravel server and queue worker.
+
 [View the Vue readme](./vue-readme.md)
 
 [View the Laravel readme](./laravel-readme.md)

@@ -5,6 +5,7 @@ import authRoutes from "@/router/auth"
 import templatesRoutes from "@/router/templates"
 import batchUpdatesRoutes from "@/router/batchUpdates"
 import accountsRoutes from "@/router/accounts"
+import Forecast from "@/forecast/Forecast.vue"
 import { useModals } from "@/store/modals"
 
 let routes: RouteRecordRaw[] = [
@@ -13,6 +14,11 @@ let routes: RouteRecordRaw[] = [
         path: "/",
         component: Home,
         props: true,
+    },
+    {
+        name: "forecast",
+        path: "/forecast",
+        component: Forecast,
     },
 ]
 routes = routes
