@@ -16,6 +16,8 @@ export type ForecastWeek = {
     total: number
 }
 
+export type ForecastWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
 export function forecastOccurrences(
     accounts: Account[],
     from: DateTime,
@@ -41,9 +43,7 @@ export function forecastOccurrences(
                 const weeks = update.weeks
                 if (!weeks) break
 
-                date = date.plus(
-                    weeks >= 4 ? { months: weeks / 4 } : { weeks }
-                )
+                date = date.plus(weeks >= 4 ? { months: weeks / 4 } : { weeks })
                 occurrence++
             }
         }
@@ -56,23 +56,51 @@ export function forecastOccurrences(
     )
 }
 
+export function weeklyIncomeOccurrences(
+    amount: number,
+    weekday: ForecastWeekday,
+    from: DateTime,
+    through: DateTime
+): ForecastOccurrence[] {
+    if (!Number.isFinite(amount) || amount < 0) {
+        throw new RangeError("Weekly forecast income must be a valid amount.")
+    }
+    if (amount === 0) return []
+
+    const daysUntilPayday = (weekday - from.weekday + 7) % 7
+    let date = from.startOf("day").plus({ days: daysUntilPayday })
+    const occurrences: ForecastOccurrence[] = []
+
+    while (date <= through) {
+        const isoDate = date.toISODate()
+        if (!isoDate) throw new Error("Could not format forecast income date.")
+
+        occurrences.push({
+            id: `expected-income-${isoDate}`,
+            date: isoDate,
+            name: "Expected weekly income",
+            amount,
+        })
+        date = date.plus({ weeks: 1 })
+    }
+
+    return occurrences
+}
+
 export function groupForecastByWeek(
     occurrences: ForecastOccurrence[]
 ): ForecastWeek[] {
     const weeks = new Map<string, ForecastWeek>()
 
     for (const occurrence of occurrences) {
-        const date = toDateTime(occurrence.date)
-        const daysSinceThursday = (date.weekday - 4 + 7) % 7
-        const start = date.minus({ days: daysSinceThursday }).toISODate()!
+        const start = forecastWeekStart(occurrence.date)
         let week = weeks.get(start)
 
         if (!week) {
+            const date = toDateTime(start)
             week = {
                 start,
-                label: date
-                    .minus({ days: daysSinceThursday })
-                    .toLocaleString(DateTime.DATE_MED),
+                label: date.toLocaleString(DateTime.DATE_MED),
                 occurrences: [],
                 total: 0,
             }
@@ -86,4 +114,12 @@ export function groupForecastByWeek(
     return [...weeks.values()].sort((left, right) =>
         left.start.localeCompare(right.start)
     )
+}
+
+export function forecastWeekStart(date: string): string {
+    const parsedDate = toDateTime(date)
+    const daysSinceThursday = (parsedDate.weekday - 4 + 7) % 7
+    const start = parsedDate.minus({ days: daysSinceThursday }).toISODate()
+    if (!start) throw new Error("Could not format forecast week start.")
+    return start
 }

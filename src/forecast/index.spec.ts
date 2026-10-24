@@ -1,9 +1,18 @@
 import { DateTime } from "luxon"
 import type { Account } from "@/store/accounts"
 import { describe, expect, it } from "vitest"
-import { forecastOccurrences, groupForecastByWeek } from "./index"
+import {
+    forecastOccurrences,
+    forecastWeekStart,
+    groupForecastByWeek,
+    weeklyIncomeOccurrences,
+} from "./index"
 
-function scheduledAccount(date: string, weeks: number, amount: number): Account {
+function scheduledAccount(
+    date: string,
+    weeks: number,
+    amount: number
+): Account {
     return {
         id: 1,
         name: "Rent",
@@ -40,9 +49,7 @@ describe("forecastOccurrences", () => {
             "2026-01-15",
         ])
         expect(forecast.map(({ amount }) => amount)).toEqual([
-            -1322,
-            -1322,
-            -1322,
+            -1322, -1322, -1322,
         ])
     })
 
@@ -76,5 +83,62 @@ describe("forecastOccurrences", () => {
         ])
         expect(weeks[1].start).toBe("2026-01-08")
         expect(weeks[1].total).toBe(-30)
+    })
+})
+
+describe("forecastWeekStart", () => {
+    it("maps each day to its Thursday pay-week start", () => {
+        expect(forecastWeekStart("2026-01-01")).toBe("2026-01-01")
+        expect(forecastWeekStart("2026-01-04")).toBe("2026-01-01")
+        expect(forecastWeekStart("2026-01-07")).toBe("2026-01-01")
+        expect(forecastWeekStart("2026-01-08")).toBe("2026-01-08")
+    })
+})
+
+describe("weeklyIncomeOccurrences", () => {
+    it("adds the first selected weekday on or after the start, then repeats weekly", () => {
+        const occurrences = weeklyIncomeOccurrences(
+            1322,
+            3,
+            DateTime.fromISO("2026-01-01"),
+            DateTime.fromISO("2026-01-21")
+        )
+
+        expect(occurrences.map(({ date }) => date)).toEqual([
+            "2026-01-07",
+            "2026-01-14",
+            "2026-01-21",
+        ])
+        expect(occurrences.every(({ amount }) => amount === 1322)).toBe(true)
+        expect(
+            occurrences.every(({ name }) => name === "Expected weekly income")
+        ).toBe(true)
+    })
+
+    it("includes income in the same weekly total as scheduled payments", () => {
+        const income = weeklyIncomeOccurrences(
+            1322,
+            3,
+            DateTime.fromISO("2026-01-01"),
+            DateTime.fromISO("2026-01-07")
+        )
+        const weeks = groupForecastByWeek([
+            ...income,
+            { id: "rent", date: "2026-01-05", name: "Rent", amount: -1200 },
+        ])
+
+        expect(weeks).toHaveLength(1)
+        expect(weeks[0].total).toBe(122)
+    })
+
+    it("does not add occurrences when income amount is zero", () => {
+        expect(
+            weeklyIncomeOccurrences(
+                0,
+                3,
+                DateTime.fromISO("2026-01-01"),
+                DateTime.fromISO("2026-01-21")
+            )
+        ).toEqual([])
     })
 })
